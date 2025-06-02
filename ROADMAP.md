@@ -79,7 +79,9 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **My Classes**:
     - [x] View classes assigned for the active academic year.
     - [x] Link to student roster for each class.
-- [x] **Resources**: Placeholder page.
+- [x] **Resources**:
+    - [x] Upload and manage teaching resources.
+    - [x] Share resources with specific classes/students (via `isPublic` and `classLevel` targeting).
 - [x] **Attendance**:
     - [x] Selection page for class, subject, date.
     - [x] Entry page to mark attendance for students.
@@ -88,7 +90,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **My Profile**: Students can view their own detailed profile information.
 - [x] **My Results**: Students can view their marks for published exams, filtered by academic year and term.
 - [x] **My Attendance**: Students can view their attendance records.
-- [x] **Resources**: Placeholder page.
+- [x] **Resources**: Access learning materials shared by teachers.
 
 ### VI. Public School Website (`/[schoolCode]/...`)
 - [x] **Dynamic Layout**: Header (logo, nav) and Footer driven by School Settings.
@@ -134,13 +136,11 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments.
 
 ### School Portal - Teacher Section
-- [ ] **Resources**:
-    - [ ] Upload and manage teaching resources.
-    - [ ] Share resources with specific classes/students.
+{/* Teacher Resources already marked above */}
 
 ### School Portal - Student Section
 - [ ] **My Timetable**: View personal class timetable.
-- [ ] **Resources**: Access learning materials shared by teachers (currently placeholder).
+{/* Student Resources already marked above */}
 
 ### Public School Website
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.
