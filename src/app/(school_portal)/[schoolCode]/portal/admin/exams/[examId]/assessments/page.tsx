@@ -2,21 +2,24 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Table, Modal, Form, Input, DatePicker, Select, message, Tag, Space, Spin, Popconfirm, Row, Col, InputNumber, Breadcrumb } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReadOutlined, ClockCircleOutlined, UserOutlined as InvigilatorIcon } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReadOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation'; // For examId
+import { useParams, useRouter } from 'next/navigation';
 import type { IAssessment } from '@/models/Tenant/Assessment';
 import type { IExam } from '@/models/Tenant/Exam';
 import type { ISubject } from '@/models/Tenant/Subject';
 import type { IClass } from '@/models/Tenant/Class';
 import type { ITenantUser } from '@/models/Tenant/User';
 import moment from 'moment';
+import mongoose from 'mongoose';
 
-const { Title, Text } = Typography;
+
+const { Title } = Typography;
 const { Option } = Select;
 
 interface AssessmentDataType extends Omit<IAssessment, 'subjectId' | 'classId' | 'invigilatorId'> {
   key: string;
+  _id: string;
   subjectId: { _id: string; name: string; code?: string } | string;
   classId: { _id: string; name: string; level?: string } | string;
   invigilatorId?: { _id: string; firstName?: string; lastName?: string; username: string } | string | null;
@@ -44,10 +47,14 @@ export default function AssessmentsPage() {
   const EXAM_API_URL = `/api/${schoolCode}/portal/exams/${examId}`;
   const SUBJECTS_API = `/api/${schoolCode}/portal/academics/subjects`;
   const CLASSES_API = `/api/${schoolCode}/portal/academics/classes`;
-  const USERS_API = `/api/${schoolCode}/portal/users`; // To fetch teachers
+  const USERS_API = `/api/${schoolCode}/portal/users`;
 
   const fetchData = useCallback(async () => {
-    if (!examId) return;
+    if (!examId || !mongoose.Types.ObjectId.isValid(examId)) {
+      message.error("Invalid Exam ID provided.");
+      router.push(`/${schoolCode}/portal/admin/exams`);
+      return;
+    }
     setLoading(true);
     try {
       const [examRes, assessmentsRes, subjectsRes, classesRes, usersRes] = await Promise.all([
@@ -74,13 +81,18 @@ export default function AssessmentsPage() {
       setAssessments(assessmentsData.map(asm => ({ 
         ...asm, 
         key: asm._id,
+        _id: asm._id, // Ensure _id is present for keys and API calls
         subjectId: asm.subjectId as any,
         classId: asm.classId as any,
         invigilatorId: asm.invigilatorId as any,
         assessmentDate: moment(asm.assessmentDate),
       })));
       setSubjects(subjectsData);
-      setClasses(classesData.filter(cls => (typeof cls.academicYearId === 'object' ? cls.academicYearId._id : cls.academicYearId) === (typeof examData.academicYearId === 'object' ? (examData.academicYearId as any)._id : examData.academicYearId))); // Filter classes for the exam's academic year
+      
+      // Filter classes for the exam's academic year
+      const examAcademicYearId = typeof examData.academicYearId === 'object' ? (examData.academicYearId as any)._id : examData.academicYearId;
+      setClasses(classesData.filter(cls => (typeof cls.academicYearId === 'object' ? (cls.academicYearId as any)._id : cls.academicYearId) === examAcademicYearId));
+      
       setTeachers(usersData.filter(user => user.role === 'teacher' && user.isActive));
 
     } catch (error: any) {
@@ -88,7 +100,7 @@ export default function AssessmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [schoolCode, examId, API_URL_BASE, EXAM_API_URL, SUBJECTS_API, CLASSES_API, USERS_API]);
+  }, [schoolCode, examId, API_URL_BASE, EXAM_API_URL, SUBJECTS_API, CLASSES_API, USERS_API, router]);
 
   useEffect(() => {
     fetchData();
@@ -115,7 +127,6 @@ export default function AssessmentsPage() {
 
   const handleDeleteAssessment = async (assessmentId: string) => {
     try {
-      // TODO: Check if assessment has marks before deleting
       const response = await fetch(`${API_URL_BASE}/${assessmentId}`, { method: 'DELETE' });
       if (!response.ok) {
         const errorData = await response.json();
@@ -159,22 +170,32 @@ export default function AssessmentsPage() {
   };
 
   const columns = [
-    { title: 'Assessment Name', dataIndex: 'assessmentName', key: 'assessmentName' },
+    { title: 'Assessment Name', dataIndex: 'assessmentName', key: 'assessmentName', sorter: (a:AssessmentDataType, b:AssessmentDataType) => a.assessmentName.localeCompare(b.assessmentName)},
     { 
       title: 'Subject', 
       dataIndex: 'subjectId', 
       key: 'subjectId', 
-      render: (sub: AssessmentDataType['subjectId']) => typeof sub === 'object' ? `${sub.name} (${sub.code || 'N/A'})` : (subjects.find(s => s._id === sub)?.name || sub)
+      render: (sub: AssessmentDataType['subjectId']) => typeof sub === 'object' ? `${sub.name} ${sub.code ? `(${sub.code})` : ''}` : (subjects.find(s => s._id === sub)?.name || sub),
+      sorter: (a: AssessmentDataType, b: AssessmentDataType) => {
+        const nameA = typeof a.subjectId === 'object' ? a.subjectId.name : (subjects.find(s => s._id === a.subjectId)?.name || '');
+        const nameB = typeof b.subjectId === 'object' ? b.subjectId.name : (subjects.find(s => s._id === b.subjectId)?.name || '');
+        return nameA.localeCompare(nameB);
+      }
     },
     { 
       title: 'Class', 
       dataIndex: 'classId', 
       key: 'classId', 
-      render: (cls: AssessmentDataType['classId']) => typeof cls === 'object' ? `${cls.name} (${cls.level || 'N/A'})` : (classes.find(c => c._id === cls)?.name || cls)
+      render: (cls: AssessmentDataType['classId']) => typeof cls === 'object' ? `${cls.name} ${cls.level ? `(${cls.level})` : ''}` : (classes.find(c => c._id === cls)?.name || cls),
+       sorter: (a: AssessmentDataType, b: AssessmentDataType) => {
+        const nameA = typeof a.classId === 'object' ? a.classId.name : (classes.find(c => c._id === a.classId)?.name || '');
+        const nameB = typeof b.classId === 'object' ? b.classId.name : (classes.find(c => c._id === b.classId)?.name || '');
+        return nameA.localeCompare(nameB);
+      }
     },
     { title: 'Type', dataIndex: 'assessmentType', key: 'assessmentType' },
     { title: 'Max Marks', dataIndex: 'maxMarks', key: 'maxMarks' },
-    { title: 'Date', dataIndex: 'assessmentDate', key: 'assessmentDate', render: (date: moment.Moment) => date ? date.format('YYYY-MM-DD') : '-' },
+    { title: 'Date', dataIndex: 'assessmentDate', key: 'assessmentDate', render: (date: moment.Moment) => date ? date.format('YYYY-MM-DD') : '-', sorter: (a: AssessmentDataType, b: AssessmentDataType) => moment(a.assessmentDate).unix() - moment(b.assessmentDate).unix()},
     { title: 'Time', dataIndex: 'assessmentTime', key: 'assessmentTime', render: (time?:string) => time || '-' },
     { title: 'Graded', dataIndex: 'isGraded', key: 'isGraded', render: (isGraded:boolean) => <Tag color={isGraded ? 'green' : 'orange'}>{isGraded ? 'Yes' : 'No'}</Tag> },
     {
@@ -203,8 +224,8 @@ export default function AssessmentsPage() {
     { title: examDetails ? `Assessments for ${examDetails.name}` : 'Loading Exam...' },
   ];
   
-  if (loading) {
-    return <div className="flex justify-center items-center h-full"><Spin size="large" tip="Loading assessments..." /></div>;
+  if (loading && !examDetails) { // Show initial loading for exam details
+    return <div className="flex justify-center items-center h-full"><Spin size="large" tip="Loading exam details..." /></div>;
   }
 
   if (!examDetails) {
@@ -220,7 +241,9 @@ export default function AssessmentsPage() {
           Add New Assessment
         </Button>
       </div>
-      <Table columns={columns} dataSource={assessments} rowKey="_id" />
+      <Spin spinning={loading}> {/* Spin wraps the table for subsequent assessment loads */}
+        <Table columns={columns} dataSource={assessments} rowKey="_id" />
+      </Spin>
 
       <Modal
         title={editingAssessment ? 'Edit Assessment' : 'Add New Assessment'}
@@ -253,7 +276,7 @@ export default function AssessmentsPage() {
             <Col xs={24} sm={12}>
                  <Form.Item name="classId" label="Class" rules={[{ required: true }]}>
                     <Select placeholder="Select class">
-                    {classes.map(cls => <Option key={cls._id} value={cls._id}>{cls.name} ({cls.level})</Option>)}
+                    {classes.map(cls => <Option key={cls._id} value={cls._id}>{cls.name} {cls.level ? `(${cls.level})` : ''}</Option>)}
                     </Select>
                 </Form.Item>
             </Col>
@@ -290,3 +313,5 @@ export default function AssessmentsPage() {
     </div>
   );
 }
+
+    
