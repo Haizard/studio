@@ -4,6 +4,7 @@ import { getTenantConnection } from '@/lib/db';
 import TenantUserModel, { ITenantUser } from '@/models/Tenant/User'; // Adjust path as needed
 import { getToken } from 'next-auth/jwt';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 
 // Helper to ensure models are registered on the tenant connection
 async function ensureTenantModelsRegistered(tenantDb: any) {
@@ -87,7 +88,7 @@ export async function POST(
     const UserOnTenantDB = tenantDb.models.User as mongoose.Model<ITenantUser>;
 
     // Check if username or email already exists
-    const existingUser = await UserOnTenantDB.findOne({ $or: [{ username }, { email }] });
+    const existingUser = await UserOnTenantDB.findOne({ $or: [{ username: username.toLowerCase() }, { email: email.toLowerCase() }] });
     if (existingUser) {
       return NextResponse.json({ error: 'Username or email already exists' }, { status: 409 });
     }
@@ -95,13 +96,13 @@ export async function POST(
     const passwordHash = await bcrypt.hash(password, 10);
 
     const newUser = new UserOnTenantDB({
-      username,
+      username: username.toLowerCase(),
       passwordHash,
       role,
-      email,
+      email: email.toLowerCase(),
       firstName,
       lastName,
-      isActive: isActive !== undefined ? isActive : true,
+      isActive: isActive !== undefined ? isActive : true, // Default to true if not provided
     });
 
     await newUser.save();
@@ -119,5 +120,4 @@ export async function POST(
         return NextResponse.json({ error: error.message }, { status: 404 });
     }
     return NextResponse.json({ error: 'Failed to create user', details: error.message }, { status: 500 });
-  }
-}
+  

@@ -1,9 +1,9 @@
-
 import { NextResponse } from 'next/server';
 import { connectToSuperAdminDB } from '@/lib/db';
 import SchoolModel, { ISchool } from '@/models/SuperAdmin/School'; // Adjust path as needed
 import SuperAdminUserModel from '@/models/SuperAdmin/SuperAdminUser'; // Needed to ensure model is registered
 import { getToken } from 'next-auth/jwt';
+import mongoose from 'mongoose';
 
 async function ensureModelsRegistered(db: any) {
   // Ensure models are registered on the connection
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
     
     // Check if school code already exists
-    const existingSchool = await School.findOne({ schoolCode });
+    const existingSchool = await School.findOne({ schoolCode: schoolCode.toLowerCase() });
     if (existingSchool) {
         return NextResponse.json({ error: 'School code already exists.' }, { status: 409 });
     }
@@ -68,11 +68,11 @@ export async function POST(request: Request) {
       schoolCode: schoolCode.toLowerCase(), // Ensure lowercase
       mongodbUri,
       contactInfo,
-      isActive: true,
+      isActive: true, // Default to active
     });
 
     await newSchool.save();
-    return NextResponse.json(newSchool, { status: 201 });
+    return NextResponse.json(newSchool.toObject(), { status: 201 });
   } catch (error: any) {
     console.error('Failed to create school:', error);
     // Handle duplicate key error for schoolCode specifically if not caught by pre-check
