@@ -1,19 +1,17 @@
 
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
-import NewsArticleModel, { INewsArticle } from '@/models/Tenant/NewsArticle'; // Adjust path as needed
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User'; // Import TenantUserModel
+import NewsArticleModel, { INewsArticle } from '@/models/Tenant/NewsArticle'; 
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User'; 
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
-// Helper to ensure models are registered on the tenant connection
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.NewsArticle) {
     tenantDb.model<INewsArticle>('NewsArticle', NewsArticleModel.schema);
   }
-  // Explicitly register User model (TenantUserModel) on the tenantDb if not already present
   if (!tenantDb.models.User) {
-    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   }
 }
 
@@ -24,7 +22,7 @@ export async function GET(
   const { schoolCode } = params;
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get('slug');
-  const adminView = searchParams.get('adminView') === 'true'; // For admin portal to see all articles
+  const adminView = searchParams.get('adminView') === 'true'; 
 
   if (!schoolCode) {
     return NextResponse.json({ error: 'School code is required' }, { status: 400 });
@@ -38,12 +36,12 @@ export async function GET(
     let query: any = {};
     
     if (slug) {
-      query.slug = slug.toLowerCase(); // Slugs are stored in lowercase
-      if (!adminView) { // Public view of a single article
+      query.slug = slug.toLowerCase(); 
+      if (!adminView) { 
         query.isActive = true;
       }
-    } else { // Listing articles
-      if (!adminView) { // Public list view
+    } else { 
+      if (!adminView) { 
         query.isActive = true;
       }
     }
@@ -53,14 +51,22 @@ export async function GET(
 
     if (slug) {
       articles = await NewsArticleOnTenantDB.findOne(query)
-        .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName') // Ensure ITenantUser is used for type hint
+        .populate<{ authorId: ITenantUser }>({
+            path: 'authorId', 
+            model: 'User', // Explicit model name
+            select: 'firstName lastName'
+        }) 
         .lean();
       if (!articles) {
         return NextResponse.json({ error: 'News article not found or not active' }, { status: 404 });
       }
     } else {
       articles = await NewsArticleOnTenantDB.find(query)
-        .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName') // Ensure ITenantUser is used for type hint
+        .populate<{ authorId: ITenantUser }>({
+            path: 'authorId', 
+            model: 'User', // Explicit model name
+            select: 'firstName lastName'
+        }) 
         .sort(sortOrder)
         .lean();
     }
@@ -75,7 +81,6 @@ export async function GET(
   }
 }
 
-// POST for creating a new news article (requires authentication, e.g., admin)
 export async function POST(
   request: Request,
   { params }: { params: { schoolCode: string } }
@@ -85,7 +90,6 @@ export async function POST(
 
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
      if (token?.role === 'superadmin' && token?.schoolCode && token.schoolCode !== schoolCode) {
-        // Allow superadmin for this operation if they are targeting a specific school
     } else if (token?.schoolCode !== schoolCode) {
         return NextResponse.json({ error: 'Unauthorized for this school' }, { status: 403 });
     } else if (token?.role !== 'admin' && token?.role !== 'superadmin') {
@@ -129,7 +133,11 @@ export async function POST(
 
     await newArticle.save();
     const populatedArticle = await NewsArticleOnTenantDB.findById(newArticle._id)
-        .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName') // Ensure ITenantUser is used for type hint
+        .populate<{ authorId: ITenantUser }>({
+            path: 'authorId', 
+            model: 'User', // Explicit model name
+            select: 'firstName lastName'
+        }) 
         .lean();
     return NextResponse.json(populatedArticle, { status: 201 });
 

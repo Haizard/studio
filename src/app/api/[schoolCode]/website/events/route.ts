@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import EventModel, { IEvent } from '@/models/Tenant/Event';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
@@ -11,7 +11,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
     tenantDb.model<IEvent>('Event', EventModel.schema);
   }
   if (!tenantDb.models.User) {
-    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   }
 }
 
@@ -38,8 +38,12 @@ export async function GET(
     }
 
     const events = await Event.find(query)
-      .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName username')
-      .sort({ startDate: adminView ? -1 : 1 }) // Admin newest first, public upcoming first
+      .populate<{ authorId: ITenantUser }>({
+        path: 'authorId', 
+        model: 'User', // Explicit model name
+        select: 'firstName lastName username'
+      })
+      .sort({ startDate: adminView ? -1 : 1 }) 
       .lean(); 
 
     return NextResponse.json(events);
@@ -93,7 +97,11 @@ export async function POST(
 
     await newEvent.save();
     const populatedEvent = await Event.findById(newEvent._id)
-      .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName username')
+      .populate<{ authorId: ITenantUser }>({
+        path: 'authorId', 
+        model: 'User', // Explicit model name
+        select: 'firstName lastName username'
+      })
       .lean();
     return NextResponse.json(populatedEvent, { status: 201 });
 

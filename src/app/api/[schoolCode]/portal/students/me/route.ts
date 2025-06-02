@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import StudentModel, { IStudent } from '@/models/Tenant/Student';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import AlevelCombinationModel, { IAlevelCombination } from '@/models/Tenant/AlevelCombination';
@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Student) tenantDb.model<IStudent>('Student', StudentModel.schema);
-  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   if (!tenantDb.models.Class) tenantDb.model<IClass>('Class', ClassModel.schema);
   if (!tenantDb.models.AcademicYear) tenantDb.model<IAcademicYear>('AcademicYear', AcademicYearModel.schema);
   if (!tenantDb.models.AlevelCombination) tenantDb.model<IAlevelCombination>('AlevelCombination', AlevelCombinationModel.schema);
@@ -55,6 +55,7 @@ export async function GET(
       .populate<{ currentAcademicYearId: IAcademicYear }>('currentAcademicYearId', 'name startDate endDate')
       .populate<{ alevelCombinationId: IAlevelCombination }>({
         path: 'alevelCombinationId',
+        model: 'AlevelCombination', // Explicit model name
         select: 'name code',
         populate: { path: 'subjects', model: 'Subject', select: 'name code' }
       })
@@ -69,16 +70,15 @@ export async function GET(
     }
     
     console.log(`[API Students ME GET / ${schoolCode}] Student profile found. Preparing response.`);
-    // @ts-ignore - Ensure passwordHash is not sent
-    if (studentProfile.userId && (studentProfile.userId as ITenantUser).passwordHash) {
+    if (studentProfile.userId && typeof studentProfile.userId === 'object' && (studentProfile.userId as any).passwordHash) {
         // @ts-ignore
-        delete (studentProfile.userId as ITenantUser).passwordHash;
+        delete (studentProfile.userId as any).passwordHash;
     }
 
     return NextResponse.json(studentProfile);
   } catch (error: any) {
     console.error(`[API Students ME GET / ${schoolCode}] Critical error fetching student profile for user ${token.uid}:`, error.message);
-    console.error(`[API Students ME GET / ${schoolCode}] Error stack:`, error.stack); // Log the full stack
+    console.error(`[API Students ME GET / ${schoolCode}] Error stack:`, error.stack); 
     return NextResponse.json({ error: 'Failed to fetch student profile due to a server issue.', details: error.message }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import TeacherModel, { ITeacher } from '@/models/Tenant/Teacher';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Teacher) tenantDb.model<ITeacher>('Teacher', TeacherModel.schema);
-  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   if (!tenantDb.models.Class) tenantDb.model<IClass>('Class', ClassModel.schema);
   if (!tenantDb.models.Subject) tenantDb.model<ISubject>('Subject', SubjectModel.schema);
   if (!tenantDb.models.AcademicYear) tenantDb.model<IAcademicYear>('AcademicYear', AcademicYearModel.schema);
@@ -39,23 +39,6 @@ export async function GET(
     const teachers = await Teacher.find({})
       .populate<{ userId: ITenantUser }>('userId', 'firstName lastName username email isActive')
       .populate<{ isClassTeacherOf: IClass }>('isClassTeacherOf', 'name level')
-      // Basic assignment population might be too heavy for list view;
-      // consider fetching detailed assignments only on single teacher GET.
-      // .populate({
-      //   path: 'assignedClassesAndSubjects.classId',
-      //   model: 'Class',
-      //   select: 'name level'
-      // })
-      // .populate({
-      //   path: 'assignedClassesAndSubjects.subjectId',
-      //   model: 'Subject',
-      //   select: 'name'
-      // })
-      // .populate({
-      //   path: 'assignedClassesAndSubjects.academicYearId',
-      //   model: 'AcademicYear',
-      //   select: 'name'
-      // })
       .sort({ 'userId.lastName': 1, 'userId.firstName': 1 })
       .lean();
     
@@ -91,7 +74,6 @@ export async function POST(
     const { 
         firstName, lastName, username, email, password, // User fields
         teacherIdNumber, qualifications, dateOfJoining, specialization, // Teacher profile fields
-        // assignedClassesAndSubjects, isClassTeacherOf, // Handle these if provided, usually empty on creation
         isActive 
     } = body;
 
@@ -133,7 +115,7 @@ export async function POST(
         qualifications: qualifications || [],
         dateOfJoining: new Date(dateOfJoining),
         specialization,
-        assignedClassesAndSubjects: body.assignedClassesAndSubjects || [], // Accept if provided
+        assignedClassesAndSubjects: body.assignedClassesAndSubjects || [], 
         isClassTeacherOf: body.isClassTeacherOf || undefined,
         isActive: isActive !== undefined ? isActive : true,
     });

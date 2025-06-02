@@ -3,7 +3,7 @@
 // File: src/app/api/[schoolCode]/portal/sample/route.ts
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User'; // Import your tenant user model
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User'; 
 import mongoose from 'mongoose';
 
 export async function GET(
@@ -19,13 +19,9 @@ export async function GET(
   try {
     const tenantDb = await getTenantConnection(schoolCode);
     
-    // Register model if not already registered on this connection
-    // Note: Mongoose's default behavior for `mongoose.model()` is to use the default connection.
-    // When using multiple connections, you must explicitly use the connection object to register and retrieve models.
-    const UserOnTenantDB = tenantDb.models.User || tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    const UserOnTenantDB = tenantDb.models.User || tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
 
-    // Example: Fetch all users from this tenant's database
-    const users = await UserOnTenantDB.find({}).limit(10).lean(); // .lean() for plain JS objects
+    const users = await UserOnTenantDB.find({}).limit(10).lean(); 
 
     return NextResponse.json({
       message: `Data from ${schoolCode} tenant database`,
@@ -34,7 +30,6 @@ export async function GET(
     });
   } catch (error: any) {
     console.error(`Error accessing tenant DB for ${schoolCode}:`, error);
-    // Distinguish between connection errors and other errors if possible
     if (error.message.includes('School not found') || error.message.includes('MongoDB URI not configured')) {
         return NextResponse.json({ error: error.message }, { status: 404 });
     }

@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import TeacherModel, { ITeacher } from '@/models/Tenant/Teacher';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
@@ -12,7 +12,7 @@ import bcrypt from 'bcryptjs';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Teacher) tenantDb.model<ITeacher>('Teacher', TeacherModel.schema);
-  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   if (!tenantDb.models.Class) tenantDb.model<IClass>('Class', ClassModel.schema);
   if (!tenantDb.models.Subject) tenantDb.model<ISubject>('Subject', SubjectModel.schema);
   if (!tenantDb.models.AcademicYear) tenantDb.model<IAcademicYear>('AcademicYear', AcademicYearModel.schema);
@@ -23,21 +23,26 @@ export async function GET(
   { params }: { params: { schoolCode: string; teacherProfileId: string } }
 ) {
   const { schoolCode, teacherProfileId } = params;
+  console.log(`[API GET /teachers/${teacherProfileId}] School: ${schoolCode}, ID: ${teacherProfileId}`);
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
     if (!(token?.role === 'superadmin' && schoolCode)) {
+      console.warn(`[API GET /teachers/${teacherProfileId}] Unauthorized access. Token role: ${token?.role}, school: ${token?.schoolCode}`);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
   }
 
   if (!mongoose.Types.ObjectId.isValid(teacherProfileId)) {
+    console.error(`[API GET /teachers/${teacherProfileId}] Invalid Teacher Profile ID: ${teacherProfileId}`);
     return NextResponse.json({ error: 'Invalid Teacher Profile ID' }, { status: 400 });
   }
 
   try {
+    console.log(`[API GET /teachers/${teacherProfileId}] Attempting tenant DB connection for ${schoolCode}`);
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
+    console.log(`[API GET /teachers/${teacherProfileId}] Models registered. Querying for teacher...`);
     const Teacher = tenantDb.models.Teacher as mongoose.Model<ITeacher>;
 
     const teacher = await Teacher.findById(teacherProfileId)
@@ -60,6 +65,7 @@ export async function GET(
       })
       .lean();
       
+    console.log(`[API GET /teachers/${teacherProfileId}] Query result: ${teacher ? 'Teacher found' : 'Teacher NOT found'}`);
     if (!teacher) {
       return NextResponse.json({ error: 'Teacher not found' }, { status: 404 });
     }
@@ -69,7 +75,8 @@ export async function GET(
 
     return NextResponse.json(teacher);
   } catch (error: any) {
-    console.error(`Error fetching teacher ${teacherProfileId} for ${schoolCode}:`, error);
+    console.error(`[API GET /teachers/${teacherProfileId}] CRITICAL ERROR fetching teacher ${teacherProfileId} for ${schoolCode}:`, error.message);
+    console.error(`[API GET /teachers/${teacherProfileId}] Full error stack:`, error.stack);
     return NextResponse.json({ error: 'Failed to fetch teacher', details: error.message, stack: error.stack }, { status: 500 });
   }
 }
@@ -94,9 +101,9 @@ export async function PUT(
   try {
     const body = await request.json();
     const { 
-        userId, // TenantUser._id
-        firstName, lastName, username, email, password, // User fields
-        teacherIdNumber, qualifications, dateOfJoining, specialization, // Teacher profile fields
+        userId, 
+        firstName, lastName, username, email, password, 
+        teacherIdNumber, qualifications, dateOfJoining, specialization, 
         assignedClassesAndSubjects, isClassTeacherOf,
         isActive 
     } = body;
@@ -213,7 +220,6 @@ export async function DELETE(
       userAccount.isActive = false;
       await userAccount.save();
     }
-    // Consider if assignments need to be cleared or handled. For now, soft delete.
     return NextResponse.json({ message: 'Teacher deactivated successfully' });
   } catch (error: any) {
     console.error(`Error deactivating teacher ${teacherProfileId} for ${schoolCode}:`, error);

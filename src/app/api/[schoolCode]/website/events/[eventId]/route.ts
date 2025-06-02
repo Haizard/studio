@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import EventModel, { IEvent } from '@/models/Tenant/Event';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
@@ -11,7 +11,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
     tenantDb.model<IEvent>('Event', EventModel.schema);
   }
   if (!tenantDb.models.User) {
-    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   }
 }
 
@@ -38,7 +38,11 @@ export async function GET(
     }
 
     const event = await Event.findOne(query)
-      .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName username')
+      .populate<{ authorId: ITenantUser }>({
+        path: 'authorId', 
+        model: 'User', // Explicit model name
+        select: 'firstName lastName username'
+      })
       .lean();
       
     if (!event) {
@@ -94,11 +98,15 @@ export async function PUT(
     eventToUpdate.audience = Array.isArray(audience) ? audience : (audience ? [audience] : []);
     eventToUpdate.featuredImageUrl = featuredImageUrl;
     eventToUpdate.isActive = isActive !== undefined ? isActive : eventToUpdate.isActive;
-    eventToUpdate.authorId = token.uid; // Update author to current editor
+    eventToUpdate.authorId = token.uid; 
 
     await eventToUpdate.save();
     const populatedEvent = await Event.findById(eventToUpdate._id)
-        .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName username')
+        .populate<{ authorId: ITenantUser }>({
+            path: 'authorId', 
+            model: 'User', // Explicit model name
+            select: 'firstName lastName username'
+        })
         .lean();
     return NextResponse.json(populatedEvent);
   } catch (error: any) {
@@ -137,8 +145,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
     return NextResponse.json({ message: 'Event deleted successfully' });
-  } catch (error: any)
-{
+  } catch (error: any) {
     console.error(`Error deleting event ${eventId} for ${schoolCode}:`, error);
     return NextResponse.json({ error: 'Failed to delete event', details: error.message }, { status: 500 });
   }

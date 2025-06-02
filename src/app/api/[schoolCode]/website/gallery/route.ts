@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import GalleryItemModel, { IGalleryItem } from '@/models/Tenant/GalleryItem';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
@@ -11,7 +11,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
     tenantDb.model<IGalleryItem>('GalleryItem', GalleryItemModel.schema);
   }
   if (!tenantDb.models.User) {
-    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   }
 }
 
@@ -30,11 +30,8 @@ export async function GET(
   }
 
   try {
-    // console.log(`[API Gallery GET] Attempting to connect to tenant DB for school: ${schoolCode}`);
     const tenantDb = await getTenantConnection(schoolCode);
-    // console.log(`[API Gallery GET] Connected to tenant DB for school: ${schoolCode}. Ensuring models are registered.`);
     await ensureTenantModelsRegistered(tenantDb);
-    // console.log(`[API Gallery GET] Models registered for school: ${schoolCode}.`);
     
     const GalleryItem = tenantDb.models.GalleryItem as mongoose.Model<IGalleryItem>;
     
@@ -46,12 +43,14 @@ export async function GET(
       query.album = album.toLowerCase();
     }
 
-    // console.log(`[API Gallery GET] Executing query for school ${schoolCode}:`, JSON.stringify(query));
     const items = await GalleryItem.find(query)
-      .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName username')
+      .populate<{ authorId: ITenantUser }>({
+        path: 'authorId', 
+        model: 'User', // Explicit model name
+        select: 'firstName lastName username'
+      })
       .sort({ uploadDate: -1 })
       .lean(); 
-    // console.log(`[API Gallery GET] Query successful for school ${schoolCode}. Found ${items.length} items.`);
 
     return NextResponse.json(items);
   } catch (error: any) {
@@ -88,11 +87,8 @@ export async function POST(
       return NextResponse.json({ error: 'Missing required field: imageUrl' }, { status: 400 });
     }
 
-    // console.log(`[API Gallery POST] Attempting to connect to tenant DB for school: ${schoolCode}`);
     const tenantDb = await getTenantConnection(schoolCode);
-    // console.log(`[API Gallery POST] Connected to tenant DB for school: ${schoolCode}. Ensuring models are registered.`);
     await ensureTenantModelsRegistered(tenantDb);
-    // console.log(`[API Gallery POST] Models registered for school: ${schoolCode}.`);
     const GalleryItem = tenantDb.models.GalleryItem as mongoose.Model<IGalleryItem>;
 
     const newItem = new GalleryItem({
@@ -106,11 +102,13 @@ export async function POST(
       uploadDate: new Date(), 
     });
 
-    // console.log(`[API Gallery POST] Attempting to save new gallery item for school ${schoolCode}:`, newItem);
     await newItem.save();
-    // console.log(`[API Gallery POST] New gallery item saved successfully for school ${schoolCode}. ID: ${newItem._id}`);
     const populatedItem = await GalleryItem.findById(newItem._id)
-      .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName username')
+      .populate<{ authorId: ITenantUser }>({
+        path: 'authorId', 
+        model: 'User', // Explicit model name
+        select: 'firstName lastName username'
+      })
       .lean();
     return NextResponse.json(populatedItem, { status: 201 });
 

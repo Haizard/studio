@@ -5,7 +5,7 @@ import AssessmentModel, { IAssessment } from '@/models/Tenant/Assessment';
 import ExamModel, { IExam } from '@/models/Tenant/Exam';
 import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User'; // Import User model
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User'; 
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
@@ -14,7 +14,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Exam) tenantDb.model<IExam>('Exam', ExamModel.schema);
   if (!tenantDb.models.Subject) tenantDb.model<ISubject>('Subject', SubjectModel.schema);
   if (!tenantDb.models.Class) tenantDb.model<IClass>('Class', ClassModel.schema);
-  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema); // Ensure User model is registered
+  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition); 
 }
 
 export async function GET(
@@ -24,14 +24,12 @@ export async function GET(
   const { schoolCode, examId, assessmentId } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
-  // Authorization check (adjust roles as needed, e.g., if teachers can view specific assessments)
   if (!token || !['admin', 'superadmin', 'teacher'].includes(token.role as string) ) {
      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   if (token.schoolCode !== schoolCode && token.role !== 'superadmin'){
      return NextResponse.json({ error: 'Unauthorized for this school' }, { status: 403 });
   }
-
 
   if (!mongoose.Types.ObjectId.isValid(examId) || !mongoose.Types.ObjectId.isValid(assessmentId)) {
     return NextResponse.json({ error: 'Invalid Exam or Assessment ID' }, { status: 400 });
@@ -43,10 +41,10 @@ export async function GET(
     const Assessment = tenantDb.models.Assessment as mongoose.Model<IAssessment>;
 
     const assessment = await Assessment.findOne({ _id: assessmentId, examId })
-        .populate({ path: 'examId', model: 'Exam', select: 'name academicYearId termId' })
-        .populate({ path: 'subjectId', model: 'Subject', select: 'name code' })
-        .populate({ path: 'classId', model: 'Class', select: 'name level' })
-        .populate({ path: 'invigilatorId', model: 'User', select: 'firstName lastName username' })
+        .populate<{ examId: IExam }>({ path: 'examId', model: 'Exam', select: 'name academicYearId termId' })
+        .populate<{ subjectId: ISubject }>({ path: 'subjectId', model: 'Subject', select: 'name code' })
+        .populate<{ classId: IClass }>({ path: 'classId', model: 'Class', select: 'name level' })
+        .populate<{ invigilatorId: ITenantUser }>({ path: 'invigilatorId', model: 'User', select: 'firstName lastName username' })
         .lean();
         
     if (!assessment) {
@@ -96,7 +94,6 @@ export async function PUT(
       return NextResponse.json({ error: 'Assessment not found or does not belong to this exam' }, { status: 404 });
     }
 
-    // Check for uniqueness if relevant fields change
      if (assessmentName !== assessmentToUpdate.assessmentName || 
         subjectId.toString() !== assessmentToUpdate.subjectId.toString() ||
         classId.toString() !== assessmentToUpdate.classId.toString()
@@ -125,10 +122,10 @@ export async function PUT(
 
     await assessmentToUpdate.save();
     const populatedAssessment = await Assessment.findById(assessmentToUpdate._id)
-      .populate({ path: 'examId', model: 'Exam', select: 'name academicYearId termId' })
-      .populate({ path: 'subjectId', model: 'Subject', select: 'name code' })
-      .populate({ path: 'classId', model: 'Class', select: 'name level' })
-      .populate({ path: 'invigilatorId', model: 'User', select: 'firstName lastName username' })
+      .populate<{ examId: IExam }>({ path: 'examId', model: 'Exam', select: 'name academicYearId termId' })
+      .populate<{ subjectId: ISubject }>({ path: 'subjectId', model: 'Subject', select: 'name code' })
+      .populate<{ classId: IClass }>({ path: 'classId', model: 'Class', select: 'name level' })
+      .populate<{ invigilatorId: ITenantUser }>({ path: 'invigilatorId', model: 'User', select: 'firstName lastName username' })
       .lean();
     return NextResponse.json(populatedAssessment);
   } catch (error: any) {
@@ -162,7 +159,6 @@ export async function DELETE(
     await ensureTenantModelsRegistered(tenantDb);
     const Assessment = tenantDb.models.Assessment as mongoose.Model<IAssessment>;
 
-    // TODO: Add check if assessment has marks entered before deleting
     const result = await Assessment.deleteOne({ _id: assessmentId, examId });
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: 'Assessment not found or does not belong to this exam' }, { status: 404 });

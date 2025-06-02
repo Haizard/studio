@@ -3,7 +3,8 @@ import type { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToSuperAdminDB, getTenantConnection } from './db';
 import SuperAdminUserModel, { ISuperAdminUser } from '@/models/SuperAdmin/SuperAdminUser';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+// Import the schema definition directly
+import { TenantUserSchemaDefinition, ITenantUser } from '@/models/Tenant/User';
 import bcrypt from 'bcryptjs';
 
 // Extend NextAuthUser to include role and potentially schoolCode
@@ -33,7 +34,7 @@ export const authOptions: NextAuthOptions = {
             // Attempt Tenant Login
             const tenantDb = await getTenantConnection(schoolCode.trim().toLowerCase());
             // Ensure model is registered on this specific connection
-            const TenantUserOnDB = tenantDb.models.User || tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+            const TenantUserOnDB = tenantDb.models.User || tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
             const user = await TenantUserOnDB.findOne({ email: email.toLowerCase() }).lean();
 
             if (user && user.passwordHash) {

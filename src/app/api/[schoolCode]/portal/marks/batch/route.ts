@@ -4,8 +4,8 @@ import { getTenantConnection } from '@/lib/db';
 import MarkModel, { IMark } from '@/models/Tenant/Mark';
 import AssessmentModel, { IAssessment } from '@/models/Tenant/Assessment';
 import ExamModel, { IExam } from '@/models/Tenant/Exam';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
-import TeacherModel, { ITeacher } from '@/models/Tenant/Teacher'; // Import Teacher model
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
+import TeacherModel, { ITeacher } from '@/models/Tenant/Teacher'; 
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
@@ -24,8 +24,8 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Mark) tenantDb.model<IMark>('Mark', MarkModel.schema);
   if (!tenantDb.models.Assessment) tenantDb.model<IAssessment>('Assessment', AssessmentModel.schema);
   if (!tenantDb.models.Exam) tenantDb.model<IExam>('Exam', ExamModel.schema);
-  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
-  if (!tenantDb.models.Teacher) tenantDb.model<ITeacher>('Teacher', TeacherModel.schema); // Ensure Teacher model is registered
+  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
+  if (!tenantDb.models.Teacher) tenantDb.model<ITeacher>('Teacher', TeacherModel.schema); 
 }
 
 export async function POST(
@@ -35,7 +35,7 @@ export async function POST(
   const { schoolCode } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!token || token.role !== 'teacher') { // Stricter: only teachers can submit marks via this route
+  if (!token || token.role !== 'teacher') { 
     return NextResponse.json({ error: 'Unauthorized: Only teachers can submit marks.' }, { status: 403 });
   }
   if (token.schoolCode !== schoolCode) {
@@ -49,7 +49,7 @@ export async function POST(
     if (!mongoose.Types.ObjectId.isValid(assessmentId)) {
       return NextResponse.json({ error: 'Invalid Assessment ID' }, { status: 400 });
     }
-    if (!Array.isArray(marks)) { // Allow empty marks array for clearing, but must be an array
+    if (!Array.isArray(marks)) { 
       return NextResponse.json({ error: 'Marks data must be an array' }, { status: 400 });
     }
 
@@ -71,7 +71,6 @@ export async function POST(
         return NextResponse.json({ error: 'Assessment is not properly linked to an exam with an academic year.' }, { status: 400 });
     }
 
-    // Authorization Check: Verify teacher is assigned to this class & subject for this academic year
     const teacherProfile = await Teacher.findOne({ userId: token.uid }).lean();
     if (!teacherProfile) {
         return NextResponse.json({ error: "Teacher profile not found for submitting user." }, { status: 403 });
@@ -91,7 +90,6 @@ export async function POST(
     if (!isAuthorized) {
         return NextResponse.json({ error: "Unauthorized: You are not assigned to teach this subject to this class for the relevant academic year." }, { status: 403 });
     }
-    // End Authorization Check
 
     const academicYearId = (assessment.examId as IExam).academicYearId;
     const termId = (assessment.examId as IExam).termId;
@@ -112,18 +110,8 @@ export async function POST(
         : Number(entry.marksObtained);
 
       if (marksObtained !== undefined && (marksObtained < 0 || marksObtained > assessment.maxMarks)) {
-         console.warn(`Marks for student ${entry.studentId} (${marksObtained}) out of range (0-${assessment.maxMarks}). Value will be capped or ignored depending on strictness.`);
-         // Cap the marks or return an error. For now, let's cap it.
-         // entry.marksObtained = Math.max(0, Math.min(assessment.maxMarks, marksObtained));
-         // Or, to be stricter and prevent saving out-of-range marks:
-         // throw new Error(`Marks for student ${studentUser.username} are out of range.`);
-         // For now, we'll allow undefined to clear, but valid numbers must be in range.
-         // This specific warning allows it to proceed, but it's better to reject or cap.
-         // Let's make it stricter: if defined, must be in range.
-         if (marksObtained < 0 || marksObtained > assessment.maxMarks) {
-            console.error(`Marks for student ${entry.studentId} (${marksObtained}) are out of range (0-${assessment.maxMarks}). This entry will be skipped.`);
-            return null; // Skip this invalid entry
-         }
+         console.error(`Marks for student ${entry.studentId} (${marksObtained}) are out of range (0-${assessment.maxMarks}). This entry will be skipped.`);
+         return null; 
       }
       
       return Mark.updateOne(
@@ -132,7 +120,7 @@ export async function POST(
           $set: {
             marksObtained: marksObtained,
             comments: entry.comments || '',
-            recordedById: token.uid, // Logged-in teacher's user ID
+            recordedById: token.uid, 
             academicYearId: academicYearId,
             termId: termId || undefined,
           },
@@ -146,8 +134,7 @@ export async function POST(
     });
 
     const results = await Promise.all(operations.filter(op => op !== null));
-    const successfulOps = results.filter(r => r && (r.modifiedCount > 0 || r.upsertedCount > 0)).length;
-
+    const successfulOps = results.filter(r => r && (r.modifiedCount > 0 || (r as any).upsertedCount > 0)).length;
 
     return NextResponse.json({ message: `Marks processed. ${successfulOps} records updated/inserted.`, results });
 

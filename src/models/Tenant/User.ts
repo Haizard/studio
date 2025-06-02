@@ -18,7 +18,8 @@ export interface ITenantUser extends Document {
   updatedAt: Date;
 }
 
-const TenantUserSchema: Schema = new Schema(
+// Export the schema definition directly
+export const TenantUserSchemaDefinition: Schema = new Schema(
   {
     username: { type: String, required: true, unique: true, trim: true, lowercase: true },
     passwordHash: { type: String, required: true },
@@ -37,9 +38,10 @@ const TenantUserSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-TenantUserSchema.index({ username: 1 });
-TenantUserSchema.index({ email: 1 });
-TenantUserSchema.index({ role: 1 });
+TenantUserSchemaDefinition.index({ username: 1 });
+TenantUserSchemaDefinition.index({ email: 1 });
+TenantUserSchemaDefinition.index({ role: 1 });
 
 // The model name 'User' here is scoped to the tenant's database connection.
-export default mongoose.models.User || mongoose.model<ITenantUser>('User', TenantUserSchema);
+// Default export for convenience, but prefer using the schema definition for explicit registration on tenant connections.
+export default mongoose.models.User || mongoose.model<ITenantUser>('User', TenantUserSchemaDefinition);

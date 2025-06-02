@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import StudentModel, { IStudent } from '@/models/Tenant/Student';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import AlevelCombinationModel, { IAlevelCombination } from '@/models/Tenant/AlevelCombination';
@@ -13,7 +13,7 @@ import bcrypt from 'bcryptjs';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Student) tenantDb.model<IStudent>('Student', StudentModel.schema);
-  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   if (!tenantDb.models.Class) tenantDb.model<IClass>('Class', ClassModel.schema);
   if (!tenantDb.models.AcademicYear) tenantDb.model<IAcademicYear>('AcademicYear', AcademicYearModel.schema);
   if (!tenantDb.models.AlevelCombination) tenantDb.model<IAlevelCombination>('AlevelCombination', AlevelCombinationModel.schema);
@@ -53,8 +53,11 @@ export async function GET(
     if (!student) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
-    // @ts-ignore
-    if (student.userId && student.userId.passwordHash) delete student.userId.passwordHash;
+    if (student.userId && typeof student.userId === 'object' && (student.userId as any).passwordHash) {
+        // @ts-ignore
+        delete (student.userId as any).passwordHash;
+    }
+
 
     return NextResponse.json(student);
   } catch (error: any) {
@@ -83,11 +86,10 @@ export async function PUT(
   try {
     const body = await request.json();
     const { 
-        userId, // This is the TenantUser._id
-        firstName, lastName, username, email, password, // User fields
-        studentIdNumber, admissionDate, dateOfBirth, gender, // Student profile fields
-        currentClassId, currentAcademicYearId, // Academic fields
-        // alevelCombinationId, oLevelOptionalSubjects, // TODO: Handle these if included in form
+        userId, 
+        firstName, lastName, username, email, password, 
+        studentIdNumber, admissionDate, dateOfBirth, gender, 
+        currentClassId, currentAcademicYearId, 
         isActive 
     } = body;
 
@@ -110,7 +112,6 @@ export async function PUT(
         return NextResponse.json({ error: 'Associated user account not found.' }, { status: 404 });
     }
 
-    // Update User Account
     userAccount.firstName = firstName;
     userAccount.lastName = lastName;
     if (username.toLowerCase() !== userAccount.username) {
@@ -129,7 +130,6 @@ export async function PUT(
     userAccount.isActive = isActive !== undefined ? isActive : userAccount.isActive;
     await userAccount.save();
 
-    // Update Student Profile
     if (studentIdNumber !== studentProfile.studentIdNumber) {
          const existingStudentById = await Student.findOne({ studentIdNumber, _id: { $ne: studentProfileId } });
         if (existingStudentById) return NextResponse.json({ error: 'Student ID Number already in use.' }, { status: 409 });
@@ -140,8 +140,6 @@ export async function PUT(
     studentProfile.gender = gender;
     studentProfile.currentClassId = currentClassId || undefined;
     studentProfile.currentAcademicYearId = currentAcademicYearId;
-    // studentProfile.alevelCombinationId = alevelCombinationId || undefined;
-    // studentProfile.oLevelOptionalSubjects = oLevelOptionalSubjects || [];
     studentProfile.isActive = isActive !== undefined ? isActive : studentProfile.isActive;
     await studentProfile.save();
 
@@ -151,8 +149,10 @@ export async function PUT(
         .populate<{ currentAcademicYearId: IAcademicYear }>('currentAcademicYearId', 'name')
         .lean();
     
-    // @ts-ignore
-    if (updatedStudent.userId && updatedStudent.userId.passwordHash) delete updatedStudent.userId.passwordHash;
+    if (updatedStudent && updatedStudent.userId && typeof updatedStudent.userId === 'object' && (updatedStudent.userId as any).passwordHash) {
+        // @ts-ignore
+        delete (updatedStudent.userId as any).passwordHash;
+    }
 
     return NextResponse.json(updatedStudent);
 
@@ -164,7 +164,6 @@ export async function PUT(
     return NextResponse.json({ error: 'Failed to update student', details: error.message }, { status: 500 });
   }
 }
-
 
 export async function DELETE(
   request: Request,
@@ -194,7 +193,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Student profile not found' }, { status: 404 });
     }
 
-    // Soft delete: Deactivate the student and their user account
     studentProfile.isActive = false;
     await studentProfile.save();
 
@@ -203,9 +201,6 @@ export async function DELETE(
       userAccount.isActive = false;
       await userAccount.save();
     }
-
-    // TODO: Consider implications: what happens to marks, enrollments etc.? 
-    // For now, this is a soft delete. Hard deletion would require more cascading logic.
 
     return NextResponse.json({ message: 'Student deactivated successfully' });
   } catch (error: any) {

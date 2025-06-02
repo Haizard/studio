@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import TeacherModel, { ITeacher } from '@/models/Tenant/Teacher';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
@@ -11,7 +11,7 @@ import mongoose from 'mongoose';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Teacher) tenantDb.model<ITeacher>('Teacher', TeacherModel.schema);
-  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   if (!tenantDb.models.Class) tenantDb.model<IClass>('Class', ClassModel.schema);
   if (!tenantDb.models.Subject) tenantDb.model<ISubject>('Subject', SubjectModel.schema);
   if (!tenantDb.models.AcademicYear) tenantDb.model<IAcademicYear>('AcademicYear', AcademicYearModel.schema);
@@ -48,17 +48,17 @@ export async function GET(
       .populate<{ assignedClassesAndSubjects: { classId: IClass, subjectId: ISubject, academicYearId: IAcademicYear}[] }>([
         {
             path: 'assignedClassesAndSubjects.classId',
-            model: 'Class', // Explicitly state model name
+            model: 'Class', 
             select: 'name level stream'
         },
         {
             path: 'assignedClassesAndSubjects.subjectId',
-            model: 'Subject', // Explicitly state model name
+            model: 'Subject', 
             select: 'name code'
         },
         {
             path: 'assignedClassesAndSubjects.academicYearId',
-            model: 'AcademicYear', // Explicitly state model name
+            model: 'AcademicYear', 
             select: 'name'
         }
       ])

@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import GalleryItemModel, { IGalleryItem } from '@/models/Tenant/GalleryItem';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
@@ -11,7 +11,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
     tenantDb.model<IGalleryItem>('GalleryItem', GalleryItemModel.schema);
   }
   if (!tenantDb.models.User) {
-    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   }
 }
 
@@ -38,7 +38,11 @@ export async function GET(
     }
 
     const item = await GalleryItem.findOne(query)
-      .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName username')
+      .populate<{ authorId: ITenantUser }>({
+        path: 'authorId', 
+        model: 'User', // Explicit model name
+        select: 'firstName lastName username'
+      })
       .lean();
       
     if (!item) {
@@ -95,7 +99,11 @@ export async function PUT(
 
     await itemToUpdate.save();
     const populatedItem = await GalleryItem.findById(itemToUpdate._id)
-        .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName username')
+        .populate<{ authorId: ITenantUser }>({
+            path: 'authorId', 
+            model: 'User', // Explicit model name
+            select: 'firstName lastName username'
+        })
         .lean();
     return NextResponse.json(populatedItem);
   } catch (error: any) {

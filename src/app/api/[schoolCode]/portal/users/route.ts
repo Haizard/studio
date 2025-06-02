@@ -1,17 +1,16 @@
 
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User'; // Adjust path as needed
+import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User'; 
 import { getToken } from 'next-auth/jwt';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 
 // Helper to ensure models are registered on the tenant connection
-async function ensureTenantModelsRegistered(tenantDb: any) {
+async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.User) {
-    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   }
-  // Register other tenant models as they are used in this route or related services
 }
 
 export async function GET(
@@ -40,8 +39,6 @@ export async function GET(
     await ensureTenantModelsRegistered(tenantDb);
     const UserOnTenantDB = tenantDb.models.User as mongoose.Model<ITenantUser>;
     
-    // Example: Fetch all users from this tenant's database
-    // Add pagination, filtering, sorting as needed
     const users = await UserOnTenantDB.find({}).select('-passwordHash').lean(); 
 
     return NextResponse.json(users);
@@ -120,4 +117,5 @@ export async function POST(
         return NextResponse.json({ error: error.message }, { status: 404 });
     }
     return NextResponse.json({ error: 'Failed to create user', details: error.message }, { status: 500 });
-  
+  }
+}
