@@ -27,7 +27,7 @@ import {
   PictureOutlined,
   IdcardOutlined, 
   CheckSquareOutlined,
-  FolderOpenOutlined, // Added for Resources
+  FolderOpenOutlined, 
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -174,7 +174,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/admin/website-management`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) {
         selectedKey = `/${schoolCode}/portal/admin/academics`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/my-classes/[classId]`)) { 
+    } else if (pathname.includes('/teacher/my-classes/') && mongoose.Types.ObjectId.isValid(pathname.split('/').pop() || '')) {
         selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { 
         selectedKey = `/${schoolCode}/portal/teacher/attendance`;
@@ -266,7 +266,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           theme="dark" 
           mode="inline" 
           selectedKeys={[selectedKey]} 
-          defaultOpenKeys={openKeys}
+          defaultOpenKeys={Array.from(new Set(openKeys))} // Ensure unique open keys
           items={menuItems} 
           className="mt-2"
         />
