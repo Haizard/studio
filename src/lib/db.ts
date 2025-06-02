@@ -35,10 +35,6 @@ async function connectToSuperAdminDB(): Promise<Mongoose> {
       bufferCommands: false,
     };
     cachedSuperAdmin!.promise = mongoose.connect(SUPERADMIN_MONGO_URI!, opts).then((mongooseInstance) => {
-      // Register SuperAdmin models here if not already done through imports ensuring schema registration
-      // This is to ensure models are available on the connection.
-      // Mongoose generally handles this if models are imported and schema defined before connect.
-      // However, explicit registration can be safer in complex setups.
       if (!mongooseInstance.models.School) {
         mongooseInstance.model<ISchool>('School', SchoolModel.schema);
       }
@@ -48,8 +44,14 @@ async function connectToSuperAdminDB(): Promise<Mongoose> {
       return mongooseInstance;
     });
   }
-  cachedSuperAdmin!.conn = await cachedSuperAdmin!.promise;
-  return cachedSuperAdmin!.conn;
+  try {
+    cachedSuperAdmin!.conn = await cachedSuperAdmin!.promise;
+    return cachedSuperAdmin!.conn!; 
+  } catch (error) {
+    cachedSuperAdmin!.promise = null; 
+    console.error("[DB connectToSuperAdminDB] Failed to connect to SuperAdmin DB:", error);
+    throw error; 
+  }
 }
 
 
@@ -59,63 +61,76 @@ if (!global.mongooseTenants) {
 
 
 export async function getTenantConnection(schoolCode: string): Promise<Connection> {
-  if (!schoolCode) {
-    throw new Error('School code is required to get tenant connection.');
+  if (!schoolCode || typeof schoolCode !== 'string' || schoolCode.trim() === '') {
+    throw new Error('School code is required and must be a non-empty string to get tenant connection.');
   }
+  const normalizedSchoolCode = schoolCode.trim().toLowerCase();
 
   const tenantConnectionsMap = global.mongooseTenants!;
   
-  if (tenantConnectionsMap.has(schoolCode)) {
-    const cachedTenant = tenantConnectionsMap.get(schoolCode)!;
+  if (tenantConnectionsMap.has(normalizedSchoolCode)) {
+    const cachedTenant = tenantConnectionsMap.get(normalizedSchoolCode)!;
     if (cachedTenant.conn) {
+      // @ts-ignore Assuming conn holds a Mongoose-like object with a 'connection' property
       return cachedTenant.conn.connection;
     }
     if (cachedTenant.promise) {
-      const mongooseInstance = await cachedTenant.promise;
-      return mongooseInstance.connection;
+      try {
+        const mongooseInstance = await cachedTenant.promise;
+        // @ts-ignore
+        return mongooseInstance.connection;
+      } catch (error) {
+        tenantConnectionsMap.delete(normalizedSchoolCode);
+        console.error(`[DB getTenantConnection] Cached promise for ${normalizedSchoolCode} failed. Retrying connection. Error:`, error);
+      }
     }
   }
 
-  await connectToSuperAdminDB(); // Ensure superadmin connection is up for fetching school details
-  
-  // Use the mongoose.models accessor to ensure we are using the model registered on the superadmin connection
-  const School = mongoose.models.School as Model<ISchool> || mongoose.model<ISchool>('School', SchoolModel.schema);
+  try {
+    await connectToSuperAdminDB(); 
+    
+    const School = mongoose.models.School as Model<ISchool> || mongoose.model<ISchool>('School', SchoolModel.schema);
+    const school = await School.findOne({ schoolCode: normalizedSchoolCode }).lean<ISchool>().exec();
 
-  const school = await School.findOne({ schoolCode }).lean<ISchool>().exec();
+    if (!school || !school.mongodbUri) {
+      console.error(`[DB getTenantConnection] School not found or MongoDB URI not configured for ${normalizedSchoolCode}`);
+      throw new Error(`School not found or MongoDB URI not configured for ${normalizedSchoolCode}`);
+    }
 
-  if (!school || !school.mongodbUri) {
-    throw new Error(`School not found or MongoDB URI not configured for ${schoolCode}`);
+    const tenantEntry = { conn: null, promise: null } as { conn: Mongoose | null; promise: Promise<Mongoose> | null };
+    tenantConnectionsMap.set(normalizedSchoolCode, tenantEntry);
+    
+    const opts = {
+      bufferCommands: false,
+    };
+
+    const newMongooseInstance = new Mongoose();
+    tenantEntry.promise = newMongooseInstance.connect(school.mongodbUri, opts).then(() => newMongooseInstance);
+    
+    const connectedMongooseInstance = await tenantEntry.promise;
+    tenantEntry.conn = connectedMongooseInstance;
+    return connectedMongooseInstance.connection;
+
+  } catch (error: any) {
+    console.error(`[DB getTenantConnection] Error establishing connection for ${normalizedSchoolCode}:`, error.message);
+    if (tenantConnectionsMap.has(normalizedSchoolCode)) {
+        const entry = tenantConnectionsMap.get(normalizedSchoolCode);
+        if (entry?.promise && !entry.conn) { 
+            tenantConnectionsMap.delete(normalizedSchoolCode);
+        }
+    }
+    throw error; 
   }
-
-  const tenantEntry = { conn: null, promise: null } as { conn: Mongoose | null; promise: Promise<Mongoose> | null };
-  tenantConnectionsMap.set(schoolCode, tenantEntry);
-  
-  const opts = {
-    bufferCommands: false,
-  };
-
-  tenantEntry.promise = mongoose.createConnection(school.mongodbUri, opts).asPromise().then(connection => {
-     // This is a Connection object, not a Mongoose instance.
-     // For models, we'll need to register them directly onto this connection object.
-     // Example: connection.model('User', TenantUserSchema);
-     // This will be done in API routes or service layers.
-    return { connection } as unknown as Mongoose; // A bit of a hack to fit the Mongoose type for caching.
-  });
-  
-  const mongooseInstance = await tenantEntry.promise;
-  // @ts-ignore
-  tenantEntry.conn = mongooseInstance; // Store the "Mongoose-like" object which holds the connection
-  // @ts-ignore
-  return mongooseInstance.connection as Connection;
 }
 
 
 export { connectToSuperAdminDB };
 
-// Utility to get models from SuperAdmin DB
 export const getSuperAdminModel = <T extends mongoose.Document>(modelName: string): mongoose.Model<T> => {
   if (!cachedSuperAdmin?.conn) {
-    throw new Error("SuperAdmin DB not connected. Call connectToSuperAdminDB first.");
+    console.warn("[DB getSuperAdminModel] SuperAdmin DB not connected. Attempting to connect implicitly. This should ideally be handled by prior explicit connection call.");
+    throw new Error("SuperAdmin DB not connected. Call connectToSuperAdminDB first or ensure application initialization handles this.");
   }
   return cachedSuperAdmin.conn.models[modelName] as mongoose.Model<T>;
 };
+
