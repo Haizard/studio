@@ -1,27 +1,30 @@
 
-"use client";
+// This file was part of the "Just Jot" application and is no longer needed
+// for the "Unified School Management System". It can be safely removed.
 
-import type React from 'react';
+// "use client";
 
-interface MetricsDisplayProps {
-  text: string;
-}
+// import type React from 'react';
 
-const MetricsDisplay: React.FC<MetricsDisplayProps> = ({ text }) => {
-  const [charCount, setCharCount] = React.useState(0);
-  const [wordCount, setWordCount] = React.useState(0);
+// interface MetricsDisplayProps {
+//   text: string;
+// }
 
-  React.useEffect(() => {
-    setCharCount(text.length);
-    setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
-  }, [text]);
+// const MetricsDisplay: React.FC<MetricsDisplayProps> = ({ text }) => {
+//   const [charCount, setCharCount] = React.useState(0);
+//   const [wordCount, setWordCount] = React.useState(0);
 
-  return (
-    <div className="text-xs md:text-sm text-muted-foreground space-x-2 md:space-x-3">
-      <span>Chars: {charCount}</span>
-      <span>Words: {wordCount}</span>
-    </div>
-  );
-};
+//   React.useEffect(() => {
+//     setCharCount(text.length);
+//     setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
+//   }, [text]);
 
-export default MetricsDisplay;
+//   return (
+//     <div className="text-xs md:text-sm text-muted-foreground space-x-2 md:space-x-3">
+//       <span>Chars: {charCount}</span>
+//       <span>Words: {wordCount}</span>
+//     </div>
+//   );
+// };
+
+// export default MetricsDisplay;
