@@ -27,6 +27,7 @@ import {
   PictureOutlined,
   IdcardOutlined, 
   CheckSquareOutlined,
+  FolderOpenOutlined, // Added for Resources
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -86,6 +87,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               ]
             },
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
+            { key: `${basePortalPath}/admin/attendance`, icon: <ScheduleOutlined />, label: <Link href={`${basePortalPath}/admin/attendance`}>Attendance Records</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
           ],
@@ -114,7 +116,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         { key: `${basePortalPath}/teacher/my-classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/teacher/my-classes`}>My Classes</Link> },
         { key: `${basePortalPath}/teacher/attendance`, icon: <CheckSquareOutlined />, label: <Link href={`${basePortalPath}/teacher/attendance`}>Attendance</Link> },
         { key: `${basePortalPath}/teacher/marks-entry`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/teacher/marks-entry`}>Marks Entry</Link> },
-        { key: `${basePortalPath}/teacher/resources`, icon: <BookOutlined />, label: <Link href={`${basePortalPath}/teacher/resources`}>Resources</Link> },
+        { key: `${basePortalPath}/teacher/resources`, icon: <FolderOpenOutlined />, label: <Link href={`${basePortalPath}/teacher/resources`}>Resources</Link> },
       );
     }
     
@@ -123,7 +125,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         { key: `${basePortalPath}/student/my-profile`, icon: <UserOutlined />, label: <Link href={`${basePortalPath}/student/my-profile`}>My Profile</Link> },
         { key: `${basePortalPath}/student/my-results`, icon: <SolutionOutlined />, label: <Link href={`${basePortalPath}/student/my-results`}>My Results</Link> },
         { key: `${basePortalPath}/student/my-attendance`, icon: <CheckSquareOutlined />, label: <Link href={`${basePortalPath}/student/my-attendance`}>My Attendance</Link> },
-        { key: `${basePortalPath}/student/resources`, icon: <BookOutlined />, label: <Link href={`${basePortalPath}/student/resources`}>Resources</Link> },
+        { key: `${basePortalPath}/student/resources`, icon: <FolderOpenOutlined />, label: <Link href={`${basePortalPath}/student/resources`}>Resources</Link> },
       );
     }
     return items;
@@ -172,9 +174,9 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/admin/website-management`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) {
         selectedKey = `/${schoolCode}/portal/admin/academics`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/my-classes/[classId]`)) { // For teacher's class roster
+    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/my-classes/[classId]`)) { 
         selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { // For teacher's attendance entry
+    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { 
         selectedKey = `/${schoolCode}/portal/teacher/attendance`;
     }
   }
@@ -182,7 +184,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 
   // Ensure parent menu groups are open for nested items
   if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
-  if(selectedKey.includes('/admin/exams')) openKeys.push('admin-management'); // Ensure 'admin-management' is open for exams
+  if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/students')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/teachers')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/settings')) openKeys.push('admin-management'); 
@@ -206,19 +208,19 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       // Customize titles for dynamic segments
       if (mongoose.Types.ObjectId.isValid(snippet)) {
         const prevSegment = relevantSnippets[index-1];
-        const secondPrevSegment = relevantSnippets[index-2]; // for deeper nesting like marks-entry
-        const nextSegment = relevantSnippets[index+1]; // for /exams/:id/assessments
+        const secondPrevSegment = relevantSnippets[index-2]; 
+        const nextSegment = relevantSnippets[index+1]; 
 
         if (prevSegment === 'exams' && nextSegment === 'assessments') { 
             title = "Manage Assessments"; 
-        } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(relevantSnippets[index+1])) { // e.g. /marks-entry/[examId]/[assessmentId] - this is examId
-             title = `Exam Details`; // Or fetch exam name
-        } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { // This is assessmentId
-             title = "Enter Marks"; // Or fetch assessment name
-        } else if (prevSegment === 'my-classes' && mongoose.Types.ObjectId.isValid(snippet)) { // For /teacher/my-classes/[classId]
-             title = `Class Roster`; // Or fetch class name
+        } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(relevantSnippets[index+1])) { 
+             title = `Exam Details`; 
+        } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { 
+             title = "Enter Marks"; 
+        } else if (prevSegment === 'my-classes' && mongoose.Types.ObjectId.isValid(snippet)) { 
+             title = `Class Roster`; 
         } else {
-            title = "Details"; // Generic for other IDs
+            title = "Details"; 
         }
       } else if (snippet === 'entry' && relevantSnippets[index-1] === 'attendance') {
         title = "Record Attendance";
