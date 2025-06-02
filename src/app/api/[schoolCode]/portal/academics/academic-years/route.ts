@@ -17,13 +17,17 @@ export async function GET(
   { params }: { params: { schoolCode: string } }
 ) {
   const { schoolCode } = params;
+  const { searchParams } = new URL(request.url);
+  const fetchActiveOnly = searchParams.get('active') === 'true';
+
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
-    // Allow superadmin to view if they specify a school code
-    if (!(token?.role === 'superadmin' && schoolCode)) {
-      return NextResponse.json({ error: 'Unauthorized for this school or role' }, { status: 403 });
-    }
+  // Allow teachers, admins, and superadmins to fetch academic years
+  if (!token || !['teacher', 'admin', 'superadmin'].includes(token.role as string)) {
+    return NextResponse.json({ error: 'Unauthorized role' }, { status: 403 });
+  }
+  if (token.role !== 'superadmin' && token.schoolCode !== schoolCode) {
+    return NextResponse.json({ error: 'Unauthorized for this school' }, { status: 403 });
   }
   
   if (!schoolCode) {
@@ -35,7 +39,12 @@ export async function GET(
     await ensureTenantModelsRegistered(tenantDb);
     const AcademicYear = tenantDb.models.AcademicYear as mongoose.Model<IAcademicYear>;
     
-    const academicYears = await AcademicYear.find({}).sort({ startDate: -1 }).lean(); 
+    const query: any = {};
+    if (fetchActiveOnly) {
+      query.isActive = true;
+    }
+    
+    const academicYears = await AcademicYear.find(query).sort({ startDate: -1 }).lean(); 
 
     return NextResponse.json(academicYears);
   } catch (error: any) {
@@ -106,3 +115,5 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to create academic year', details: error.message }, { status: 500 });
   }
 }
+
+    
