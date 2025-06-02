@@ -2,27 +2,29 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import NewsArticleModel, { INewsArticle } from '@/models/Tenant/NewsArticle'; // Adjust path as needed
+import TenantUserModel, { ITenantUser } from '@/models/Tenant/User'; // Import TenantUserModel
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
 // Helper to ensure models are registered on the tenant connection
-async function ensureTenantModelsRegistered(tenantDb: any) {
+async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.NewsArticle) {
     tenantDb.model<INewsArticle>('NewsArticle', NewsArticleModel.schema);
   }
-  // Register other tenant models as they are used in this route or related services
+  // Explicitly register User model (TenantUserModel) on the tenantDb if not already present
+  if (!tenantDb.models.User) {
+    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+  }
 }
 
-// GET all news articles for the public website (can be public or restricted)
-// For management, a separate authenticated GET might be needed or use this with admin checks.
 export async function GET(
   request: Request,
   { params }: { params: { schoolCode: string } }
 ) {
   const { schoolCode } = params;
   const { searchParams } = new URL(request.url);
-  const slug = searchParams.get('slug'); // For fetching a single article by slug
-  const adminView = searchParams.get('adminView') === 'true';
+  const slug = searchParams.get('slug');
+  const adminView = searchParams.get('adminView') === 'true'; // For admin portal to see all articles
 
   if (!schoolCode) {
     return NextResponse.json({ error: 'School code is required' }, { status: 400 });
@@ -34,29 +36,32 @@ export async function GET(
     const NewsArticleOnTenantDB = tenantDb.models.NewsArticle as mongoose.Model<INewsArticle>;
     
     let query: any = {};
-    if (slug) {
-      query.slug = slug;
-    }
     
-    if (!adminView && !slug) { // For public list view, only active
+    if (slug) {
+      query.slug = slug.toLowerCase(); // Slugs are stored in lowercase
+      if (!adminView) { // Public view of a single article
         query.isActive = true;
-    } else if (!adminView && slug) { // For public single view, only active
+      }
+    } else { // Listing articles
+      if (!adminView) { // Public list view
         query.isActive = true;
+      }
     }
-    // If adminView is true, no isActive restriction is applied for listing or single view by slug
-    // If adminView is true and fetching a specific article by ID (not slug), that's handled in [articleId]/route.ts
-
 
     let articles;
+    const sortOrder = adminView ? { createdAt: -1 } : { publishedDate: -1 };
+
     if (slug) {
-      articles = await NewsArticleOnTenantDB.findOne(query).lean();
+      articles = await NewsArticleOnTenantDB.findOne(query)
+        .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName') // Ensure ITenantUser is used for type hint
+        .lean();
       if (!articles) {
-        return NextResponse.json({ error: 'News article not found' }, { status: 404 });
+        return NextResponse.json({ error: 'News article not found or not active' }, { status: 404 });
       }
     } else {
-      // Fetch all articles based on query (active for public, all for admin)
       articles = await NewsArticleOnTenantDB.find(query)
-        .sort({ publishedDate: -1 })
+        .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName') // Ensure ITenantUser is used for type hint
+        .sort(sortOrder)
         .lean();
     }
     
@@ -78,7 +83,6 @@ export async function POST(
   const { schoolCode } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
-  // Protect this route: only admin or superadmin can post news
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
      if (token?.role === 'superadmin' && token?.schoolCode && token.schoolCode !== schoolCode) {
         // Allow superadmin for this operation if they are targeting a specific school
@@ -116,14 +120,30 @@ export async function POST(
       slug: slug.toLowerCase(),
       summary,
       featuredImageUrl,
-      tags,
+      tags: Array.isArray(tags) ? tags : (tags ? (tags as string).split(',').map(tag => tag.trim()) : []),
       category,
-      authorId: token.uid, // Assuming token.uid stores the logged-in user's ID from CustomUser
+      authorId: token.uid, 
       publishedDate: publishedDate ? new Date(publishedDate) : new Date(),
-      isActive: isActive !== undefined ? isActive : true, // Default to true
+      isActive: isActive !== undefined ? isActive : true,
     });
 
     await newArticle.save();
-    return NextResponse.json(newArticle.toObject(), { status: 201 });
+    const populatedArticle = await NewsArticleOnTenantDB.findById(newArticle._id)
+        .populate<{ authorId: ITenantUser }>('authorId', 'firstName lastName') // Ensure ITenantUser is used for type hint
+        .lean();
+    return NextResponse.json(populatedArticle, { status: 201 });
 
-  } catch (error: any)
+  } catch (error: any) {
+    console.error(`Error creating news article for ${schoolCode}:`, error);
+    if (error.code === 11000) {
+        return NextResponse.json({ error: 'Article with this slug already exists.' }, { status: 409 });
+    }
+    if (error instanceof mongoose.Error.ValidationError) {
+        return NextResponse.json({ error: 'Validation Error', details: error.errors }, { status: 400 });
+    }
+    if (error.message.includes('School not found') || error.message.includes('MongoDB URI not configured')) {
+        return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    return NextResponse.json({ error: 'Failed to create news article', details: error.message }, { status: 500 });
+  }
+}
