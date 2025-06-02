@@ -17,7 +17,9 @@ import {
   MedicineBoxOutlined,
   HomeOutlined,
   BarChartOutlined,
-  DesktopOutlined // For Website Management
+  DesktopOutlined, // For Website Management
+  CalendarOutlined, // For Academic Years
+  UnorderedListOutlined // For Subjects
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -59,7 +61,18 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           label: 'School Administration',
           children: [
             { key: `${basePortalPath}/admin/users`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/users`}>Users</Link> },
-            { key: `${basePortalPath}/admin/academics`, icon: <BookOutlined />, label: <Link href={`${basePortalPath}/admin/academics`}>Academics</Link> },
+            { 
+              key: 'admin-academics', 
+              icon: <BookOutlined />, 
+              label: 'Academics',
+              children: [
+                { key: `${basePortalPath}/admin/academics`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/academics`}>Overview</Link> },
+                { key: `${basePortalPath}/admin/academics/academic-years`, icon: <CalendarOutlined />, label: <Link href={`${basePortalPath}/admin/academics/academic-years`}>Academic Years</Link> },
+                { key: `${basePortalPath}/admin/academics/subjects`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/admin/academics/subjects`}>Subjects</Link> },
+                // { key: `${basePortalPath}/admin/academics/classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/academics/classes`}>Classes</Link> },
+                // { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreAddOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
+              ]
+            },
             { key: `${basePortalPath}/admin/exams`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
