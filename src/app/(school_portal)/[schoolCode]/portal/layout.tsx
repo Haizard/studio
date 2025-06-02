@@ -22,7 +22,8 @@ import {
   UnorderedListOutlined, 
   AppstoreAddOutlined,
   ScheduleOutlined, 
-  FileTextOutlined 
+  FileTextOutlined,
+  UsergroupAddOutlined // Added for Teachers
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -66,6 +67,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           label: 'School Administration',
           children: [
             { key: `${basePortalPath}/admin/users`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/users`}>Users</Link> },
+            { key: `${basePortalPath}/admin/students`, icon: <UserOutlined />, label: <Link href={`${basePortalPath}/admin/students`}>Students</Link> },
+            { key: `${basePortalPath}/admin/teachers`, icon: <UsergroupAddOutlined />, label: <Link href={`${basePortalPath}/admin/teachers`}>Teachers</Link> },
             { 
               key: 'admin-academics', 
               icon: <BookOutlined />, 
@@ -165,6 +168,15 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 
   if(selectedKey === `/${schoolCode}/portal/admin/exams` && pathname.includes('/admin/exams/')){
       openKeys.push('admin-management'); // Ensure parent group is open
+  }
+   if(selectedKey === `/${schoolCode}/portal/admin/students` && pathname.includes('/admin/students')){
+      openKeys.push('admin-management'); 
+  }
+   if(selectedKey === `/${schoolCode}/portal/admin/teachers` && pathname.includes('/admin/teachers')){
+      openKeys.push('admin-management'); 
+  }
+   if(selectedKey === `/${schoolCode}/portal/admin/settings` && pathname.includes('/admin/settings')){
+      openKeys.push('admin-management'); 
   }
   if (selectedKey === `/${schoolCode}/portal/teacher/marks-entry` && pathname.includes('/teacher/marks-entry/')) {
     // No specific parent group for teacher standalone items unless explicitly created.
@@ -275,3 +287,5 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 };
 
 export default SchoolPortalLayout;
+
+    
