@@ -40,9 +40,9 @@ export async function GET(
     await ensureTenantModelsRegistered(tenantDb);
     const Term = tenantDb.models.Term as mongoose.Model<ITerm>;
     
-    let query = {};
+    let query: any = {};
     if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) {
-      query = { academicYearId };
+      query.academicYearId = academicYearId;
     }
 
     const terms = await Term.find(query)
