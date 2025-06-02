@@ -5,6 +5,7 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import { getTenantConnection } from '@/lib/db';
 import WebsiteSettingsModel, { IWebsiteSettings } from '@/models/Tenant/WebsiteSettings';
 import mongoose from 'mongoose';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface AboutUsPageProps {
   params: { schoolCode: string };
@@ -29,7 +30,13 @@ async function getAboutUsContent(schoolCode: string): Promise<Partial<IWebsiteSe
         aboutUsContent: '', 
       };
     }
-    return settings;
+    // Sanitize the HTML content before returning
+    const sanitizedContent = settings.aboutUsContent ? DOMPurify.sanitize(settings.aboutUsContent) : '';
+    
+    return {
+      ...settings,
+      aboutUsContent: sanitizedContent,
+    };
   } catch (error) {
     console.error(`Error fetching About Us content for ${schoolCode}:`, error);
     return {
@@ -50,9 +57,9 @@ export default async function AboutUsPage({ params }: AboutUsPageProps) {
       </Typography.Title>
 
       <Card className="shadow-lg">
-        {settings.aboutUsContent ? (
+        {settings.aboutUsContent && settings.aboutUsContent !== '<p><br></p>' && settings.aboutUsContent.trim() !== '' ? (
           <div 
-            className="prose prose-lg max-w-none" 
+            className="prose prose-lg max-w-none ql-editor ql-snow" // Apply Quill's viewing theme classes
             dangerouslySetInnerHTML={{ __html: settings.aboutUsContent }}
           />
         ) : (
@@ -60,11 +67,11 @@ export default async function AboutUsPage({ params }: AboutUsPageProps) {
         )}
       </Card>
       
-      {!settings.aboutUsContent && process.env.NODE_ENV === 'development' && (
+      {(!settings.aboutUsContent || settings.aboutUsContent === '<p><br></p>' || settings.aboutUsContent.trim() === '') && process.env.NODE_ENV === 'development' && (
           <Alert 
             type="info" 
             message="Admin Tip" 
-            description={`To add content to this page, go to the Admin Portal > Settings for school ${schoolCode.toUpperCase()} and fill in the "About Us Page Content" field.`}
+            description={`To add content to this page, go to the Admin Portal > Settings for school ${schoolCode.toUpperCase()} and fill in the "About Us Page Content" field using the Rich Text Editor.`}
             showIcon
             className="mt-6"
             />

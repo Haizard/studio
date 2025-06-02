@@ -4,9 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Form, Input, message, Spin, Card, Row, Col } from 'antd';
 import { SaveOutlined, SettingOutlined } from '@ant-design/icons';
 import type { IWebsiteSettings } from '@/models/Tenant/WebsiteSettings'; 
+import RichTextEditor from '@/components/RichTextEditor'; // Import RichTextEditor
 
 const { Title } = Typography;
-const { TextArea } = Input;
+// const { TextArea } = Input; // TextArea will be replaced by RichTextEditor for aboutUsContent
 
 interface SchoolSettingsPageProps {
   params: { schoolCode: string };
@@ -41,7 +42,7 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
         faviconUrl: data.faviconUrl,
         primaryColor: data.primaryColor,
         secondaryColor: data.secondaryColor,
-        aboutUsContent: data.aboutUsContent, // Load new field
+        aboutUsContent: data.aboutUsContent || '', // Ensure aboutUsContent is at least an empty string for RTE
       });
       setSettingsId(data._id); 
     } catch (error: any) {
@@ -153,7 +154,7 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
             </Col>
              <Col xs={24}>
               <Form.Item name="footerText" label="Website Footer Text (Optional)">
-                <TextArea rows={3} placeholder="e.g., © 2024 Springfield High School. All Rights Reserved." />
+                <Input.TextArea rows={3} placeholder="e.g., © 2024 Springfield High School. All Rights Reserved." />
               </Form.Item>
             </Col>
           </Row>
@@ -161,8 +162,23 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
           <Title level={4} className="mt-6 mb-4">"About Us" Page Content</Title>
           <Row gutter={24}>
             <Col xs={24}>
-              <Form.Item name="aboutUsContent" label="Content for About Us Page">
-                <TextArea rows={10} placeholder="Enter the content for your school's 'About Us' page. You can use basic HTML for formatting if needed." />
+              <Form.Item 
+                name="aboutUsContent" 
+                label="Content for About Us Page"
+                rules={[{ 
+                  validator: (_, value) => {
+                    if (!value || value === '<p><br></p>') { // Check for empty Quill content
+                      // return Promise.reject(new Error('About Us content cannot be empty.'));
+                      return Promise.resolve(); // Making it optional
+                    }
+                    return Promise.resolve();
+                  }
+                }]}
+              >
+                <RichTextEditor
+                  placeholder="Enter the content for your school's 'About Us' page..."
+                  className="bg-white" 
+                />
               </Form.Item>
             </Col>
           </Row>
