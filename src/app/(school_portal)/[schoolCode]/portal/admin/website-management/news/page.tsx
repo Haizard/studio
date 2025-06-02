@@ -2,10 +2,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Button, Typography, Table, Modal, Form, Input, DatePicker, Switch, message, Tag, Space, Spin, Row, Col } from 'antd';
-import { PlusOutlined, EditOutlined, AimOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, AimOutlined, BulbOutlined } from '@ant-design/icons';
 import type { INewsArticle } from '@/models/Tenant/NewsArticle'; 
 import moment from 'moment'; 
 import { summarizeText, type SummarizeTextInput } from '@/ai/flows/summarize-text-flow';
+import { generateArticleContent, type GenerateArticleInput } from '@/ai/flows/generate-article-flow';
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -26,6 +27,7 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
   const [editingArticle, setEditingArticle] = useState<NewsArticleDataType | null>(null);
   const [form] = Form.useForm();
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
 
   const fetchArticles = async () => {
     setLoading(true);
@@ -131,6 +133,31 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
     }
   };
 
+  const handleGenerateFullContent = async () => {
+    const title = form.getFieldValue('title');
+    const keywords = form.getFieldValue('aiKeywords'); 
+    if (!title || title.trim() === '') {
+      message.warning('Please enter a title for the article before generating content.');
+      return;
+    }
+    setIsGeneratingContent(true);
+    try {
+      const input: GenerateArticleInput = { title, keywords };
+      const result = await generateArticleContent(input);
+      if (result && result.articleContent) {
+        form.setFieldsValue({ content: result.articleContent });
+        message.success('Article content generated successfully!');
+      } else {
+        message.error('Failed to generate article content.');
+      }
+    } catch (error: any) {
+      console.error('Error generating article content:', error);
+      message.error(error.message || 'An error occurred while generating the article content.');
+    } finally {
+      setIsGeneratingContent(false);
+    }
+  };
+
 
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title', sorter: (a:NewsArticleDataType, b:NewsArticleDataType) => a.title.localeCompare(b.title) },
@@ -168,7 +195,7 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
         open={isModalVisible}
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
-        confirmLoading={form.isSubmitting || isGeneratingSummary}
+        confirmLoading={form.isSubmitting || isGeneratingSummary || isGeneratingContent}
         destroyOnClose
         width={800}
       >
@@ -179,9 +206,30 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
           <Form.Item name="slug" label="Slug (URL Path)" rules={[{ required: true }]} help="Auto-generated from title if left blank. E.g., 'my-article-title'">
             <Input disabled={!!editingArticle && !!editingArticle.slug}/>
           </Form.Item>
-          <Form.Item name="content" label="Content (Markdown or HTML)" rules={[{ required: true }]}>
-            <TextArea rows={10} placeholder="Write your article content here..." />
+          
+          <Form.Item label="Content (Markdown or HTML)" required>
+             <Row gutter={8} align="middle" className="mb-2">
+              <Col flex="auto">
+                 <Form.Item name="aiKeywords" noStyle help="Optional: Keywords to guide AI content generation (comma-separated).">
+                   <Input placeholder="Optional: Keywords for AI (e.g., sports day, annual results)" />
+                 </Form.Item>
+              </Col>
+              <Col flex="none">
+                <Button 
+                  icon={<BulbOutlined />} 
+                  onClick={handleGenerateFullContent} 
+                  loading={isGeneratingContent}
+                  title="Generate Article Content with AI"
+                >
+                 {isGeneratingContent ? 'Generating...' : 'AI Generate Content'}
+                </Button>
+              </Col>
+            </Row>
+            <Form.Item name="content" noStyle rules={[{ required: true }]}>
+                <TextArea rows={10} placeholder="Write your article content here, or generate with AI using the button above." />
+            </Form.Item>
           </Form.Item>
+
           <Form.Item label="Summary (Optional)">
             <Row gutter={8}>
               <Col flex="auto">
