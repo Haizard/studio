@@ -7,9 +7,11 @@ import type { INewsArticle } from '@/models/Tenant/NewsArticle';
 import moment from 'moment'; 
 import { summarizeText, type SummarizeTextInput } from '@/ai/flows/summarize-text-flow';
 import { generateArticleContent, type GenerateArticleInput } from '@/ai/flows/generate-article-flow';
+import RichTextEditor from '@/components/RichTextEditor'; // Import the new RichTextEditor
+import { Controller, useForm } from 'react-hook-form'; // Import Controller for RTE
 
 const { Title, Paragraph } = Typography;
-const { TextArea } = Input;
+const { TextArea } = Input; // TextArea will still be used for summary
 
 interface NewsArticleDataType extends INewsArticle {
   key: string;
@@ -19,13 +21,44 @@ interface NewsManagementPageProps {
   params: { schoolCode: string };
 }
 
+// For react-hook-form
+type FormValues = {
+  title: string;
+  slug: string;
+  content: string;
+  summary?: string;
+  category?: string;
+  tags?: string;
+  featuredImageUrl?: string;
+  publishedDate: moment.Moment;
+  isActive: boolean;
+  aiKeywords?: string;
+};
+
+
 export default function NewsManagementPage({ params }: NewsManagementPageProps) {
   const { schoolCode } = params;
   const [articles, setArticles] = useState<NewsArticleDataType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingArticle, setEditingArticle] = useState<NewsArticleDataType | null>(null);
-  const [form] = Form.useForm();
+  
+  // Use react-hook-form for modal form
+  const { control, handleSubmit, reset, setValue, getValues, watch, formState: {isSubmitting} } = useForm<FormValues>({
+     defaultValues: {
+        title: '',
+        slug: '',
+        content: '',
+        summary: '',
+        category: '',
+        tags: '',
+        featuredImageUrl: '',
+        publishedDate: moment(),
+        isActive: true,
+        aiKeywords: ''
+    }
+  });
+
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
 
@@ -41,7 +74,7 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
       setArticles(data.map(article => ({ 
         ...article, 
         key: article._id,
-        publishedDate: article.publishedDate ? moment(article.publishedDate) as any : undefined 
+        // publishedDate: article.publishedDate ? moment(article.publishedDate) as any : undefined 
       })));
     } catch (error: any) {
       message.error(error.message || 'Could not load news articles.');
@@ -57,24 +90,32 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
 
   const handleAddArticle = () => {
     setEditingArticle(null);
-    form.resetFields();
-    form.setFieldsValue({ isActive: true, publishedDate: moment() });
+    reset({ 
+        title: '', slug: '', content: '', summary: '', category: '', tags: '', 
+        featuredImageUrl: '', publishedDate: moment(), isActive: true, aiKeywords: ''
+    });
     setIsModalVisible(true);
   };
 
   const handleEditArticle = (article: NewsArticleDataType) => {
     setEditingArticle(article);
-    form.setFieldsValue({
-      ...article,
-      tags: Array.isArray(article.tags) ? article.tags.join(', ') : article.tags,
-      publishedDate: article.publishedDate ? moment(article.publishedDate) : undefined,
+    reset({
+      title: article.title,
+      slug: article.slug,
+      content: article.content,
+      summary: article.summary || '',
+      category: article.category || '',
+      tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
+      featuredImageUrl: article.featuredImageUrl || '',
+      publishedDate: article.publishedDate ? moment(article.publishedDate) : moment(),
+      isActive: article.isActive,
+      aiKeywords: '' // Keywords are for generation, not stored typically
     });
     setIsModalVisible(true);
   };
 
-  const handleModalOk = async () => {
+  const onSubmit = async (values: FormValues) => {
     try {
-      const values = await form.validateFields();
       const payload = { 
         ...values,
         publishedDate: values.publishedDate ? values.publishedDate.toISOString() : new Date().toISOString(),
@@ -110,8 +151,8 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
   };
 
   const handleGenerateSummary = async () => {
-    const content = form.getFieldValue('content');
-    if (!content || content.trim() === '') {
+    const content = getValues('content');
+    if (!content || content.trim() === '' || content.trim() === '<p><br></p>') { // Check for empty Quill content
       message.warning('Please enter some content for the article before generating a summary.');
       return;
     }
@@ -120,7 +161,7 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
       const input: SummarizeTextInput = { textToSummarize: content };
       const result = await summarizeText(input);
       if (result && result.summary) {
-        form.setFieldsValue({ summary: result.summary });
+        setValue('summary', result.summary);
         message.success('Summary generated successfully!');
       } else {
         message.error('Failed to generate summary.');
@@ -134,8 +175,8 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
   };
 
   const handleGenerateFullContent = async () => {
-    const title = form.getFieldValue('title');
-    const keywords = form.getFieldValue('aiKeywords'); 
+    const title = getValues('title');
+    const keywords = getValues('aiKeywords'); 
     if (!title || title.trim() === '') {
       message.warning('Please enter a title for the article before generating content.');
       return;
@@ -145,7 +186,10 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
       const input: GenerateArticleInput = { title, keywords };
       const result = await generateArticleContent(input);
       if (result && result.articleContent) {
-        form.setFieldsValue({ content: result.articleContent });
+        // For Quill, it's better to set the value as HTML
+        // Simple text to basic HTML paragraph:
+        const htmlContent = result.articleContent.split(/\n\s*\n/).map(p => `<p>${p}</p>`).join('');
+        setValue('content', htmlContent);
         message.success('Article content generated successfully!');
       } else {
         message.error('Failed to generate article content.');
@@ -162,7 +206,7 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title', sorter: (a:NewsArticleDataType, b:NewsArticleDataType) => a.title.localeCompare(b.title) },
     { title: 'Slug', dataIndex: 'slug', key: 'slug' },
-    { title: 'Published Date', dataIndex: 'publishedDate', key: 'publishedDate', render: (date: moment.Moment) => date ? date.format('YYYY-MM-DD') : '-', sorter: (a: NewsArticleDataType, b: NewsArticleDataType) => moment(a.publishedDate).unix() - moment(b.publishedDate).unix()},
+    { title: 'Published Date', dataIndex: 'publishedDate', key: 'publishedDate', render: (dateStr: string) => dateStr ? moment(dateStr).format('YYYY-MM-DD HH:mm') : '-', sorter: (a: NewsArticleDataType, b: NewsArticleDataType) => moment(a.publishedDate).unix() - moment(b.publishedDate).unix()},
     { title: 'Category', dataIndex: 'category', key: 'category', render: (cat?: string) => cat || '-' },
     { title: 'Status', dataIndex: 'isActive', key: 'isActive', render: (isActive: boolean) => <Tag color={isActive ? 'green' : 'red'}>{isActive ? 'Published' : 'Draft'}</Tag> },
     {
@@ -179,6 +223,8 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
   if (loading) {
     return <div className="flex justify-center items-center h-full"><Spin size="large" /></div>;
   }
+  
+  const watchedContent = watch('content'); // For AI Summary
 
   return (
     <div>
@@ -193,26 +239,52 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
       <Modal
         title={editingArticle ? 'Edit News Article' : 'Add New News Article'}
         open={isModalVisible}
-        onOk={handleModalOk}
+        onOk={handleSubmit(onSubmit)}
         onCancel={() => setIsModalVisible(false)}
-        confirmLoading={form.isSubmitting || isGeneratingSummary || isGeneratingContent}
+        confirmLoading={isSubmitting || isGeneratingSummary || isGeneratingContent}
         destroyOnClose
-        width={800}
+        width={900} // Increased width for RTE
+        maskClosable={false}
       >
-        <Form form={form} layout="vertical" name="newsArticleForm" className="mt-4">
-          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-            <Input />
+        <Form layout="vertical" name="newsArticleForm" className="mt-4" onFinish={handleSubmit(onSubmit)}>
+          <Form.Item label="Title" required>
+            <Controller
+                name="title"
+                control={control}
+                rules={{ required: "Title is required" }}
+                render={({ field, fieldState }) => (
+                    <>
+                        <Input {...field} />
+                        {fieldState.error && <p className="text-red-500 text-xs mt-1">{fieldState.error.message}</p>}
+                    </>
+                )}
+            />
           </Form.Item>
-          <Form.Item name="slug" label="Slug (URL Path)" rules={[{ required: true }]} help="Auto-generated from title if left blank. E.g., 'my-article-title'">
-            <Input disabled={!!editingArticle && !!editingArticle.slug}/>
+          <Form.Item label="Slug (URL Path)" required help="Auto-generated from title if left blank. E.g., 'my-article-title'">
+             <Controller
+                name="slug"
+                control={control}
+                rules={{ required: "Slug is required" }}
+                render={({ field, fieldState }) => (
+                    <>
+                        <Input {...field} disabled={!!editingArticle && !!editingArticle.slug} />
+                        {fieldState.error && <p className="text-red-500 text-xs mt-1">{fieldState.error.message}</p>}
+                    </>
+                )}
+            />
           </Form.Item>
           
-          <Form.Item label="Content (Markdown or HTML)" required>
+          <Form.Item label="Content" required>
              <Row gutter={8} align="middle" className="mb-2">
               <Col flex="auto">
-                 <Form.Item name="aiKeywords" noStyle help="Optional: Keywords to guide AI content generation (comma-separated).">
-                   <Input placeholder="Optional: Keywords for AI (e.g., sports day, annual results)" />
-                 </Form.Item>
+                 <Controller
+                    name="aiKeywords"
+                    control={control}
+                    render={({ field }) => (
+                       <Input {...field} placeholder="Optional: Keywords for AI (e.g., sports day, annual results)" />
+                    )}
+                 />
+                 <p className="text-xs text-gray-500 mt-1">Optional: Keywords to guide AI content generation (comma-separated).</p>
               </Col>
               <Col flex="none">
                 <Button 
@@ -225,17 +297,37 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
                 </Button>
               </Col>
             </Row>
-            <Form.Item name="content" noStyle rules={[{ required: true }]}>
-                <TextArea rows={10} placeholder="Write your article content here, or generate with AI using the button above." />
-            </Form.Item>
+            <Controller
+              name="content"
+              control={control}
+              rules={{ 
+                required: "Content is required",
+                validate: value => (value && value !== '<p><br></p>') || 'Content cannot be empty'
+              }}
+              render={({ field, fieldState }) => (
+                <>
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Write your article content here, or generate with AI using the button above."
+                    className="bg-white" // Ensure proper background for toolbar contrast
+                  />
+                  {fieldState.error && <p className="text-red-500 text-xs mt-1">{fieldState.error.message}</p>}
+                </>
+              )}
+            />
           </Form.Item>
 
           <Form.Item label="Summary (Optional)">
             <Row gutter={8}>
               <Col flex="auto">
-                <Form.Item name="summary" noStyle>
-                  <TextArea rows={3} placeholder="A short summary for article listings." />
-                </Form.Item>
+                <Controller
+                    name="summary"
+                    control={control}
+                    render={({ field }) => (
+                         <TextArea {...field} rows={3} placeholder="A short summary for article listings." />
+                    )}
+                />
               </Col>
               <Col flex="none">
                 <Button 
@@ -243,33 +335,51 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
                   onClick={handleGenerateSummary} 
                   loading={isGeneratingSummary}
                   title="Generate Summary with AI"
+                  disabled={!watchedContent || watchedContent === '<p><br></p>'}
                 >
                  {isGeneratingSummary ? 'Generating...' : 'AI Summary'}
                 </Button>
               </Col>
             </Row>
           </Form.Item>
-          <Form.Item name="category" label="Category (Optional)">
-            <Input />
+          <Form.Item label="Category (Optional)">
+             <Controller name="category" control={control} render={({ field }) => <Input {...field} />} />
           </Form.Item>
-          <Form.Item name="tags" label="Tags (Optional, comma-separated)">
-            <Input placeholder="e.g., sports, academics, event" />
+          <Form.Item label="Tags (Optional, comma-separated)">
+             <Controller name="tags" control={control} render={({ field }) => <Input {...field} placeholder="e.g., sports, academics, event" />} />
           </Form.Item>
-           <Form.Item name="featuredImageUrl" label="Featured Image URL (Optional)">
-            <Input placeholder="https://example.com/image.jpg" />
+           <Form.Item label="Featured Image URL (Optional)">
+            <Controller name="featuredImageUrl" control={control} render={({ field }) => <Input {...field} placeholder="https://example.com/image.jpg" />} />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="publishedDate" label="Published Date" rules={[{ required: true }]}>
-                <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" style={{width: "100%"}}/>
+              <Form.Item label="Published Date" required>
+                <Controller
+                    name="publishedDate"
+                    control={control}
+                    rules={{ required: "Published date is required"}}
+                    render={({ field, fieldState }) => (
+                        <>
+                            <DatePicker {...field} showTime format="YYYY-MM-DD HH:mm:ss" style={{width: "100%"}}/>
+                            {fieldState.error && <p className="text-red-500 text-xs mt-1">{fieldState.error.message}</p>}
+                        </>
+                    )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="isActive" label="Status" valuePropName="checked">
-                <Switch checkedChildren="Published" unCheckedChildren="Draft" />
+              <Form.Item label="Status" valuePropName="checked">
+                <Controller
+                    name="isActive"
+                    control={control}
+                    render={({ field }) => (
+                        <Switch {...field} checked={field.value} checkedChildren="Published" unCheckedChildren="Draft" />
+                    )}
+                />
               </Form.Item>
             </Col>
           </Row>
+          {/* Submit button is handled by Modal's onOk */}
         </Form>
       </Modal>
     </div>

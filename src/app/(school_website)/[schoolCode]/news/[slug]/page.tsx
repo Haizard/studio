@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Typography, Tag, Breadcrumb, Alert } from 'antd';
+import { Typography, Tag, Breadcrumb, Alert, Button } from 'antd';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { INewsArticle } from '@/models/Tenant/NewsArticle'; // Adjust path if needed
+import type { INewsArticle } from '@/models/Tenant/NewsArticle'; 
 import { CalendarOutlined, UserOutlined, TagsOutlined } from '@ant-design/icons';
 
 interface SingleNewsPageProps {
@@ -16,7 +16,7 @@ async function getArticleBySlug(schoolCode: string, slug: string): Promise<INews
       cache: 'no-store',
     });
     if (!res.ok) {
-      if (res.status === 404) return null; // Article not found
+      if (res.status === 404) return null; 
       console.error(`Failed to fetch article ${slug} for ${schoolCode}: ${res.status} ${res.statusText}`);
       const errorBody = await res.json().catch(() => ({}));
       console.error("Error body:", errorBody);
@@ -27,20 +27,6 @@ async function getArticleBySlug(schoolCode: string, slug: string): Promise<INews
     console.error('Error fetching article by slug:', error);
     return null;
   }
-}
-
-// Basic Markdown to HTML (very simplified for demonstration)
-// For a real app, use a library like 'marked' or 'react-markdown'.
-function renderContentAsHtml(content: string): string {
-  let html = content;
-  // Convert paragraphs (double newlines)
-  html = html.split(/\n\s*\n/).map(p => `<p class="mb-4">${p}</p>`).join('');
-  // Convert line breaks within paragraphs
-  html = html.replace(/\n/g, '<br />');
-  // Basic bold and italic (simplified)
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  return html;
 }
 
 
@@ -113,11 +99,11 @@ export default async function SingleNewsArticlePage({ params }: SingleNewsPagePr
           </div>
         )}
 
-        {/* Using dangerouslySetInnerHTML for simplified HTML rendering from markdown-like text */}
-        {/* For production, use a dedicated Markdown library like react-markdown for safety and features */}
+        {/* Render HTML content from Rich Text Editor */}
+        {/* Ensure quill.snow.css is imported globally for these styles to apply */}
         <div
-          className="prose prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: renderContentAsHtml(article.content) }}
+          className="prose prose-lg max-w-none ql-editor ql-snow" // Added ql-editor and ql-snow for basic Quill styling
+          dangerouslySetInnerHTML={{ __html: article.content }}
         />
 
         {(article.tags && article.tags.length > 0) && (
@@ -134,5 +120,3 @@ export default async function SingleNewsArticlePage({ params }: SingleNewsPagePr
     </div>
   );
 }
-
-    

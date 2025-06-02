@@ -3,6 +3,7 @@
 
 import type { Metadata } from 'next';
 import './globals.css';
+import 'react-quill/dist/quill.snow.css'; // Import Quill styles here
 import { Toaster } from "@/components/ui/toaster";
 import { ConfigProvider } from 'antd';
 import { getAntdTheme } from '@/lib/themeConfig';
