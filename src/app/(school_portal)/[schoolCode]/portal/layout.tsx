@@ -23,7 +23,7 @@ import {
   AppstoreAddOutlined,
   ScheduleOutlined, 
   FileTextOutlined,
-  UsergroupAddOutlined, // Added for Teachers
+  UsergroupAddOutlined, 
   PictureOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
@@ -173,24 +173,13 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   openKeys = activeKeysResult.open || [];
 
   // Ensure parent groups are open for specific selected keys
-  if(selectedKey === `/${schoolCode}/portal/admin/exams` && pathname.includes('/admin/exams/')){
-      openKeys.push('admin-management');
-  }
-   if(selectedKey === `/${schoolCode}/portal/admin/students` && pathname.includes('/admin/students')){
-      openKeys.push('admin-management'); 
-  }
-   if(selectedKey === `/${schoolCode}/portal/admin/teachers` && pathname.includes('/admin/teachers')){
-      openKeys.push('admin-management'); 
-  }
-   if(selectedKey === `/${schoolCode}/portal/admin/settings` && pathname.includes('/admin/settings')){
-      openKeys.push('admin-management'); 
-  }
-   if(selectedKey === `/${schoolCode}/portal/admin/website-management` && pathname.includes('/admin/website-management/')){
-      openKeys.push('website-management'); 
-  }
-  if (selectedKey === `/${schoolCode}/portal/teacher/marks-entry` && pathname.includes('/teacher/marks-entry/')) {
-    // No specific parent group for teacher standalone items unless explicitly created.
-  }
+  if(selectedKey.includes('/admin/academics')) openKeys.push('admin-academics','admin-management');
+  if(selectedKey.includes('/admin/exams')) openKeys.push('admin-management');
+  if(selectedKey.includes('/admin/students')) openKeys.push('admin-management'); 
+  if(selectedKey.includes('/admin/teachers')) openKeys.push('admin-management'); 
+  if(selectedKey.includes('/admin/settings')) openKeys.push('admin-management'); 
+  if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
+  if(selectedKey.includes('/teacher/marks-entry')) {} // No specific parent for teacher items unless grouped
 
 
   const breadcrumbItemsGen = () => {
