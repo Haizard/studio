@@ -25,7 +25,8 @@ import {
   FileTextOutlined,
   UsergroupAddOutlined, 
   PictureOutlined,
-  IdcardOutlined, // Added for Teacher Profile
+  IdcardOutlined, 
+  CheckSquareOutlined, // Added for Attendance
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -111,6 +112,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       items.push(
         { key: `${basePortalPath}/teacher/my-profile`, icon: <IdcardOutlined />, label: <Link href={`${basePortalPath}/teacher/my-profile`}>My Profile</Link> },
         { key: `${basePortalPath}/teacher/my-classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/teacher/my-classes`}>My Classes</Link> },
+        { key: `${basePortalPath}/teacher/attendance`, icon: <CheckSquareOutlined />, label: <Link href={`${basePortalPath}/teacher/attendance`}>Attendance</Link> },
         { key: `${basePortalPath}/teacher/marks-entry`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/teacher/marks-entry`}>Marks Entry</Link> },
         { key: `${basePortalPath}/teacher/resources`, icon: <BookOutlined />, label: <Link href={`${basePortalPath}/teacher/resources`}>Resources</Link> },
       );
@@ -170,6 +172,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/admin/academics`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/my-classes/`)) {
         selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance`)) {
+        selectedKey = `/${schoolCode}/portal/teacher/attendance`;
     }
   }
   openKeys = activeKeysResult.open || [];
@@ -213,6 +217,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
          else {
             title = "Details"; 
         }
+      } else if (snippet === 'entry' && relevantSnippets[index-1] === 'attendance') {
+        title = "Record Attendance";
       }
 
 

@@ -59,7 +59,7 @@ export async function GET(
         {
             path: 'assignedClassesAndSubjects.academicYearId',
             model: 'AcademicYear', 
-            select: 'name'
+            select: 'name _id' // Ensure _id is populated
         }
       ])
       .lean();
