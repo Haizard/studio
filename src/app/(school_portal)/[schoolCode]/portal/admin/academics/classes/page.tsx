@@ -13,6 +13,7 @@ const { Option } = Select;
 
 interface ClassDataType extends Omit<IClass, 'academicYearId' | 'classTeacherId' | 'subjectsOffered'> {
   key: string;
+  _id: string; // Ensure _id is always present
   academicYearId: { _id: string; name: string } | string; // Populated or ID
   classTeacherId?: { _id: string; firstName?: string; lastName?: string; username: string } | string | null; // Populated or ID
   subjectsOffered?: ({ _id: string; name: string; code?:string } | string)[]; // Populated or ID array
@@ -33,6 +34,10 @@ export default function ClassesPage({ params }: ClassesPageProps) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassDataType | null>(null);
   const [form] = Form.useForm();
+  
+  const classLevelInModal = Form.useWatch('level', form);
+  const [filteredSubjectsForModal, setFilteredSubjectsForModal] = useState<ISubject[]>([]);
+
 
   const API_URL_BASE = `/api/${schoolCode}/portal/academics/classes`;
   const ACADEMIC_YEARS_API = `/api/${schoolCode}/portal/academics/academic-years`;
@@ -59,7 +64,7 @@ export default function ClassesPage({ params }: ClassesPageProps) {
       const subjectsData: ISubject[] = await subjectsRes.json();
       const usersData: ITenantUser[] = await usersRes.json();
 
-      setClasses(classesData.map(cls => ({ ...cls, key: cls._id } as ClassDataType)));
+      setClasses(classesData.map(cls => ({ ...cls, key: cls._id, _id: cls._id } as ClassDataType)));
       setAcademicYears(yearsData);
       setSubjects(subjectsData);
       setTeachers(usersData.filter(user => user.role === 'teacher' && user.isActive));
@@ -74,6 +79,43 @@ export default function ClassesPage({ params }: ClassesPageProps) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!isModalVisible) {
+      setFilteredSubjectsForModal([]); 
+      return;
+    }
+  
+    const effectiveLevel = (classLevelInModal || "").toLowerCase().trim();
+  
+    if (!effectiveLevel) {
+      setFilteredSubjectsForModal([]);
+      const currentSelectedSubjectIds = form.getFieldValue('subjectsOffered') || [];
+      if (currentSelectedSubjectIds.length > 0) {
+          form.setFieldsValue({ subjectsOffered: [] });
+      }
+      return;
+    }
+  
+    const filtered = subjects.filter(subject => {
+      if (!subject.forLevel || subject.forLevel.length === 0) {
+        return true; 
+      }
+      return subject.forLevel.some(sl => sl.toLowerCase().trim() === effectiveLevel);
+    });
+    setFilteredSubjectsForModal(filtered);
+  
+    const currentSelectedSubjectIds = form.getFieldValue('subjectsOffered') || [];
+    const validSelectedSubjectIds = currentSelectedSubjectIds.filter((id: string) => 
+      filtered.some(sub => sub._id === id)
+    );
+  
+    if (validSelectedSubjectIds.length !== currentSelectedSubjectIds.length) {
+      form.setFieldsValue({ subjectsOffered: validSelectedSubjectIds });
+    }
+  
+  }, [classLevelInModal, subjects, isModalVisible, form]);
+
 
   const handleAddClass = () => {
     setEditingClass(null);
@@ -174,7 +216,7 @@ export default function ClassesPage({ params }: ClassesPageProps) {
           const subjectDetails = typeof sub === 'object' ? sub : subjects.find(s => s._id === sub);
           const subjectName = subjectDetails ? subjectDetails.name : (typeof sub === 'string' ? sub : 'Unknown');
           return <Tag key={typeof sub === 'object' ? sub._id : sub}>{subjectName}</Tag>;
-        });
+        }).concat(subs.length > 3 ? [<Tag key="more">...</Tag>] : []);
       }
     },
     { title: 'Capacity', dataIndex: 'capacity', key: 'capacity', render: (capacity?: number) => capacity || '-' },
@@ -225,25 +267,32 @@ export default function ClassesPage({ params }: ClassesPageProps) {
           <Form.Item name="name" label="Class Name" rules={[{ required: true, message: "E.g., 'Form 1A', 'Senior 5 Arts'" }]}>
             <Input placeholder="e.g., Form 1A" />
           </Form.Item>
-          <Form.Item name="level" label="Level" rules={[{ required: true, message: "E.g., 'Form 1', 'Senior 5'" }]}>
-            <Input placeholder="e.g., Form 1" />
-          </Form.Item>
-          <Form.Item name="stream" label="Stream (Optional)">
-            <Input placeholder="e.g., A, Blue, Sciences" />
-          </Form.Item>
           <Form.Item name="academicYearId" label="Academic Year" rules={[{ required: true }]}>
             <Select placeholder="Select academic year">
               {academicYears.map(year => <Option key={year._id} value={year._id}>{year.name}</Option>)}
             </Select>
           </Form.Item>
+          <Form.Item name="level" label="Level" rules={[{ required: true, message: "E.g., 'Form 1', 'Senior 5'" }]}>
+            <Input placeholder="e.g., Form 1 (Type the level to filter subjects)" />
+          </Form.Item>
+          <Form.Item name="stream" label="Stream (Optional)">
+            <Input placeholder="e.g., A, Blue, Sciences" />
+          </Form.Item>
+          <Form.Item name="subjectsOffered" label="Subjects Offered (Optional)"
+            tooltip={!classLevelInModal ? "Please specify the class level first to see relevant subjects." : ""}
+          >
+            <Select 
+              mode="multiple" 
+              placeholder={classLevelInModal ? "Select subjects" : "Enter class level to see subjects"}
+              allowClear
+              disabled={!classLevelInModal}
+            >
+              {filteredSubjectsForModal.map(subject => <Option key={subject._id} value={subject._id}>{subject.name} {subject.code ? `(${subject.code})` : ''}</Option>)}
+            </Select>
+          </Form.Item>
           <Form.Item name="classTeacherId" label="Class Teacher (Optional)">
             <Select placeholder="Select class teacher" allowClear>
               {teachers.map(teacher => <Option key={teacher._id} value={teacher._id}>{`${teacher.firstName} ${teacher.lastName} (${teacher.username})`}</Option>)}
-            </Select>
-          </Form.Item>
-          <Form.Item name="subjectsOffered" label="Subjects Offered (Optional)">
-            <Select mode="multiple" placeholder="Select subjects" allowClear>
-              {subjects.map(subject => <Option key={subject._id} value={subject._id}>{subject.name} {subject.code ? `(${subject.code})` : ''}</Option>)}
             </Select>
           </Form.Item>
           <Form.Item name="capacity" label="Capacity (Optional)">
