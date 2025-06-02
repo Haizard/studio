@@ -35,7 +35,7 @@ export default function AssessmentsPage() {
   const [examDetails, setExamDetails] = useState<IExam | null>(null);
   const [assessments, setAssessments] = useState<AssessmentDataType[]>([]);
   const [subjects, setSubjects] = useState<ISubject[]>([]);
-  const [classes, setClasses] = useState<IClass[]>([]);
+  const [classes, setClasses] = useState<IClass[]>([]); // Will be filtered by exam's academic year
   const [teachers, setTeachers] = useState<ITenantUser[]>([]);
   
   const [loading, setLoading] = useState(true);
@@ -46,8 +46,8 @@ export default function AssessmentsPage() {
   const API_URL_BASE = `/api/${schoolCode}/portal/exams/${examId}/assessments`;
   const EXAM_API_URL = `/api/${schoolCode}/portal/exams/${examId}`;
   const SUBJECTS_API = `/api/${schoolCode}/portal/academics/subjects`;
-  const CLASSES_API = `/api/${schoolCode}/portal/academics/classes`;
-  const USERS_API = `/api/${schoolCode}/portal/users`; // To fetch teachers
+  const CLASSES_API_BASE = `/api/${schoolCode}/portal/academics/classes`; // Base URL for classes
+  const USERS_API = `/api/${schoolCode}/portal/users`; 
 
   const fetchData = useCallback(async () => {
     if (!examId || !mongoose.Types.ObjectId.isValid(examId)) {
@@ -57,42 +57,41 @@ export default function AssessmentsPage() {
     }
     setLoading(true);
     try {
-      const [examRes, assessmentsRes, subjectsRes, classesRes, usersRes] = await Promise.all([
-        fetch(EXAM_API_URL),
+      const examRes = await fetch(EXAM_API_URL);
+      if (!examRes.ok) throw new Error((await examRes.json()).error || 'Failed to fetch exam details');
+      const examData: IExam = await examRes.json();
+      setExamDetails(examData);
+      
+      const examAcademicYearId = typeof examData.academicYearId === 'object' ? (examData.academicYearId as any)._id : examData.academicYearId;
+
+      const [assessmentsRes, subjectsRes, classesRes, usersRes] = await Promise.all([
         fetch(API_URL_BASE),
         fetch(SUBJECTS_API),
-        fetch(CLASSES_API),
+        fetch(`${CLASSES_API_BASE}?academicYearId=${examAcademicYearId}`), // Fetch classes filtered by exam's academic year
         fetch(USERS_API)
       ]);
 
-      if (!examRes.ok) throw new Error((await examRes.json()).error || 'Failed to fetch exam details');
       if (!assessmentsRes.ok) throw new Error((await assessmentsRes.json()).error || 'Failed to fetch assessments');
       if (!subjectsRes.ok) throw new Error((await subjectsRes.json()).error || 'Failed to fetch subjects');
-      if (!classesRes.ok) throw new Error((await classesRes.json()).error || 'Failed to fetch classes');
+      if (!classesRes.ok) throw new Error((await classesRes.json()).error || 'Failed to fetch classes for the exam year');
       if (!usersRes.ok) throw new Error((await usersRes.json()).error || 'Failed to fetch users');
       
-      const examData: IExam = await examRes.json();
       const assessmentsData: IAssessment[] = await assessmentsRes.json();
       const subjectsData: ISubject[] = await subjectsRes.json();
       const classesData: IClass[] = await classesRes.json();
       const usersData: ITenantUser[] = await usersRes.json();
 
-      setExamDetails(examData);
       setAssessments(assessmentsData.map(asm => ({ 
         ...asm, 
         key: asm._id,
-        _id: asm._id, // Ensure _id is present for keys and API calls
+        _id: asm._id,
         subjectId: asm.subjectId as any,
         classId: asm.classId as any,
         invigilatorId: asm.invigilatorId as any,
         assessmentDate: moment(asm.assessmentDate),
       })));
       setSubjects(subjectsData);
-      
-      // Filter classes for the exam's academic year
-      const examAcademicYearId = typeof examData.academicYearId === 'object' ? (examData.academicYearId as any)._id : examData.academicYearId;
-      setClasses(classesData.filter(cls => (typeof cls.academicYearId === 'object' ? (cls.academicYearId as any)._id : cls.academicYearId) === examAcademicYearId));
-      
+      setClasses(classesData); // These are now pre-filtered
       setTeachers(usersData.filter(user => user.role === 'teacher' && user.isActive));
 
     } catch (error: any) {
@@ -100,7 +99,7 @@ export default function AssessmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [schoolCode, examId, API_URL_BASE, EXAM_API_URL, SUBJECTS_API, CLASSES_API, USERS_API, router]);
+  }, [schoolCode, examId, API_URL_BASE, EXAM_API_URL, SUBJECTS_API, CLASSES_API_BASE, USERS_API, router]);
 
   useEffect(() => {
     fetchData();
@@ -125,9 +124,9 @@ export default function AssessmentsPage() {
     setIsModalVisible(true);
   };
 
-  const handleDeleteAssessment = async (assessmentId: string) => {
+  const handleDeleteAssessment = async (assessmentIdToDelete: string) => {
     try {
-      const response = await fetch(`${API_URL_BASE}/${assessmentId}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL_BASE}/${assessmentIdToDelete}`, { method: 'DELETE' });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete assessment');
@@ -224,7 +223,7 @@ export default function AssessmentsPage() {
     { title: examDetails ? `Assessments for ${examDetails.name}` : 'Loading Exam...' },
   ];
   
-  if (loading && !examDetails) { // Show initial loading for exam details
+  if (loading && !examDetails) { 
     return <div className="flex justify-center items-center h-full"><Spin size="large" tip="Loading exam details..." /></div>;
   }
 
@@ -241,7 +240,7 @@ export default function AssessmentsPage() {
           Add New Assessment
         </Button>
       </div>
-      <Spin spinning={loading}> {/* Spin wraps the table for subsequent assessment loads */}
+      <Spin spinning={loading}> 
         <Table columns={columns} dataSource={assessments} rowKey="_id" />
       </Spin>
 
@@ -275,7 +274,7 @@ export default function AssessmentsPage() {
             </Col>
             <Col xs={24} sm={12}>
                  <Form.Item name="classId" label="Class" rules={[{ required: true }]}>
-                    <Select placeholder="Select class">
+                    <Select placeholder="Select class (filtered by exam's academic year)">
                     {classes.map(cls => <Option key={cls._id} value={cls._id}>{cls.name} {cls.level ? `(${cls.level})` : ''}</Option>)}
                     </Select>
                 </Form.Item>
@@ -313,5 +312,3 @@ export default function AssessmentsPage() {
     </div>
   );
 }
-
-    

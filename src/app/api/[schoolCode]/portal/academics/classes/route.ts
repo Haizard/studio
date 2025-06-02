@@ -28,6 +28,9 @@ export async function GET(
   { params }: { params: { schoolCode: string } }
 ) {
   const { schoolCode } = params;
+  const { searchParams } = new URL(request.url);
+  const academicYearId = searchParams.get('academicYearId');
+
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
@@ -45,7 +48,12 @@ export async function GET(
     await ensureTenantModelsRegistered(tenantDb);
     const Class = tenantDb.models.Class as mongoose.Model<IClass>;
     
-    const classes = await Class.find({})
+    let query: any = {};
+    if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) {
+      query.academicYearId = academicYearId;
+    }
+    
+    const classes = await Class.find(query)
       .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
       .populate<{ classTeacherId: ITenantUser }>('classTeacherId', 'firstName lastName username')
       .populate<{ subjectsOffered: ISubject[] }>('subjectsOffered', 'name code')
