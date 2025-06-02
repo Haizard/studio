@@ -26,7 +26,7 @@ import {
   UsergroupAddOutlined, 
   PictureOutlined,
   IdcardOutlined, 
-  CheckSquareOutlined, // Added for Attendance
+  CheckSquareOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -122,6 +122,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       items.push(
         { key: `${basePortalPath}/student/my-profile`, icon: <UserOutlined />, label: <Link href={`${basePortalPath}/student/my-profile`}>My Profile</Link> },
         { key: `${basePortalPath}/student/my-results`, icon: <SolutionOutlined />, label: <Link href={`${basePortalPath}/student/my-results`}>My Results</Link> },
+        { key: `${basePortalPath}/student/my-attendance`, icon: <CheckSquareOutlined />, label: <Link href={`${basePortalPath}/student/my-attendance`}>My Attendance</Link> },
         { key: `${basePortalPath}/student/resources`, icon: <BookOutlined />, label: <Link href={`${basePortalPath}/student/resources`}>Resources</Link> },
       );
     }
@@ -161,25 +162,27 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   const activeKeysResult = findActiveKeys(menuItems, pathname);
   selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
   
+  // Specific logic to ensure the correct key is selected for nested dynamic routes
   if (!activeKeysResult.selected) {
     if (pathname.includes('/admin/exams/') && pathname.includes('/assessments')) { 
         selectedKey = `/${schoolCode}/portal/admin/exams`; 
-    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) {
+    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) { // e.g. /portal/teacher/marks-entry/examId/assessmentId
         selectedKey = `/${schoolCode}/portal/teacher/marks-entry`; 
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/website-management/`)) {
         selectedKey = `/${schoolCode}/portal/admin/website-management`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) {
         selectedKey = `/${schoolCode}/portal/admin/academics`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/my-classes/`)) {
+    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/my-classes/[classId]`)) { // For teacher's class roster
         selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance`)) {
+    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { // For teacher's attendance entry
         selectedKey = `/${schoolCode}/portal/teacher/attendance`;
     }
   }
   openKeys = activeKeysResult.open || [];
 
+  // Ensure parent menu groups are open for nested items
   if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
-  if(selectedKey.includes('/admin/exams')) openKeys.push('admin-management');
+  if(selectedKey.includes('/admin/exams')) openKeys.push('admin-management'); // Ensure 'admin-management' is open for exams
   if(selectedKey.includes('/admin/students')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/teachers')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/settings')) openKeys.push('admin-management'); 
@@ -200,22 +203,22 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
+      // Customize titles for dynamic segments
       if (mongoose.Types.ObjectId.isValid(snippet)) {
         const prevSegment = relevantSnippets[index-1];
-        const secondPrevSegment = relevantSnippets[index-2];
-        const nextSegment = relevantSnippets[index+1];
+        const secondPrevSegment = relevantSnippets[index-2]; // for deeper nesting like marks-entry
+        const nextSegment = relevantSnippets[index+1]; // for /exams/:id/assessments
 
         if (prevSegment === 'exams' && nextSegment === 'assessments') { 
             title = "Manage Assessments"; 
-        } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { 
-             title = "Enter Marks";
-        } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(snippet)) { 
-             title = `Exam Details`; 
-        } else if (prevSegment === 'my-classes' && mongoose.Types.ObjectId.isValid(snippet)) {
-             title = `Class Roster`;
-        }
-         else {
-            title = "Details"; 
+        } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(relevantSnippets[index+1])) { // e.g. /marks-entry/[examId]/[assessmentId] - this is examId
+             title = `Exam Details`; // Or fetch exam name
+        } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { // This is assessmentId
+             title = "Enter Marks"; // Or fetch assessment name
+        } else if (prevSegment === 'my-classes' && mongoose.Types.ObjectId.isValid(snippet)) { // For /teacher/my-classes/[classId]
+             title = `Class Roster`; // Or fetch class name
+        } else {
+            title = "Details"; // Generic for other IDs
         }
       } else if (snippet === 'entry' && relevantSnippets[index-1] === 'attendance') {
         title = "Record Attendance";
