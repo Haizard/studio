@@ -80,21 +80,23 @@ export async function PUT(
 
     // Check for name uniqueness if name is being changed
     if (name !== subjectToUpdate.name) {
-        const existingSubjectByName = await Subject.findOne({ name });
+        const existingSubjectByName = await Subject.findOne({ name, _id: { $ne: subjectId } });
         if (existingSubjectByName) {
           return NextResponse.json({ error: 'Subject with this name already exists' }, { status: 409 });
         }
     }
     // Check for code uniqueness if code is being changed and is not empty
     if (code && code !== subjectToUpdate.code) {
-        const existingSubjectByCode = await Subject.findOne({ code });
+        const existingSubjectByCode = await Subject.findOne({ code, _id: { $ne: subjectId } });
         if (existingSubjectByCode) {
             return NextResponse.json({ error: 'Subject with this code already exists' }, { status: 409 });
         }
+    } else if (!code && subjectToUpdate.code) { // If code is being removed
+        // No specific check, just allow removal
     }
 
     subjectToUpdate.name = name;
-    subjectToUpdate.code = code || undefined; // Allow unsetting code
+    subjectToUpdate.code = code || undefined; // Allow unsetting code by passing null/empty string
     subjectToUpdate.department = department || undefined;
     subjectToUpdate.isElective = isElective !== undefined ? isElective : subjectToUpdate.isElective;
     subjectToUpdate.forLevel = Array.isArray(forLevel) ? forLevel : subjectToUpdate.forLevel;

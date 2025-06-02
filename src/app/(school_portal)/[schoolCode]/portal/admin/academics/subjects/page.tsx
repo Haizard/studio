@@ -17,7 +17,7 @@ interface SubjectsPageProps {
 }
 
 // Example levels, these could be fetched or configurable
-const availableLevels = ['O-Level', 'A-Level', 'Form 1', 'Form 2', 'Form 3', 'Form 4', 'Senior 5', 'Senior 6'];
+const availableLevels = ['O-Level', 'A-Level', 'Form 1', 'Form 2', 'Form 3', 'Form 4', 'Senior 5', 'Senior 6', 'Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6', 'Primary 7', 'Nursery'];
 
 export default function SubjectsPage({ params }: SubjectsPageProps) {
   const { schoolCode } = params;
@@ -109,10 +109,10 @@ export default function SubjectsPage({ params }: SubjectsPageProps) {
 
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name', sorter: (a:SubjectDataType, b:SubjectDataType) => a.name.localeCompare(b.name) },
-    { title: 'Code', dataIndex: 'code', key: 'code' },
-    { title: 'Department', dataIndex: 'department', key: 'department' },
+    { title: 'Code', dataIndex: 'code', key: 'code', render: (code?: string) => code || '-' },
+    { title: 'Department', dataIndex: 'department', key: 'department', render: (dept?: string) => dept || '-' },
     { title: 'Type', dataIndex: 'isElective', key: 'isElective', render: (isElective: boolean) => <Tag color={isElective ? 'orange' : 'cyan'}>{isElective ? 'Elective' : 'Core'}</Tag> },
-    { title: 'Applicable Levels', dataIndex: 'forLevel', key: 'forLevel', render: (levels: string[]) => (levels && levels.length > 0 ? levels.map(level => <Tag key={level}>{level}</Tag>) : '-')},
+    { title: 'Applicable Levels', dataIndex: 'forLevel', key: 'forLevel', render: (levels?: string[]) => (levels && levels.length > 0 ? levels.map(level => <Tag key={level}>{level}</Tag>) : '-')},
     {
       title: 'Actions',
       key: 'actions',
