@@ -1,8 +1,8 @@
 
 'use client';
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { Button, Typography, Table, Radio, Input, message, Spin, Row, Col, Card, Descriptions, Alert, Breadcrumb, DatePicker } from 'antd';
-import { SaveOutlined, ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, CloseCircleOutlined, MinusCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Button, Typography, Table, Radio, Input, message, Spin, Row, Col, Card, Descriptions, Alert, Breadcrumb, DatePicker, Space as AntSpace } from 'antd';
+import { SaveOutlined, ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, CloseCircleOutlined, MinusCircleOutlined, QuestionCircleOutlined, UsergroupAddOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { IStudent } from '@/models/Tenant/Student';
@@ -100,16 +100,16 @@ function AttendanceEntryCore() {
       const attendanceMap = new Map(existingAttendanceData.map(att => [att.studentId.toString(), att]));
 
       const mergedData: StudentAttendanceData[] = studentsData
-        .filter(student => student.userId && student.isActive) // Only active students with user accounts
+        .filter(student => student.userId && (student.userId as ITenantUser).isActive) 
         .map(student => {
           const user = student.userId as ITenantUser;
-          const existingRecord = attendanceMap.get(student._id.toString()); // Student profile _id should match studentId in attendance
+          const existingRecord = attendanceMap.get(student._id.toString()); 
           return {
             key: student._id.toString(),
-            studentId: student._id.toString(), // This is the Student Profile ID
+            studentId: student._id.toString(), 
             studentName: `${user.firstName} ${user.lastName}`,
             studentUsername: user.username,
-            status: existingRecord?.status || 'Present', // Default to 'Present'
+            status: existingRecord?.status || 'Present', 
             remarks: existingRecord?.remarks || '',
           };
         });
@@ -139,6 +139,13 @@ function AttendanceEntryCore() {
     );
   };
 
+  const handleMarkAllPresent = () => {
+    setStudentsAttendance(prev =>
+      prev.map(s => ({ ...s, status: 'Present' }))
+    );
+    message.info('All students marked as Present. You can make individual changes.');
+  };
+
   const handleSaveAttendance = async () => {
     if (!academicYearId || !classId || !date) {
       message.error("Critical information missing. Cannot save attendance.");
@@ -151,7 +158,7 @@ function AttendanceEntryCore() {
       subjectId: subjectId || undefined,
       date,
       records: studentsAttendance.map(s => ({
-        studentId: s.studentId, // This is the Student Profile ID
+        studentId: s.studentId, 
         status: s.status,
         remarks: s.remarks,
       })),
@@ -168,7 +175,7 @@ function AttendanceEntryCore() {
         throw new Error(errorData.error || 'Failed to save attendance.');
       }
       message.success('Attendance saved successfully!');
-      fetchData(); // Re-fetch to confirm and update local state if needed
+      fetchData(); 
     } catch (err: any) {
       message.error(err.message || 'Could not save attendance.');
     } finally {
@@ -238,7 +245,7 @@ function AttendanceEntryCore() {
           </Paragraph>
         </Col>
         <Col>
-          <Space>
+          <AntSpace>
              <DatePicker 
               value={moment(date)} 
               onChange={(newDate) => {
@@ -258,10 +265,20 @@ function AttendanceEntryCore() {
             <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveAttendance} loading={saving}>
               Save Attendance
             </Button>
-          </Space>
+          </AntSpace>
         </Col>
       </Row>
       
+      <div className="mb-4">
+        <Button 
+          icon={<UsergroupAddOutlined />} 
+          onClick={handleMarkAllPresent} 
+          disabled={saving || studentsAttendance.length === 0}
+        >
+          Mark All Present
+        </Button>
+      </div>
+
       <Table
         columns={columns}
         dataSource={studentsAttendance}
@@ -269,7 +286,7 @@ function AttendanceEntryCore() {
         bordered
         size="middle"
         pagination={{ pageSize: 30, showSizeChanger: true, pageSizeOptions: ['15', '30', '50', '100'] }}
-        locale={{ emptyText: "No students found for this class in the selected academic year." }}
+        locale={{ emptyText: "No students found for this class in the selected academic year, or ensure students are active." }}
       />
       <div className="mt-6 text-right">
          <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveAttendance} loading={saving}>
@@ -282,8 +299,6 @@ function AttendanceEntryCore() {
 
 
 export default function AttendanceEntryPage() {
-    // Wrap with Suspense because useSearchParams() needs it for Server Components
-    // or when a page might be pre-rendered.
     return (
         <Suspense fallback={<div className="flex justify-center items-center h-64"><Spin size="large" tip="Loading page..." /></div>}>
             <AttendanceEntryCore />
