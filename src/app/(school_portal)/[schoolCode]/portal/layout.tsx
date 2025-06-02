@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { Layout, Menu, Typography, Avatar, Dropdown, Space, Breadcrumb } from 'antd';
+import { Layout, Menu, Typography, Avatar, Dropdown, Space, Breadcrumb, Button as AntButton } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -19,10 +19,11 @@ import {
   BarChartOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react'; // Import NextAuth hooks
 
 const { Header, Sider, Content } = Layout;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 interface SchoolPortalLayoutProps {
   children: React.ReactNode;
@@ -32,9 +33,13 @@ interface SchoolPortalLayoutProps {
 const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, params }) => {
   const { schoolCode } = params;
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, status } = useSession(); // Get session data
 
-  // Placeholder user role - this would come from auth context
-  const userRole: 'admin' | 'teacher' | 'student' = 'admin'; 
+  // User role from session or a default/fallback
+  const userRole = (session?.user as any)?.role || 'student'; // Fallback to student for menu generation
+  const userName = (session?.user as any)?.name || (session?.user as any)?.email || 'User';
+  const userAvatar = (session?.user as any)?.image;
 
   const getMenuItems = (role: string) => {
     const basePortalPath = `/${schoolCode}/portal`;
@@ -46,7 +51,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       },
     ];
 
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'superadmin') { // superadmin might also access tenant admin features
       items.push(
         {
           key: 'admin-management',
@@ -79,17 +84,24 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         { key: `${basePortalPath}/student/resources`, icon: <BookOutlined />, label: <Link href={`${basePortalPath}/student/resources`}>Resources</Link> },
       );
     }
+    // Add other roles like librarian, finance etc.
     return items;
   };
   
   const menuItems = getMenuItems(userRole);
 
+  const handleLogout = async () => {
+    await signOut({ redirect: false, callbackUrl: `/login?schoolCode=${schoolCode}` });
+    // Include schoolCode in login redirect if applicable for tenant login flow
+    router.push(`/login?schoolCode=${schoolCode}`);
+  };
+
   const userAccountMenuItems = [
-    { key: 'profile', label: 'My Profile', icon: <UserOutlined /> },
-    { key: 'logout', label: 'Logout', icon: <LogoutOutlined />, danger: true },
+    // { key: 'profile', label: 'My Profile', icon: <UserOutlined /> }, // Could link to a generic profile page
+    // { type: 'divider' as const },
+    { key: 'logout', label: 'Logout', icon: <LogoutOutlined />, danger: true, onClick: handleLogout },
   ];
 
-  // Determine selected key and open keys based on current path
   let selectedKey = '';
   let openKeys: string[] = [];
 
@@ -101,28 +113,55 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           return { selected: childResult.selected, open: [item.key, ...(childResult.open || [])] };
         }
       } else if (item.key && currentPath.startsWith(item.key)) {
-        return { selected: item.key, open: [] };
+        // Ensure exact match or prefix match for selection
+        if (currentPath === item.key || currentPath.startsWith(item.key + '/')) {
+           return { selected: item.key, open: [] };
+        }
       }
     }
     return {};
   };
   
   const activeKeysResult = findActiveKeys(menuItems, pathname);
-  selectedKey = activeKeysResult.selected || `${schoolCode}/portal/dashboard`;
+  selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
   openKeys = activeKeysResult.open || [];
 
 
-  const breadcrumbItems = pathname.split('/').filter(p => p && p !== schoolCode && p !== 'portal').map((item, index, arr) => {
-    const path = `/${schoolCode}/portal/${arr.slice(0, index + 1).join('/')}`;
-    const isLast = index === arr.length - 1;
-    const title = item.charAt(0).toUpperCase() + item.slice(1).replace(/-/g, ' ');
-    return {
-      title: isLast ? title : <Link href={path}>{title}</Link>,
-    };
-  });
-  
-  const homeBreadcrumb = {title: <Link href={`/${schoolCode}/portal/dashboard`}>Home</Link>};
+  const breadcrumbItemsGen = () => {
+    const pathSnippets = pathname.split('/').filter(i => i);
+    // Find index of 'portal'
+    const portalIndex = pathSnippets.findIndex(p => p === 'portal');
+    // Filter out segments before and including 'portal', and the schoolCode itself
+    const relevantSnippets = pathSnippets.slice(portalIndex + 1);
 
+    const items = relevantSnippets.map((snippet, index) => {
+      const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
+      const title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
+      const isLast = index === relevantSnippets.length - 1;
+      return {
+        title: isLast ? title : <Link href={url}>{title}</Link>,
+        key: url
+      };
+    });
+    return [{ title: <Link href={`/${schoolCode}/portal/dashboard`}>Home</Link>, key: `/${schoolCode}/portal/dashboard` }, ...items];
+  }
+  const breadcrumbItems = breadcrumbItemsGen();
+
+  if (status === "loading") {
+    return (
+      <Layout style={{ minHeight: '100vh' }}>
+        <Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <p>Loading session...</p>
+        </Content>
+      </Layout>
+    );
+  }
+
+  // if (status === "unauthenticated") {
+  //   // Middleware should handle this
+  //   // router.push(`/login?schoolCode=${schoolCode}&callbackUrl=${pathname}`);
+  //   return null;
+  // }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -147,15 +186,19 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       </Sider>
       <Layout>
         <Header className="bg-white p-0 px-6 flex justify-between items-center shadow">
-          <Breadcrumb items={[homeBreadcrumb, ...breadcrumbItems]} />
-          <Dropdown menu={{ items: userAccountMenuItems }} trigger={['click']}>
-            <a onClick={(e) => e.preventDefault()} className="flex items-center">
-              <Space>
-                <Avatar icon={<UserOutlined />} />
-                <span>User Name</span> {/* Placeholder */}
-              </Space>
-            </a>
-          </Dropdown>
+          <Breadcrumb items={breadcrumbItems} />
+          {session?.user ? (
+            <Dropdown menu={{ items: userAccountMenuItems }} trigger={['click']}>
+              <a onClick={(e) => e.preventDefault()} className="flex items-center cursor-pointer">
+                <Space>
+                  <Avatar icon={<UserOutlined />} src={userAvatar} />
+                  <Text>{userName}</Text>
+                </Space>
+              </a>
+            </Dropdown>
+          ) : (
+            <AntButton onClick={() => router.push(`/login?schoolCode=${schoolCode}`)}>Login</AntButton>
+          )}
         </Header>
         <Content className="m-4">
           <div className="p-6 bg-white rounded-lg shadow min-h-full">
