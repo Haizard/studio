@@ -10,20 +10,24 @@ import type { IMark } from '@/models/Tenant/Mark';
 import type { IAssessment } from '@/models/Tenant/Assessment';
 import type { ISubject } from '@/models/Tenant/Subject';
 import type { IExam } from '@/models/Tenant/Exam';
+import mongoose from 'mongoose';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 const { Option } = Select;
 const { Panel } = Collapse;
 
-interface PopulatedMark extends Omit<IMark, 'assessmentId' | 'academicYearId' | 'termId'> {
-  assessmentId: PopulatedAssessment;
-  academicYearId: { _id: string; name: string };
-  termId?: { _id: string; name: string };
+interface PopulatedMarkAssessmentSubject extends Pick<ISubject, '_id' | 'name' | 'code'> {}
+interface PopulatedMarkAssessmentExam extends Pick<IExam, '_id' | 'name'> {}
+
+interface PopulatedMarkAssessment extends Omit<IAssessment, 'subjectId' | 'examId'> {
+  subjectId: PopulatedMarkAssessmentSubject;
+  examId: PopulatedMarkAssessmentExam;
 }
 
-interface PopulatedAssessment extends Omit<IAssessment, 'subjectId' | 'examId'> {
-  subjectId: { _id: string; name: string; code?: string };
-  examId: { _id: string; name: string };
+interface PopulatedMark extends Omit<IMark, 'assessmentId' | 'academicYearId' | 'termId'> {
+  assessmentId: PopulatedMarkAssessment;
+  academicYearId: Pick<IAcademicYear, '_id' | 'name'>;
+  termId?: Pick<ITerm, '_id' | 'name'>;
 }
 
 interface ResultsByExam {
@@ -48,7 +52,7 @@ export default function StudentResultsPage() {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string | undefined>();
   
   const [terms, setTerms] = useState<ITerm[]>([]);
-  const [selectedTerm, setSelectedTerm] = useState<string | undefined>(); // Optional
+  const [selectedTerm, setSelectedTerm] = useState<string | undefined>();
 
   const [studentMarks, setStudentMarks] = useState<PopulatedMark[]>([]);
   const [groupedResults, setGroupedResults] = useState<ResultsByExam[]>([]);
@@ -58,10 +62,9 @@ export default function StudentResultsPage() {
   const [loadingResults, setLoadingResults] = useState(false);
 
   const ACADEMIC_YEARS_API = `/api/${schoolCode}/portal/academics/academic-years`;
-  const TERMS_API = `/api/${schoolCode}/portal/academics/terms`;
+  const TERMS_API_BASE = `/api/${schoolCode}/portal/academics/terms`;
   const STUDENT_MARKS_API_BASE = `/api/${schoolCode}/portal/students/me/marks`;
 
-  // Fetch Academic Years
   useEffect(() => {
     const fetchYears = async () => {
       setLoadingYears(true);
@@ -69,12 +72,10 @@ export default function StudentResultsPage() {
         const res = await fetch(ACADEMIC_YEARS_API);
         if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch academic years');
         const data: IAcademicYear[] = await res.json();
-        setAcademicYears(data.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())); // Sort newest first
-        // Optionally set a default year, e.g., the most recent active one
+        setAcademicYears(data.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
         const activeYear = data.find(y => y.isActive);
         if (activeYear) setSelectedAcademicYear(activeYear._id);
         else if (data.length > 0) setSelectedAcademicYear(data[0]._id);
-
       } catch (err: any) {
         message.error(err.message || 'Could not load academic years.');
       } finally {
@@ -84,7 +85,6 @@ export default function StudentResultsPage() {
     fetchYears();
   }, [schoolCode, ACADEMIC_YEARS_API]);
 
-  // Fetch Terms when Academic Year changes
   useEffect(() => {
     if (!selectedAcademicYear) {
       setTerms([]);
@@ -94,11 +94,11 @@ export default function StudentResultsPage() {
     const fetchTerms = async () => {
       setLoadingTerms(true);
       try {
-        const res = await fetch(`${TERMS_API}?academicYearId=${selectedAcademicYear}`);
+        const res = await fetch(`${TERMS_API_BASE}?academicYearId=${selectedAcademicYear}`);
         if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch terms');
         const data: ITerm[] = await res.json();
-        setTerms(data.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())); // Sort oldest first
-        setSelectedTerm(undefined); // Reset term selection
+        setTerms(data.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()));
+        setSelectedTerm(undefined);
       } catch (err: any) {
         message.error(err.message || 'Could not load terms for the selected year.');
         setTerms([]);
@@ -107,9 +107,8 @@ export default function StudentResultsPage() {
       }
     };
     fetchTerms();
-  }, [selectedAcademicYear, schoolCode, TERMS_API]);
+  }, [selectedAcademicYear, schoolCode, TERMS_API_BASE]);
 
-  // Fetch Student Marks when Academic Year or Term changes
   const fetchStudentMarks = useCallback(async () => {
     if (!selectedAcademicYear) {
       setStudentMarks([]);
@@ -123,7 +122,10 @@ export default function StudentResultsPage() {
         url += `&termId=${selectedTerm}`;
       }
       const res = await fetch(url);
-      if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch student results.');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to fetch student results.');
+      }
       const data: PopulatedMark[] = await res.json();
       setStudentMarks(data);
     } catch (err: any) {
@@ -138,7 +140,6 @@ export default function StudentResultsPage() {
     fetchStudentMarks();
   }, [fetchStudentMarks]);
 
-  // Process and group marks whenever studentMarks change
   useEffect(() => {
     if (studentMarks.length === 0) {
       setGroupedResults([]);
@@ -164,11 +165,11 @@ export default function StudentResultsPage() {
       }
 
       subjectEntry.assessments.push(mark);
-      if (typeof mark.marksObtained === 'number') {
+      if (typeof mark.marksObtained === 'number' && !isNaN(mark.marksObtained)) {
         subjectEntry.totalMarksObtained = (subjectEntry.totalMarksObtained || 0) + mark.marksObtained;
         results[examId].overallTotalMarksObtained = (results[examId].overallTotalMarksObtained || 0) + mark.marksObtained;
       }
-      if (typeof mark.assessmentId.maxMarks === 'number') {
+      if (typeof mark.assessmentId.maxMarks === 'number' && !isNaN(mark.assessmentId.maxMarks)) {
         subjectEntry.totalMaxMarks = (subjectEntry.totalMaxMarks || 0) + mark.assessmentId.maxMarks;
          results[examId].overallTotalMaxMarks = (results[examId].overallTotalMaxMarks || 0) + mark.assessmentId.maxMarks;
       }
@@ -235,8 +236,8 @@ export default function StudentResultsPage() {
           {groupedResults.map(examResult => (
             <Panel 
                 header={
-                    <Title level={4} className="!mb-0">
-                        <FileTextOutlined className="mr-2" /> {examResult.examName} 
+                    <Title level={4} className="!mb-0 flex justify-between items-center">
+                        <span><FileTextOutlined className="mr-2" /> {examResult.examName}</span>
                         {examResult.overallTotalMaxMarks && examResult.overallTotalMaxMarks > 0 ? 
                             <Tag color="blue" className="ml-2 text-base">
                                 Overall: {examResult.overallTotalMarksObtained?.toFixed(1) || '0'} / {examResult.overallTotalMaxMarks?.toFixed(1)} 
@@ -268,7 +269,7 @@ export default function StudentResultsPage() {
                                             Total: {subjectResult.totalMarksObtained?.toFixed(1) || '0'} / {subjectResult.totalMaxMarks?.toFixed(1)}
                                         </Tag>
                                         <Tag color={grade === 'F' || grade === 'N/A' ? 'volcano' : 'success'}>
-                                            {grade} ({subjectPercentage?.toFixed(1) || '0'}%)
+                                            {grade} ({subjectPercentage?.toFixed(1) || 'N/A'}%)
                                         </Tag>
                                     </Space>
                                     : <Tag>No Marks Yet</Tag>
@@ -280,9 +281,14 @@ export default function StudentResultsPage() {
                         {subjectResult.assessments.map(mark => (
                           <Descriptions.Item 
                             key={mark._id} 
-                            label={`${mark.assessmentId.assessmentName} (${mark.assessmentId.assessmentType}) - ${new Date(mark.assessmentId.assessmentDate).toLocaleDateString()}`}
+                            label={
+                              <Text>
+                                {`${mark.assessmentId.assessmentName} (${mark.assessmentId.assessmentType}) - `}
+                                <Text type="secondary">{new Date(mark.assessmentId.assessmentDate).toLocaleDateString()}</Text>
+                              </Text>
+                            }
                           >
-                            <span className="font-semibold">{mark.marksObtained === null || mark.marksObtained === undefined ? 'N/A' : mark.marksObtained.toFixed(1)}</span> / {mark.assessmentId.maxMarks.toFixed(1)}
+                            <Text strong>{mark.marksObtained === null || mark.marksObtained === undefined ? 'N/A' : mark.marksObtained.toFixed(1)}</Text> / {mark.assessmentId.maxMarks.toFixed(1)}
                             {mark.comments && <Paragraph italic type="secondary" className="text-xs !mb-0 ml-2">({mark.comments})</Paragraph>}
                           </Descriptions.Item>
                         ))}
@@ -318,4 +324,3 @@ export default function StudentResultsPage() {
     </div>
   );
 }
-

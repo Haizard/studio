@@ -51,13 +51,19 @@ export async function GET(
     const Assessment = tenantDb.models.Assessment as mongoose.Model<IAssessment>;
     const Exam = tenantDb.models.Exam as mongoose.Model<IExam>;
 
-    // Find IDs of exams that are 'Published' and match the academic year/term criteria
+    // 1. Find IDs of exams that are 'Published' and match the academic year/term criteria
     const examQuery: any = { 
-        academicYearId,
+        academicYearId: new mongoose.Types.ObjectId(academicYearId), // Ensure it's ObjectId
         status: 'Published' 
     };
     if (termId) {
-        examQuery.termId = termId;
+        examQuery.termId = new mongoose.Types.ObjectId(termId); // Ensure it's ObjectId
+    } else {
+        // If no termId is provided, we might want to fetch exams that either have no termId or match null
+        // For simplicity, let's assume if termId is not given, we don't filter by it.
+        // Or, if your exams always have terms unless they are year-long, adjust as needed.
+        // This might fetch exams that have a termId if one isn't provided, which might be okay.
+        // To explicitly fetch exams with no termId: examQuery.termId = null;
     }
     const publishedExams = await Exam.find(examQuery).select('_id').lean();
     const publishedExamIds = publishedExams.map(exam => exam._id);
@@ -66,7 +72,7 @@ export async function GET(
         return NextResponse.json([]); // No published exams for this criteria
     }
 
-    // Find assessments belonging to these published exams
+    // 2. Find assessments belonging to these published exams
     const relevantAssessments = await Assessment.find({ examId: { $in: publishedExamIds } }).select('_id').lean();
     const relevantAssessmentIds = relevantAssessments.map(assessment => assessment._id);
 
@@ -74,14 +80,14 @@ export async function GET(
         return NextResponse.json([]); // No assessments for these published exams
     }
 
-    // Fetch marks for the student for these relevant assessments
+    // 3. Fetch marks for the student for these relevant assessments
     const marksQuery: any = {
-      studentId: token.uid,
+      studentId: new mongoose.Types.ObjectId(token.uid as string), // Ensure it's ObjectId
       assessmentId: { $in: relevantAssessmentIds },
-      academicYearId, // Ensure marks belong to the selected academic year
+      academicYearId: new mongoose.Types.ObjectId(academicYearId), // Ensure it's ObjectId
     };
     if (termId) {
-      marksQuery.termId = termId;
+      marksQuery.termId = new mongoose.Types.ObjectId(termId); // Ensure it's ObjectId
     }
     
     const studentMarks = await Mark.find(marksQuery)
@@ -90,11 +96,11 @@ export async function GET(
         select: 'assessmentName maxMarks assessmentDate assessmentType subjectId examId',
         populate: [
           { path: 'subjectId', model: 'Subject', select: 'name code' },
-          { path: 'examId', model: 'Exam', select: 'name' }
+          { path: 'examId', model: 'Exam', select: 'name' } // examId on assessment is already ObjectId
         ]
       })
       .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
-      .populate<{ termId: ITerm }>('termId', 'name')
+      .populate<{ termId?: ITerm }>('termId', 'name') // termId on Mark model is optional
       .sort({ 'assessmentId.examId.name': 1, 'assessmentId.subjectId.name': 1, 'assessmentId.assessmentDate': 1 })
       .lean();
 
@@ -102,6 +108,6 @@ export async function GET(
 
   } catch (error: any) {
     console.error(`Error fetching marks for student ${token.uid}, school ${schoolCode}:`, error);
-    return NextResponse.json({ error: 'Failed to fetch student marks', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch student marks', details: error.message, stack: error.stack }, { status: 500 });
   }
 }
