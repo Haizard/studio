@@ -27,6 +27,8 @@ import {
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react'; 
+import mongoose from 'mongoose';
+
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -78,6 +80,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               ]
             },
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
+            // { key: `${basePortalPath}/admin/marks-entry`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/admin/marks-entry`}>Marks (Admin View)</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
           ],
@@ -96,13 +99,17 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
         { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> },
       );
-    } else if (role === 'teacher') {
+    }
+    
+    if (role === 'teacher') {
       items.push(
         { key: `${basePortalPath}/teacher/my-classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/teacher/my-classes`}>My Classes</Link> },
         { key: `${basePortalPath}/teacher/marks-entry`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/teacher/marks-entry`}>Marks Entry</Link> },
         { key: `${basePortalPath}/teacher/resources`, icon: <BookOutlined />, label: <Link href={`${basePortalPath}/teacher/resources`}>Resources</Link> },
       );
-    } else if (role === 'student') {
+    }
+    
+    if (role === 'student') {
       items.push(
         { key: `${basePortalPath}/student/my-profile`, icon: <UserOutlined />, label: <Link href={`${basePortalPath}/student/my-profile`}>My Profile</Link> },
         { key: `${basePortalPath}/student/my-results`, icon: <SolutionOutlined />, label: <Link href={`${basePortalPath}/student/my-results`}>My Results</Link> },
@@ -134,7 +141,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           return { selected: childResult.selected, open: [item.key, ...(childResult.open || [])].filter(Boolean) as string[] };
         }
       } else if (item.key && currentPath.startsWith(item.key)) {
-        // Exact match or if currentPath is a sub-path of the item.key (e.g., for dynamic routes like assessments)
         if (currentPath === item.key || currentPath.startsWith(item.key + '/')) {
            return { selected: item.key, open: [] };
         }
@@ -145,20 +151,27 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   
   const activeKeysResult = findActiveKeys(menuItems, pathname);
   selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
-  // If the direct key isn't found but it's a sub-route (e.g. assessments page), try to find the parent exam key
-  if (!activeKeysResult.selected && pathname.includes('/admin/exams/') && pathname.split('/').length > 5) { // e.g. /sch/portal/admin/exams/[examId]/assessments
-    selectedKey = `/${schoolCode}/portal/admin/exams`;
+  
+  if (!activeKeysResult.selected) {
+    if (pathname.includes('/admin/exams/') && pathname.split('/').length > 5 && pathname.includes('assessments')) { // e.g., /sch/portal/admin/exams/[examId]/assessments
+        selectedKey = `/${schoolCode}/portal/admin/exams`;
+    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 5) { // e.g., /sch/portal/teacher/marks-entry/[assessmentId]
+        selectedKey = `/${schoolCode}/portal/teacher/marks-entry`;
+    }
   }
   openKeys = activeKeysResult.open || [];
   if(selectedKey === `/${schoolCode}/portal/admin/exams` && pathname.includes('/admin/exams/')){
-      openKeys.push('admin-management'); // Ensure parent is open
+      openKeys.push('admin-management'); 
+  }
+  if (selectedKey === `/${schoolCode}/portal/teacher/marks-entry` && pathname.includes('/teacher/marks-entry/')) {
+    // No specific parent group to open for teacher standalone items like this unless you create one
   }
 
 
   const breadcrumbItemsGen = () => {
     const pathSnippets = pathname.split('/').filter(i => i);
     const portalIndex = pathSnippets.findIndex(p => p === 'portal');
-    // Handle case where path is just /[schoolCode]/portal (portalIndex = 1, pathSnippets.length = 2)
+    
     if (portalIndex === -1 || pathSnippets.length <= portalIndex +1 ) {
          return [{ title: <Link href={`/${schoolCode}/portal/dashboard`}>Home</Link>, key: `/${schoolCode}/portal/dashboard` }];
     }
@@ -169,16 +182,16 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
-      // If snippet is a Mongo ObjectId, try to replace it with a more descriptive name (e.g., Exam Name)
-      // This is a simplified example; real implementation might need data fetching or context
-      if (mongoose.Types.ObjectId.isValid(snippet) && index > 0 && relevantSnippets[index-1] === 'exams') {
-        // Placeholder - in a real app, you'd fetch the exam name here or pass it via props/context
-        // title = "Manage Assessments"; // Or fetch exam name: examDetails?.name || snippet;
-        // For now, let's make it generic for dynamic ID routes
-        if (relevantSnippets[index+1] === 'assessments') {
-            title = "Assessments";
-        } else {
-            title = "Details"; // Default for an ID
+      if (mongoose.Types.ObjectId.isValid(snippet)) {
+        const prevSegment = relevantSnippets[index-1];
+        const nextSegment = relevantSnippets[index+1];
+        if (prevSegment === 'exams' && nextSegment === 'assessments') {
+            title = "Manage Assessments";
+        } else if (prevSegment === 'marks-entry') {
+             title = "Enter Marks";
+        }
+         else {
+            title = "Details"; 
         }
       }
 
