@@ -21,8 +21,8 @@ import {
   CalendarOutlined, 
   UnorderedListOutlined, 
   AppstoreAddOutlined,
-  ScheduleOutlined, // For Terms
-  FileTextOutlined // For Exams
+  ScheduleOutlined, 
+  FileTextOutlined 
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -141,6 +141,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           return { selected: childResult.selected, open: [item.key, ...(childResult.open || [])].filter(Boolean) as string[] };
         }
       } else if (item.key && currentPath.startsWith(item.key)) {
+        // Exact match or if currentPath is a sub-route of item.key (e.g., for dynamic segments like [id])
         if (currentPath === item.key || currentPath.startsWith(item.key + '/')) {
            return { selected: item.key, open: [] };
         }
@@ -153,18 +154,20 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
   
   if (!activeKeysResult.selected) {
-    if (pathname.includes('/admin/exams/') && pathname.split('/').length > 5 && pathname.includes('assessments')) { // e.g., /sch/portal/admin/exams/[examId]/assessments
-        selectedKey = `/${schoolCode}/portal/admin/exams`;
-    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 5) { // e.g., /sch/portal/teacher/marks-entry/[assessmentId]
-        selectedKey = `/${schoolCode}/portal/teacher/marks-entry`;
+    // Handle cases where the path is deeper than the menu structure, e.g., dynamic ID pages
+    if (pathname.includes('/admin/exams/') && pathname.includes('/assessments')) { 
+        selectedKey = `/${schoolCode}/portal/admin/exams`; // Parent menu item for .../exams/[examId]/assessments
+    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) { // .../marks-entry/[examId]/[assessmentId]
+        selectedKey = `/${schoolCode}/portal/teacher/marks-entry`; // Parent menu item
     }
   }
   openKeys = activeKeysResult.open || [];
+
   if(selectedKey === `/${schoolCode}/portal/admin/exams` && pathname.includes('/admin/exams/')){
-      openKeys.push('admin-management'); 
+      openKeys.push('admin-management'); // Ensure parent group is open
   }
   if (selectedKey === `/${schoolCode}/portal/teacher/marks-entry` && pathname.includes('/teacher/marks-entry/')) {
-    // No specific parent group to open for teacher standalone items like this unless you create one
+    // No specific parent group for teacher standalone items unless explicitly created.
   }
 
 
@@ -172,26 +175,31 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     const pathSnippets = pathname.split('/').filter(i => i);
     const portalIndex = pathSnippets.findIndex(p => p === 'portal');
     
-    if (portalIndex === -1 || pathSnippets.length <= portalIndex +1 ) {
+    if (portalIndex === -1 || pathSnippets.length <= portalIndex + 1 ) { // Only 'portal' or nothing after
          return [{ title: <Link href={`/${schoolCode}/portal/dashboard`}>Home</Link>, key: `/${schoolCode}/portal/dashboard` }];
     }
-    const relevantSnippets = pathSnippets.slice(portalIndex + 1);
+    const relevantSnippets = pathSnippets.slice(portalIndex + 1); // e.g., ['dashboard'] or ['admin', 'users']
 
 
     const items = relevantSnippets.map((snippet, index) => {
       const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
+      // Specific title overrides based on path structure
       if (mongoose.Types.ObjectId.isValid(snippet)) {
         const prevSegment = relevantSnippets[index-1];
+        const secondPrevSegment = relevantSnippets[index-2];
         const nextSegment = relevantSnippets[index+1];
-        if (prevSegment === 'exams' && nextSegment === 'assessments') {
-            title = "Manage Assessments";
-        } else if (prevSegment === 'marks-entry') {
+
+        if (prevSegment === 'exams' && nextSegment === 'assessments') { // For /exams/[examId]/assessments
+            title = "Manage Assessments"; // When snippet is [examId]
+        } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { // For /marks-entry/[examId]/[assessmentId], snippet is assessmentId
              title = "Enter Marks";
+        } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(snippet)) { // For /marks-entry/[examId], snippet is examId
+             title = `Exam Details`; 
         }
          else {
-            title = "Details"; 
+            title = "Details"; // Generic for other ID pages
         }
       }
 

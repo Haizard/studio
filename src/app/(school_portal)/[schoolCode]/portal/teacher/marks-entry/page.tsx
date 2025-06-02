@@ -116,11 +116,14 @@ export default function MarksEntrySelectionPage() {
       return;
     }
     const subjectsForClass = teacherAssignments
-      .filter(assign => assign.classId._id === selectedClass)
+      .filter(assign => assign.classId._id === selectedClass && assign.academicYearId._id === selectedAcademicYear)
       .map(assign => assign.subjectId);
-    setAssignedSubjects(subjectsForClass as ISubject[]);
+    
+    // Ensure unique subjects if a teacher teaches the same subject multiple times (though unlikely with current structure)
+    const uniqueSubjects = Array.from(new Map(subjectsForClass.map(sub => [sub._id, sub])).values());
+    setAssignedSubjects(uniqueSubjects as ISubject[]);
     setSelectedSubject(undefined); // Reset subject selection
-  }, [selectedClass, teacherAssignments]);
+  }, [selectedClass, teacherAssignments, selectedAcademicYear]);
 
 
   // Fetch Exams when Academic Year changes
@@ -195,7 +198,7 @@ export default function MarksEntrySelectionPage() {
       key: 'actions',
       render: (_: any, record: IAssessment) => (
         <Tooltip title="Enter or View Marks">
-          <Link href={`/${schoolCode}/portal/teacher/marks-entry/${record._id}`}>
+          <Link href={`/${schoolCode}/portal/teacher/marks-entry/${selectedExam}/${record._id}`}>
             <Button icon={<EditOutlined />} type="primary">Enter/View Marks</Button>
           </Link>
         </Tooltip>
