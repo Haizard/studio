@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Form, Input, message, Spin, Card, Row, Col } from 'antd';
 import { SaveOutlined, SettingOutlined } from '@ant-design/icons';
-import type { IWebsiteSettings } from '@/models/Tenant/WebsiteSettings'; // Adjust path as necessary
+import type { IWebsiteSettings } from '@/models/Tenant/WebsiteSettings'; 
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -17,7 +17,7 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [settingsId, setSettingsId] = useState<string | null>(null); // To store the _id of the settings doc
+  const [settingsId, setSettingsId] = useState<string | null>(null);
 
   const API_URL = `/api/${schoolCode}/portal/settings`;
 
@@ -41,9 +41,9 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
         faviconUrl: data.faviconUrl,
         primaryColor: data.primaryColor,
         secondaryColor: data.secondaryColor,
-        // socialMediaLinks: data.socialMediaLinks // For simplicity, not handling nested social links yet
+        aboutUsContent: data.aboutUsContent, // Load new field
       });
-      setSettingsId(data._id); // Store the ID for PUT requests
+      setSettingsId(data._id); 
     } catch (error: any) {
       message.error(error.message || 'Could not load school settings.');
     } finally {
@@ -60,7 +60,7 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
     try {
       const payload = { ...values };
       if (settingsId) {
-        payload._id = settingsId; // Include _id if we are updating an existing document
+        payload._id = settingsId; 
       }
 
       const response = await fetch(API_URL, {
@@ -74,7 +74,7 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
         throw new Error(errorData.error || 'Failed to save settings');
       }
       message.success('School settings saved successfully!');
-      fetchSettings(); // Re-fetch to ensure form has the latest data
+      fetchSettings(); 
     } catch (error: any) {
       message.error(error.message || 'Could not save school settings.');
     } finally {
@@ -88,7 +88,7 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
 
   return (
     <div>
-      <Title level={2} className="mb-8"><SettingOutlined className="mr-2" />School Settings</Title>
+      <Title level={2} className="mb-8"><SettingOutlined className="mr-2" />School & Website Settings</Title>
       <Card>
         <Form
           form={form}
@@ -96,6 +96,7 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
           onFinish={onFinish}
           name="schoolSettingsForm"
         >
+          <Title level={4} className="mb-4">Basic Information</Title>
           <Row gutter={24}>
             <Col xs={24} md={12}>
               <Form.Item
@@ -126,6 +127,10 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
                 <Input placeholder="e.g., 123 Main St, Springfield" />
               </Form.Item>
             </Col>
+          </Row>
+
+          <Title level={4} className="mt-6 mb-4">Website Appearance</Title>
+          <Row gutter={24}>
              <Col xs={24} md={12}>
               <Form.Item name="logoUrl" label="Logo URL (Optional)">
                 <Input placeholder="https://example.com/logo.png" />
@@ -137,12 +142,12 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="primaryColor" label="Website Primary Color (Hex, Optional)">
+              <Form.Item name="primaryColor" label="Website Primary Color (Hex, Optional)" help="Default is Ant Design blue.">
                 <Input placeholder="#1677ff" />
               </Form.Item>
             </Col>
              <Col xs={24} md={12}>
-              <Form.Item name="secondaryColor" label="Website Secondary Color (Hex, Optional)">
+              <Form.Item name="secondaryColor" label="Website Secondary Color (Hex, Optional)" help="Used for accents.">
                 <Input placeholder="#5A5A5A" />
               </Form.Item>
             </Col>
@@ -152,11 +157,16 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
               </Form.Item>
             </Col>
           </Row>
-          {/* 
-            Future fields:
-            - Social Media Links (Facebook, Twitter, etc.) - would need more complex form handling for key-value pairs
-            - Navigation Links (ordering, labels, slugs) - would require a dynamic list form component
-          */}
+
+          <Title level={4} className="mt-6 mb-4">"About Us" Page Content</Title>
+          <Row gutter={24}>
+            <Col xs={24}>
+              <Form.Item name="aboutUsContent" label="Content for About Us Page">
+                <TextArea rows={10} placeholder="Enter the content for your school's 'About Us' page. You can use basic HTML for formatting if needed." />
+              </Form.Item>
+            </Col>
+          </Row>
+          
           <Form.Item className="mt-6">
             <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={saving}>
               Save Settings
@@ -167,5 +177,3 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
     </div>
   );
 }
-
-    

@@ -5,6 +5,7 @@ interface NavLink {
   label: string;
   slug: string; // e.g., /about, /admissions
   order: number;
+  icon?: any; // Storing ReactNode directly in schema is not ideal, consider string names for icons
 }
 
 export interface IWebsiteSettings extends Document {
@@ -25,6 +26,7 @@ export interface IWebsiteSettings extends Document {
   };
   navLinks?: NavLink[];
   footerText?: string;
+  aboutUsContent?: string; // New field for "About Us" page content
   // schoolCode is implicit as this model belongs to a tenant DB
   createdAt: Date;
   updatedAt: Date;
@@ -52,16 +54,15 @@ const WebsiteSettingsSchema: Schema = new Schema(
         label: { type: String, required: true, trim: true },
         slug: { type: String, required: true, trim: true },
         order: { type: Number, default: 0 },
+        // Icon field is tricky for schema; storing string names might be better if icons are dynamic
+        // icon: { type: Schema.Types.Mixed }, 
         _id: false,
       },
     ],
     footerText: { type: String, trim: true },
+    aboutUsContent: { type: String, trim: true }, // New field
   },
   { timestamps: true }
 );
-
-// Typically, there's only one WebsiteSettings document per school,
-// so a unique index isn't strictly necessary unless you plan for multiple versions.
-// We can enforce singleton behavior at the application level.
 
 export default mongoose.models.WebsiteSettings || mongoose.model<IWebsiteSettings>('WebsiteSettings', WebsiteSettingsSchema);
