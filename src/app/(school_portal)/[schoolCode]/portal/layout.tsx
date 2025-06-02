@@ -168,12 +168,14 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/teacher/marks-entry`; 
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/website-management/`)) {
         selectedKey = `/${schoolCode}/portal/admin/website-management`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) {
+        selectedKey = `/${schoolCode}/portal/admin/academics`;
     }
   }
   openKeys = activeKeysResult.open || [];
 
   // Ensure parent groups are open for specific selected keys
-  if(selectedKey.includes('/admin/academics')) openKeys.push('admin-academics','admin-management');
+  if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
   if(selectedKey.includes('/admin/exams')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/students')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/teachers')) openKeys.push('admin-management'); 
@@ -274,7 +276,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               </a>
             </Dropdown>
           ) : (
-            <AntButton onClick={() => router.push(`/login?schoolCode=${schoolCode}`)}>Login</AntButton>
+            <AntButton onClick={() => router.push(`/login?schoolCode=${schoolCode}`)}>"Login"</AntButton>
           )}
         </Header>
         <Content className="m-4">
