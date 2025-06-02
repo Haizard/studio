@@ -24,7 +24,8 @@ import {
   ScheduleOutlined, 
   FileTextOutlined,
   UsergroupAddOutlined, 
-  PictureOutlined
+  PictureOutlined,
+  IdcardOutlined, // Added for Teacher Profile
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -84,7 +85,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               ]
             },
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
-            // { key: `${basePortalPath}/admin/marks-entry`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/admin/marks-entry`}>Marks (Admin View)</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
           ],
@@ -109,6 +109,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     
     if (role === 'teacher') {
       items.push(
+        { key: `${basePortalPath}/teacher/my-profile`, icon: <IdcardOutlined />, label: <Link href={`${basePortalPath}/teacher/my-profile`}>My Profile</Link> },
         { key: `${basePortalPath}/teacher/my-classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/teacher/my-classes`}>My Classes</Link> },
         { key: `${basePortalPath}/teacher/marks-entry`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/teacher/marks-entry`}>Marks Entry</Link> },
         { key: `${basePortalPath}/teacher/resources`, icon: <BookOutlined />, label: <Link href={`${basePortalPath}/teacher/resources`}>Resources</Link> },
@@ -147,7 +148,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           return { selected: childResult.selected, open: [item.key, ...(childResult.open || [])].filter(Boolean) as string[] };
         }
       } else if (item.key && currentPath.startsWith(item.key)) {
-        // Exact match or prefix match for dynamic segments under a base key
         if (currentPath === item.key || currentPath.startsWith(item.key + '/')) {
            return { selected: item.key, open: [] };
         }
@@ -159,29 +159,27 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   const activeKeysResult = findActiveKeys(menuItems, pathname);
   selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
   
-  // This block ensures the correct parent menu item is opened for dynamic child routes
   if (!activeKeysResult.selected) {
-    // Specific handling for /admin/exams/[examId]/assessments
     if (pathname.includes('/admin/exams/') && pathname.includes('/assessments')) { 
         selectedKey = `/${schoolCode}/portal/admin/exams`; 
-    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) { // For /teacher/marks-entry/[examId]/[assessmentId]
+    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) {
         selectedKey = `/${schoolCode}/portal/teacher/marks-entry`; 
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/website-management/`)) {
         selectedKey = `/${schoolCode}/portal/admin/website-management`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) {
         selectedKey = `/${schoolCode}/portal/admin/academics`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/my-classes/`)) {
+        selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
     }
   }
   openKeys = activeKeysResult.open || [];
 
-  // Ensure parent groups are open for specific selected keys
   if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
   if(selectedKey.includes('/admin/exams')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/students')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/teachers')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/settings')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
-  if(selectedKey.includes('/teacher/marks-entry')) {} // No specific parent for teacher items unless grouped
 
 
   const breadcrumbItemsGen = () => {
@@ -198,7 +196,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
-      // Special handling for dynamic segments that are ObjectIds
       if (mongoose.Types.ObjectId.isValid(snippet)) {
         const prevSegment = relevantSnippets[index-1];
         const secondPrevSegment = relevantSnippets[index-2];
@@ -207,14 +204,14 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         if (prevSegment === 'exams' && nextSegment === 'assessments') { 
             title = "Manage Assessments"; 
         } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { 
-             // This is the [assessmentId] part of /teacher/marks-entry/[examId]/[assessmentId]
              title = "Enter Marks";
         } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(snippet)) { 
-             // This is the [examId] part of /teacher/marks-entry/[examId]/...
              title = `Exam Details`; 
+        } else if (prevSegment === 'my-classes' && mongoose.Types.ObjectId.isValid(snippet)) {
+             title = `Class Roster`;
         }
          else {
-            title = "Details"; // Generic title for other ObjectIds
+            title = "Details"; 
         }
       }
 
