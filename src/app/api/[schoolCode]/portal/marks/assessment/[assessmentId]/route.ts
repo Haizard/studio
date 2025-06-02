@@ -43,25 +43,37 @@ export async function GET(
     }
 
     let query: any = { assessmentId };
+    // For teachers, admins, superadmins, fetch all marks for the assessment.
+    // For students, filter by their own ID.
     if (token.role === 'student') {
-        query.studentId = token.uid;
+        // Assuming token.uid holds the User's _id for the student.
+        // We need to find the Student profile linked to this User ID to get the Student document _id.
+        // However, Mark.studentId refers to User._id if students are also users.
+        // If Mark.studentId refers to Student._id, then we need to adjust.
+        // Assuming Mark.studentId = User._id for now.
+        // The BATCH MARKS API uses studentId which is the User ID from the `students` array, 
+        // where key is user._id.
+        // The StudentMarkData interface uses studentId, which comes from student._id (profile id).
+        // The BATCH MARKS API needs to consistently use one or the other, or we need to resolve.
+        // Let's assume `Mark.studentId` is the actual `Student Profile ID` or the `User ID` consistently.
+        // Given current Mark model: `studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },`
+        // This means `Mark.studentId` IS `User._id`.
+        query.studentId = token.uid; 
     }
 
     const marks = await Mark.find(query)
       .populate<{ studentId: ITenantUser }>({
         path: 'studentId', 
         model: 'User', // Explicit model name
-        select: 'firstName lastName username'
+        select: 'firstName lastName username' // Only select what's needed for display of mark owner
       })
       .lean();
     
-    if (token.role === 'student' && marks.length === 0) {
-        // No specific message here, client can handle display of empty results
-    }
-
     return NextResponse.json(marks);
   } catch (error: any) {
     console.error(`Error fetching marks for assessment ${assessmentId}, school ${schoolCode}:`, error);
     return NextResponse.json({ error: 'Failed to fetch marks', details: error.message }, { status: 500 });
   }
 }
+
+    

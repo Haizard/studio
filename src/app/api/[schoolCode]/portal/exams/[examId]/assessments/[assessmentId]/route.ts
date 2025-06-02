@@ -24,8 +24,9 @@ export async function GET(
   const { schoolCode, examId, assessmentId } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
+  // Allow teachers, admins, and superadmins to fetch assessment details
   if (!token || !['admin', 'superadmin', 'teacher'].includes(token.role as string) ) {
-     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+     return NextResponse.json({ error: 'Unauthorized role' }, { status: 403 });
   }
   if (token.schoolCode !== schoolCode && token.role !== 'superadmin'){
      return NextResponse.json({ error: 'Unauthorized for this school' }, { status: 403 });
@@ -64,9 +65,10 @@ export async function PUT(
   const { schoolCode, examId, assessmentId } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
+ // Only admins or superadmins can update assessments
  if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
     if (!(token?.role === 'superadmin' && schoolCode)) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        return NextResponse.json({ error: 'Unauthorized: Only Admins can update assessments.' }, { status: 403 });
     }
   }
 
@@ -144,9 +146,10 @@ export async function DELETE(
   const { schoolCode, examId, assessmentId } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
+  // Only admins or superadmins can delete assessments
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
     if (!(token?.role === 'superadmin' && schoolCode)) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        return NextResponse.json({ error: 'Unauthorized: Only Admins can delete assessments' }, { status: 403 });
     }
   }
 
@@ -163,9 +166,12 @@ export async function DELETE(
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: 'Assessment not found or does not belong to this exam' }, { status: 404 });
     }
+    // TODO: Delete associated marks when an assessment is deleted. This should ideally be handled transactionally or via a pre-delete hook in the model.
     return NextResponse.json({ message: 'Assessment deleted successfully' });
   } catch (error: any) {
     console.error(`Error deleting assessment ${assessmentId} for ${schoolCode}:`, error);
     return NextResponse.json({ error: 'Failed to delete assessment', details: error.message }, { status: 500 });
   }
 }
+
+    
