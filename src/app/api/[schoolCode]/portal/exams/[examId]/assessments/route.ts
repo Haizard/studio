@@ -5,6 +5,7 @@ import AssessmentModel, { IAssessment } from '@/models/Tenant/Assessment';
 import ExamModel, { IExam } from '@/models/Tenant/Exam';
 import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
+import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
@@ -13,6 +14,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Exam) tenantDb.model<IExam>('Exam', ExamModel.schema);
   if (!tenantDb.models.Subject) tenantDb.model<ISubject>('Subject', SubjectModel.schema);
   if (!tenantDb.models.Class) tenantDb.model<IClass>('Class', ClassModel.schema);
+  if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
 }
 
 export async function GET(
@@ -22,11 +24,14 @@ export async function GET(
   const { schoolCode, examId } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
-    if (!(token?.role === 'superadmin' && schoolCode)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+  // Authorization: Allow admins and teachers for this school
+  if (!token || !['admin', 'superadmin', 'teacher'].includes(token.role as string) ) {
+     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
+  if (token.schoolCode !== schoolCode && token.role !== 'superadmin'){
+     return NextResponse.json({ error: 'Unauthorized for this school' }, { status: 403 });
+  }
+
 
   if (!mongoose.Types.ObjectId.isValid(examId)) {
     return NextResponse.json({ error: 'Invalid Exam ID' }, { status: 400 });
@@ -37,10 +42,26 @@ export async function GET(
     await ensureTenantModelsRegistered(tenantDb);
     const Assessment = tenantDb.models.Assessment as mongoose.Model<IAssessment>;
     
-    const assessments = await Assessment.find({ examId })
-      .populate('subjectId', 'name code')
-      .populate('classId', 'name level')
-      .populate('invigilatorId', 'firstName lastName username')
+    const { searchParams } = new URL(request.url);
+    const classId = searchParams.get('classId');
+    const subjectId = searchParams.get('subjectId');
+
+    let query: any = { examId };
+    if (classId && mongoose.Types.ObjectId.isValid(classId)) {
+      query.classId = classId;
+    }
+    if (subjectId && mongoose.Types.ObjectId.isValid(subjectId)) {
+      query.subjectId = subjectId;
+    }
+    
+    // Teachers should only see assessments for their assigned classes/subjects for this exam.
+    // Admins see all. This logic is a simplified version, more robust checks might be needed in a complex system.
+    // For now, if classId and subjectId are provided in query, it will filter by them.
+
+    const assessments = await Assessment.find(query)
+      .populate({ path: 'subjectId', model: 'Subject', select: 'name code' })
+      .populate({ path: 'classId', model: 'Class', select: 'name level' })
+      .populate({ path: 'invigilatorId', model: 'User', select: 'firstName lastName username' })
       .sort({ assessmentDate: 1, 'subjectId.name': 1 })
       .lean(); 
 
@@ -105,9 +126,9 @@ export async function POST(
 
     await newAssessment.save();
     const populatedAssessment = await Assessment.findById(newAssessment._id)
-        .populate('subjectId', 'name code')
-        .populate('classId', 'name level')
-        .populate('invigilatorId', 'firstName lastName username')
+        .populate({ path: 'subjectId', model: 'Subject', select: 'name code' })
+        .populate({ path: 'classId', model: 'Class', select: 'name level' })
+        .populate({ path: 'invigilatorId', model: 'User', select: 'firstName lastName username' })
         .lean();
     return NextResponse.json(populatedAssessment, { status: 201 });
   } catch (error: any) {

@@ -47,7 +47,7 @@ export default function AssessmentsPage() {
   const EXAM_API_URL = `/api/${schoolCode}/portal/exams/${examId}`;
   const SUBJECTS_API = `/api/${schoolCode}/portal/academics/subjects`;
   const CLASSES_API = `/api/${schoolCode}/portal/academics/classes`;
-  const USERS_API = `/api/${schoolCode}/portal/users`;
+  const USERS_API = `/api/${schoolCode}/portal/users`; // To fetch teachers
 
   const fetchData = useCallback(async () => {
     if (!examId || !mongoose.Types.ObjectId.isValid(examId)) {

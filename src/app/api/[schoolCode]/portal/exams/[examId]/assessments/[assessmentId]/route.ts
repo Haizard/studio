@@ -24,8 +24,7 @@ export async function GET(
   const { schoolCode, examId, assessmentId } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
-  // Loosened for now, assuming teacher might also need to see this if it's for their assigned assessment directly.
-  // For stricter admin-only view, adjust roles.
+  // Authorization check (adjust roles as needed, e.g., if teachers can view specific assessments)
   if (!token || !['admin', 'superadmin', 'teacher'].includes(token.role as string) ) {
      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
