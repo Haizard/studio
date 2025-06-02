@@ -14,7 +14,7 @@ const { Option } = Select;
 interface ClassDataType extends Omit<IClass, 'academicYearId' | 'classTeacherId' | 'subjectsOffered'> {
   key: string;
   academicYearId: { _id: string; name: string } | string; // Populated or ID
-  classTeacherId?: { _id: string; firstName?: string; lastName?: string; username: string } | string; // Populated or ID
+  classTeacherId?: { _id: string; firstName?: string; lastName?: string; username: string } | string | null; // Populated or ID
   subjectsOffered?: ({ _id: string; name: string; code?:string } | string)[]; // Populated or ID array
 }
 
@@ -141,10 +141,13 @@ export default function ClassesPage({ params }: ClassesPageProps) {
       title: 'Academic Year', 
       dataIndex: 'academicYearId', 
       key: 'academicYearId', 
-      render: (ay: ClassDataType['academicYearId']) => typeof ay === 'object' ? ay.name : (academicYears.find(y => y._id === ay)?.name || ay),
+      render: (ay: ClassDataType['academicYearId']) => {
+         if (!ay) return '-';
+         return typeof ay === 'object' ? ay.name : (academicYears.find(y => y._id === ay)?.name || ay);
+      },
       sorter: (a: ClassDataType, b: ClassDataType) => {
-        const nameA = typeof a.academicYearId === 'object' ? a.academicYearId.name : (academicYears.find(y => y._id === a.academicYearId)?.name || '');
-        const nameB = typeof b.academicYearId === 'object' ? b.academicYearId.name : (academicYears.find(y => y._id === b.academicYearId)?.name || '');
+        const nameA = a.academicYearId && typeof a.academicYearId === 'object' ? a.academicYearId.name : (academicYears.find(y => y._id === a.academicYearId)?.name || '');
+        const nameB = b.academicYearId && typeof b.academicYearId === 'object' ? b.academicYearId.name : (academicYears.find(y => y._id === b.academicYearId)?.name || '');
         return nameA.localeCompare(nameB);
       }
     },
@@ -167,10 +170,11 @@ export default function ClassesPage({ params }: ClassesPageProps) {
       key: 'subjectsOffered', 
       render: (subs?: ClassDataType['subjectsOffered']) => {
         if (!subs || subs.length === 0) return '-';
-        return subs.map(sub => {
-          const subjectName = typeof sub === 'object' ? sub.name : (subjects.find(s => s._id === sub)?.name || sub);
+        return subs.slice(0, 3).map(sub => { // Show max 3 tags for brevity
+          const subjectDetails = typeof sub === 'object' ? sub : subjects.find(s => s._id === sub);
+          const subjectName = subjectDetails ? subjectDetails.name : (typeof sub === 'string' ? sub : 'Unknown');
           return <Tag key={typeof sub === 'object' ? sub._id : sub}>{subjectName}</Tag>;
-        }).slice(0, 3); // Show max 3 tags
+        });
       }
     },
     { title: 'Capacity', dataIndex: 'capacity', key: 'capacity', render: (capacity?: number) => capacity || '-' },

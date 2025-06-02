@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import TenantUserModel, { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
@@ -16,7 +16,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
     tenantDb.model<IAcademicYear>('AcademicYear', AcademicYearModel.schema);
   }
   if (!tenantDb.models.User) { // For Class Teacher
-    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   }
    if (!tenantDb.models.Subject) { // For Subjects Offered
     tenantDb.model<ISubject>('Subject', SubjectModel.schema);
@@ -46,9 +46,9 @@ export async function GET(
     const Class = tenantDb.models.Class as mongoose.Model<IClass>;
     
     const classes = await Class.find({})
-      .populate('academicYearId', 'name')
-      .populate('classTeacherId', 'firstName lastName username')
-      .populate('subjectsOffered', 'name code')
+      .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
+      .populate<{ classTeacherId: ITenantUser }>('classTeacherId', 'firstName lastName username')
+      .populate<{ subjectsOffered: ISubject[] }>('subjectsOffered', 'name code')
       .sort({ 'academicYearId.name': -1, name: 1 })
       .lean(); 
 
@@ -86,6 +86,23 @@ export async function POST(
     if (!name || !level || !academicYearId) {
       return NextResponse.json({ error: 'Missing required fields: name, level, academicYearId' }, { status: 400 });
     }
+    if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
+        return NextResponse.json({ error: 'Invalid Academic Year ID format' }, { status: 400 });
+    }
+    if (classTeacherId && !mongoose.Types.ObjectId.isValid(classTeacherId)) {
+        return NextResponse.json({ error: 'Invalid Class Teacher ID format' }, { status: 400 });
+    }
+    if (subjectsOffered && !Array.isArray(subjectsOffered)) {
+        return NextResponse.json({ error: 'Subjects offered must be an array' }, { status: 400 });
+    }
+    if (subjectsOffered) {
+        for (const subId of subjectsOffered) {
+            if (!mongoose.Types.ObjectId.isValid(subId)) {
+                 return NextResponse.json({ error: `Invalid Subject ID format in subjectsOffered: ${subId}` }, { status: 400 });
+            }
+        }
+    }
+
 
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
@@ -108,14 +125,14 @@ export async function POST(
 
     await newClass.save();
     const populatedClass = await Class.findById(newClass._id)
-      .populate('academicYearId', 'name')
-      .populate('classTeacherId', 'firstName lastName username')
-      .populate('subjectsOffered', 'name code')
+      .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
+      .populate<{ classTeacherId: ITenantUser }>('classTeacherId', 'firstName lastName username')
+      .populate<{ subjectsOffered: ISubject[] }>('subjectsOffered', 'name code')
       .lean();
     return NextResponse.json(populatedClass, { status: 201 });
   } catch (error: any) {
     console.error(`Error creating class for ${schoolCode}:`, error);
-    if (error.code === 11000) {
+    if (error.code === 11000) { // Mongoose duplicate key error from unique index
         return NextResponse.json({ error: 'Class name must be unique within an academic year.' }, { status: 409 });
     }
     if (error.message.includes('School not found') || error.message.includes('MongoDB URI not configured')) {

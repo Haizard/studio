@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import TenantUserModel, { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
@@ -16,7 +16,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
     tenantDb.model<IAcademicYear>('AcademicYear', AcademicYearModel.schema);
   }
   if (!tenantDb.models.User) {
-    tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+    tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
   }
   if (!tenantDb.models.Subject) {
     tenantDb.model<ISubject>('Subject', SubjectModel.schema);
@@ -46,9 +46,9 @@ export async function GET(
     const Class = tenantDb.models.Class as mongoose.Model<IClass>;
 
     const classData = await Class.findById(classId)
-      .populate('academicYearId', 'name')
-      .populate('classTeacherId', 'firstName lastName username')
-      .populate('subjectsOffered', 'name code')
+      .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
+      .populate<{ classTeacherId: ITenantUser }>('classTeacherId', 'firstName lastName username')
+      .populate<{ subjectsOffered: ISubject[] }>('subjectsOffered', 'name code')
       .lean();
       
     if (!classData) {
@@ -85,6 +85,22 @@ export async function PUT(
     if (!name || !level || !academicYearId) {
       return NextResponse.json({ error: 'Missing required fields: name, level, academicYearId' }, { status: 400 });
     }
+    if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
+        return NextResponse.json({ error: 'Invalid Academic Year ID format' }, { status: 400 });
+    }
+    if (classTeacherId && !mongoose.Types.ObjectId.isValid(classTeacherId)) {
+        return NextResponse.json({ error: 'Invalid Class Teacher ID format' }, { status: 400 });
+    }
+    if (subjectsOffered && !Array.isArray(subjectsOffered)) {
+        return NextResponse.json({ error: 'Subjects offered must be an array' }, { status: 400 });
+    }
+     if (subjectsOffered) {
+        for (const subId of subjectsOffered) {
+            if (!mongoose.Types.ObjectId.isValid(subId)) {
+                 return NextResponse.json({ error: `Invalid Subject ID format in subjectsOffered: ${subId}` }, { status: 400 });
+            }
+        }
+    }
 
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
@@ -95,7 +111,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
     }
 
-    if (name !== classToUpdate.name || academicYearId.toString() !== classToUpdate.academicYearId.toString()) {
+    if (name !== classToUpdate.name || (classToUpdate.academicYearId as mongoose.Types.ObjectId).toString() !== academicYearId) {
         const existingClass = await Class.findOne({ name, academicYearId, _id: { $ne: classId } });
         if (existingClass) {
           return NextResponse.json({ error: 'Another class with this name already exists for the selected academic year.' }, { status: 409 });
@@ -112,14 +128,14 @@ export async function PUT(
 
     await classToUpdate.save();
     const populatedClass = await Class.findById(classToUpdate._id)
-      .populate('academicYearId', 'name')
-      .populate('classTeacherId', 'firstName lastName username')
-      .populate('subjectsOffered', 'name code')
+      .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
+      .populate<{ classTeacherId: ITenantUser }>('classTeacherId', 'firstName lastName username')
+      .populate<{ subjectsOffered: ISubject[] }>('subjectsOffered', 'name code')
       .lean();
     return NextResponse.json(populatedClass);
   } catch (error: any) {
     console.error(`Error updating class ${classId} for ${schoolCode}:`, error);
-    if (error.code === 11000) {
+    if (error.code === 11000) { // Mongoose duplicate key error from unique index
         return NextResponse.json({ error: 'Class name must be unique within an academic year.' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Failed to update class', details: error.message }, { status: 500 });
@@ -148,7 +164,7 @@ export async function DELETE(
     await ensureTenantModelsRegistered(tenantDb);
     const Class = tenantDb.models.Class as mongoose.Model<IClass>;
 
-    // TODO: Add check if class is in use by students or other entities before deleting
+    // TODO: Add check if class is in use by students or other entities (e.g., assessments) before deleting
     const result = await Class.deleteOne({ _id: classId });
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
