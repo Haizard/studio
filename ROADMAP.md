@@ -1,0 +1,164 @@
+
+# Unified School Management System - Roadmap
+
+This document tracks the features implemented and planned for the Unified School Management System.
+
+## ✅ Implemented Features
+
+### I. Core Infrastructure & Setup
+- [x] Next.js 15 with App Router
+- [x] Tailwind CSS for styling
+- [x] Ant Design component library integration
+- [x] Database Setup:
+    - [x] SuperAdmin DB connection (`mongoose`)
+    - [x] Tenant-specific DB connections (`mongoose`)
+- [x] Authentication (NextAuth.js):
+    - [x] Credentials-based login
+    - [x] Role-based access control (SuperAdmin, Admin, Teacher, Student)
+    - [x] Session management (JWT)
+- [x] Basic Layouts:
+    - [x] SuperAdmin Portal Layout (Sider, Header, Content)
+    - [x] School Portal Layout (Sider with role-based menus, Header, Content, Breadcrumbs)
+    - [x] Public School Website Layout (Header, Footer, Basic Navigation)
+- [x] Middleware for route protection and role-based redirects
+
+### II. SuperAdmin Portal (`/dashboard`, `/schools`)
+- [x] **Dashboard**: Basic placeholder page.
+- [x] **School Management**:
+    - [x] List existing schools
+    - [x] Add new schools (Name, School Code, MongoDB URI, Contact Info)
+    - [x] Edit existing schools
+    - [x] View school details
+
+### III. School Portal - Admin Section (`/[schoolCode]/portal/admin/...`)
+- [x] **Dashboard**: Placeholder page with basic structure.
+- [x] **User Management**:
+    - [x] List all tenant users (admins, teachers, students etc.)
+    - [x] Add new tenant users with specific roles (Admin, Teacher, etc.)
+    - [x] Edit tenant user details (profile info, role, status)
+    - [x] Password management (set on create, optional update on edit)
+- [x] **Student Management**:
+    - [x] List all students with key details.
+    - [x] Add new students (creates TenantUser with 'student' role & Student profile).
+    - [x] Edit student details (user info, profile info, academic class/year).
+    - [x] Activate/Deactivate student accounts.
+- [x] **Teacher Management**:
+    - [x] List all teachers with key details.
+    - [x] Add new teachers (creates TenantUser with 'teacher' role & Teacher profile).
+    - [x] Edit teacher details (user info, profile info, qualifications, specialization).
+    - [x] Activate/Deactivate teacher accounts.
+    - [x] API support for `assignedClassesAndSubjects` (UI for direct assignment management in modal is basic).
+- [x] **Academics Management**:
+    - [x] **Academics Overview Page**: Dashboard for academic modules.
+    - [x] **Academic Year Management**: CRUD operations, including setting the active year.
+    - [x] **Term Management**: CRUD operations, linked to Academic Years, including setting active term.
+    - [x] **Subject Management**: CRUD operations for school subjects.
+    - [x] **Class Management**: CRUD operations, linking classes to academic years, class teachers (optional), and subjects offered.
+    - [x] **A-Level Combination Management**: CRUD operations for A-Level subject combinations, linked to academic years and subjects.
+- [x] **Exam Management**:
+    - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status).
+    - [x] **Assessment Management**: CRUD operations for individual assessments (papers, practicals) under an exam, linking to subjects and classes.
+- [x] **Website Content Management**:
+    - [x] **Website Management Overview Page**.
+    - [x] **News Article Management**: CRUD operations for news articles (title, slug, content, images, etc.).
+    - [x] **Event Management**: CRUD operations for school events (details, dates, images, etc.).
+    - [x] **Gallery Management**: CRUD operations for gallery images (upload, title, album, tags).
+- [x] **School Settings**:
+    - [x] Manage basic website settings (School Name, Logo, Tagline, Contact Info, Footer, Colors).
+- [x] **Admin Reports**: Placeholder page.
+
+### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
+- [x] **Marks Entry**:
+    - [x] Selection page: Filter by Academic Year, Exam, Class, Subject to find assessments.
+    - [x] Detailed Marks Entry page: Enter/update marks and comments for students for a specific assessment.
+    - [x] API for batch mark submission with teacher authorization.
+- [x] **My Classes**: Placeholder page.
+- [x] **Resources**: Placeholder page.
+
+### V. School Portal - Student Section (`/[schoolCode]/portal/student/...`)
+- [x] **My Profile**: Students can view their own detailed profile information.
+- [x] **My Results**: Students can view their marks for published exams, filtered by academic year and term.
+- [x] **Resources**: Placeholder page.
+
+### VI. Public School Website (`/[schoolCode]/...`)
+- [x] **Dynamic Layout**: Header (logo, nav) and Footer driven by School Settings.
+- [x] **Homepage**: Basic placeholder structure.
+- [x] **News Listing Page**: Displays active news articles.
+- [x] **Single News Article Page**: Displays full content of a news article by slug.
+- [x] **Events Listing Page**: Displays active upcoming and past events.
+- [x] **Gallery Page**: Displays active gallery items, with album filtering.
+
+## 🚧 Planned/Pending Features (High-Level)
+
+### School Portal - Admin Section
+- [ ] **Finance Management**:
+    - [ ] Fee structure setup
+    - [ ] Student fee collection and tracking
+    - [ ] Invoicing and receipts
+    - [ ] Expense tracking
+    - [ ] Financial reporting
+- [ ] **Library Management**:
+    - [ ] Book cataloging (ISBN, author, publisher, etc.)
+    - [ ] Member management (students, teachers)
+    - [ ] Book borrowing and returns
+    - [ ] Fine management for overdue books
+    - [ ] Library inventory and reporting
+- [ ] **Pharmacy/Health Management**:
+    - [ ] Student health records
+    - [ ] Medication dispensing log
+    - [ ] Inventory of medical supplies
+- [ ] **Dormitory Management**:
+    - [ ] Dormitory/Room setup
+    - [ ] Student room allocation
+    - [ ] Check-in/Check-out
+- [ ] **Timetable Management**:
+    - [ ] Create and manage class timetables
+    - [ ] Teacher timetable view
+    - [ ] Student timetable view
+- [ ] **Student Attendance**:
+    - [ ] Mark student attendance (class-wise, daily)
+    - [ ] Attendance reporting
+- [ ] **Grading & Promotion**:
+    - [ ] Define grading scales
+    - [ ] Process student promotions/repetitions based on results
+    - [ ] Generate report cards/transcripts
+- [ ] **Detailed Admin Reports**: Implementation of various report generation tools.
+- [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments.
+
+### School Portal - Teacher Section
+- [ ] **My Classes**:
+    - [ ] View student lists for assigned classes
+    - [ ] Manage student attendance for their classes
+    - [ ] View class timetables
+- [ ] **Resources**:
+    - [ ] Upload and manage teaching resources
+    - [ ] Share resources with specific classes/students
+
+### School Portal - Student Section
+- [ ] **My Timetable**: View personal class timetable.
+- [ ] **My Attendance**: View own attendance records.
+- [ ] **Resources**: Access learning materials shared by teachers.
+- [ ] **Fee Payment**: View fee status and potentially integrate payment.
+
+### Public School Website
+- [ ] **About Us Page**: Content management for school history, mission, vision.
+- [ ] **Admissions Page**: Information on admission process, forms, deadlines.
+- [ ] **Contact Page**: Contact form, map, detailed contact information.
+- [ ] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
+- [ ] **Staff Directory**: Public listing of teaching staff (optional).
+- [ ] **Blog/Articles**: More generic content beyond news.
+
+### Cross-Cutting Concerns
+- [ ] **Notifications System**: In-app and email notifications for important events.
+- [ ] **Advanced Search & Filtering**: Across all major modules.
+- [ ] **Data Import/Export**: For key data like students, teachers, marks.
+- [ ] **Enhanced Security**: Password policies, session timeouts, audit trails.
+- [ ] **Performance Optimization**: For large datasets and high traffic.
+- [ ] **Accessibility (A11Y) improvements**.
+- [ ] **Mobile Responsiveness**: Thorough testing and refinement.
+- [ ] **Theming Customization**: Allow admins more control over portal and public site appearance beyond basic colors.
+- [ ] **AI Features (Genkit)**: Specific integrations (e.g., content generation, support chatbot, data analysis).
+- [ ] **Backup & Restore**: Strategies for tenant data.
+
+This roadmap should give us a clear overview of our progress and what lies ahead!
+Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
