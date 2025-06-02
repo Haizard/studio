@@ -4,61 +4,93 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
-  const { pathname, origin } = req.nextUrl;
+  const { pathname, origin, searchParams } = req.nextUrl;
 
-  // Get the session token
-  // The secret should be the same as in your `authOptions`
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) {
-    console.error("NEXTAUTH_SECRET is not set. Middleware cannot function properly.");
-    // Allow request to proceed but log error, or redirect to an error page
+    console.error("CRITICAL: NEXTAUTH_SECRET is not set. Middleware and authentication will not function correctly.");
+    // In a real scenario, you might want to redirect to a dedicated error page or show a maintenance message.
+    // For now, allowing to proceed but this is a major configuration issue.
     return NextResponse.next();
   }
   const token = await getToken({ req, secret });
 
-  // Define protected route patterns
-  const isSuperAdminRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/schools'); // SuperAdmin specific top-level routes
+  const isLoggedIn = !!token;
+  const userRole = token?.role as string | undefined;
+  const userSchoolCode = token?.schoolCode as string | undefined;
+
+  // Routes definitions
+  const isSuperAdminOnlyRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/schools');
   const isSchoolPortalRoute = /^\/[^/]+\/portal/.test(pathname); // Matches /[schoolCode]/portal/...
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/auth/error'); // Add other auth routes if any
+
+  // If user is logged in and tries to access login page, redirect them
+  if (isLoggedIn && isAuthRoute) {
+    if (userRole === 'superadmin') {
+      return NextResponse.redirect(new URL('/dashboard', origin));
+    }
+    if (userRole && userSchoolCode) {
+      return NextResponse.redirect(new URL(`/${userSchoolCode}/portal/dashboard`, origin));
+    }
+    return NextResponse.redirect(new URL('/', origin)); // Fallback to home
+  }
 
   // If trying to access a protected route without a token, redirect to login
-  if ((isSuperAdminRoute || isSchoolPortalRoute) && !token) {
+  if (!isLoggedIn && (isSuperAdminOnlyRoute || isSchoolPortalRoute)) {
     const loginUrl = new URL('/login', origin);
-    // Add callbackUrl so user is redirected back after login
-    loginUrl.searchParams.set('callbackUrl', pathname);
+    loginUrl.searchParams.set('callbackUrl', pathname + searchParams.toString()); // Preserve query params
+    
+    // If accessing a school portal URL directly, prefill schoolCode on login page
+    if (isSchoolPortalRoute) {
+        const schoolCodeFromPath = pathname.split('/')[1];
+        if (schoolCodeFromPath) {
+            loginUrl.searchParams.set('schoolCode', schoolCodeFromPath);
+        }
+    }
     return NextResponse.redirect(loginUrl);
   }
   
   // If user is authenticated, perform role-based access control
-  if (token) {
-    const userRole = token.role as string;
-    const userSchoolCode = token.schoolCode as string | undefined;
-
+  if (isLoggedIn) {
     // SuperAdmin route protection
-    if (isSuperAdminRoute && userRole !== 'superadmin') {
-      // If not a superadmin, redirect to a generic access denied or their respective dashboard
-      // For simplicity, redirecting to home or login.
-      // A more sophisticated approach would be to redirect to their specific portal if applicable
-      // or an access denied page.
+    if (isSuperAdminOnlyRoute && userRole !== 'superadmin') {
       console.warn(`Access Denied: User ${token.email} (role: ${userRole}) tried to access SuperAdmin route ${pathname}`);
-      return NextResponse.redirect(new URL('/', origin)); // Or /login or an access-denied page
+      // Redirect non-superadmins away from superadmin routes
+      if (userSchoolCode) { // If they belong to a school, send them to their portal
+        return NextResponse.redirect(new URL(`/${userSchoolCode}/portal/dashboard`, origin));
+      }
+      return NextResponse.redirect(new URL('/', origin)); // Fallback
     }
 
     // School Portal route protection
     if (isSchoolPortalRoute) {
-      const schoolCodeFromPath = pathname.split('/')[1];
+      const schoolCodeFromPath = pathname.split('/')[1]?.toLowerCase();
+
       if (userRole === 'superadmin') {
-        // Superadmins can access any school portal (if logic allows)
-        // Or you might want to restrict superadmins from direct portal access unless they 'impersonate'
-        // For now, allowing access.
+        // Superadmins can access any school portal.
+        // No specific check needed here for superadmin, they pass.
       } else {
-        // Tenant users (teacher, student, admin)
-        if (!userSchoolCode || userSchoolCode.toLowerCase() !== schoolCodeFromPath.toLowerCase()) {
-          // User is trying to access a portal for a school they don't belong to
+        // Tenant users (admin, teacher, student)
+        if (!userSchoolCode || userSchoolCode.toLowerCase() !== schoolCodeFromPath) {
           console.warn(`Access Denied: User ${token.email} (school: ${userSchoolCode}) tried to access portal for school ${schoolCodeFromPath}`);
-          return NextResponse.redirect(new URL('/', origin)); // Or /login or an access-denied page
+          // If they have a school code but it's wrong, send them to their own portal
+          if (userSchoolCode) {
+             return NextResponse.redirect(new URL(`/${userSchoolCode}/portal/dashboard`, origin));
+          }
+          // If they somehow don't have a school code but are trying to access a portal
+          return NextResponse.redirect(new URL('/login', origin)); // Send to login
         }
-        // Further role-based checks within the portal can be done here or in page components
-        // e.g., if a student tries to access /portal/admin/...
+        // Additional checks for roles within a portal (e.g. student accessing admin section)
+        // This is a simplified check. More granular checks should be inside page/layout components or specific API routes.
+        if (userRole === 'student' && pathname.includes('/portal/admin/')) {
+            console.warn(`Access Denied: Student ${token.email} tried to access admin section ${pathname}`);
+            return NextResponse.redirect(new URL(`/${userSchoolCode}/portal/dashboard`, origin));
+        }
+         if (userRole === 'teacher' && pathname.includes('/portal/admin/')) {
+            console.warn(`Access Denied: Teacher ${token.email} tried to access admin section ${pathname}`);
+            return NextResponse.redirect(new URL(`/${userSchoolCode}/portal/dashboard`, origin));
+        }
+
       }
     }
   }
@@ -66,23 +98,23 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Specify which paths the middleware should run on
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
+     * - api (API routes are handled by their own authentication logic, if any)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - login page itself to avoid redirect loops
-     * - public website routes (/[schoolCode] without /portal)
+     * - public assets in /public folder (e.g. images, svgs)
+     * Public website routes (e.g., `/[schoolCode]/` or `/[schoolCode]/about`) are NOT matched here by default,
+     * allowing them to be public. Only portal and superadmin routes are explicitly protected.
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|login|auth/error).*)',
-     // This regex ensures we match /dashboard, /schools and /[schoolCode]/portal routes
-     // but not /[schoolCode]/ (public website homepage) or /[schoolCode]/about etc.
-     '/dashboard/:path*',
-     '/schools/:path*',
-     '/:schoolCode/portal/:path*',
+    '/dashboard/:path*',
+    '/schools/:path*',
+    '/:schoolCode/portal/:path*',
+    '/login', // Match login to redirect if already authenticated
+    // Add other specific paths that need protection or redirection logic
+    // '/((?!api|_next/static|_next/image|favicon.ico|images).*)', // A broader matcher if needed, but be careful
   ],
 };

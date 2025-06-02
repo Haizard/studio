@@ -1,59 +1,91 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Form, Input, Button, Typography, Alert, Space } from 'antd';
-import { MailOutlined, LockOutlined, HomeOutlined } from '@ant-design/icons';
+import { MailOutlined, LockOutlined, HomeOutlined, ReadOutlined } from '@ant-design/icons';
 
-const { Title } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(searchParams.get('error'));
+  const [error, setError] = useState<string | null>(null);
+  const [initialSchoolCode, setInitialSchoolCode] = useState('');
+
+  useEffect(() => {
+    const callbackError = searchParams.get('error');
+    if (callbackError) {
+      // More user-friendly messages for common NextAuth errors
+      if (callbackError === "CredentialsSignin") {
+        setError("Invalid email, password, or school code. Please check your credentials and try again.");
+      } else if (callbackError === "Callback") {
+         setError("There was an issue redirecting you after login. Please try logging in again.");
+      }
+      else {
+        setError(`Login failed: ${callbackError}`);
+      }
+    }
+    const schoolCodeFromQuery = searchParams.get('schoolCode');
+    if (schoolCodeFromQuery) {
+        setInitialSchoolCode(schoolCodeFromQuery);
+    }
+  }, [searchParams]);
 
   const onFinish = async (values: any) => {
     setLoading(true);
     setError(null);
 
-    const callbackUrl = searchParams.get('callbackUrl') || '/';
-
+    const callbackUrlFromQuery = searchParams.get('callbackUrl');
+    
     const result = await signIn('credentials', {
-      redirect: false,
+      redirect: false, // We will handle redirect manually
       email: values.email,
       password: values.password,
-      schoolCode: values.schoolCode,
-      // callbackUrl: callbackUrl // Let signIn handle redirect based on result
+      schoolCode: values.schoolCode ? values.schoolCode.trim() : undefined, // Pass undefined if empty
     });
 
     setLoading(false);
 
     if (result?.error) {
-      setError(result.error === "CredentialsSignin" ? "Invalid email or password." : result.error);
+      if (result.error === "CredentialsSignin") {
+        setError("Invalid email, password, or school code. Please check your credentials and try again.");
+      } else {
+        setError(`Login error: ${result.error}. If this persists, contact support.`);
+      }
+    } else if (result?.ok && result.url) {
+        // Determine redirect path based on user type or a default
+        // For now, redirecting to callbackUrl or a sensible default.
+        // NextAuth will typically set result.url to the callbackUrl if successful.
+        // The middleware will handle routing to the correct dashboard based on role.
+        const finalRedirectUrl = callbackUrlFromQuery || '/'; // Default to home if no callback
+        router.push(finalRedirectUrl);
     } else if (result?.ok) {
-      // Determine redirect path based on user type or a default
-      // For now, redirecting to callbackUrl or a sensible default.
-      // This logic can be expanded if user.role is available here or via getSession()
-      router.push(callbackUrl === '/login' ? '/' : callbackUrl);
+        // Fallback if result.url is not provided but login is ok
+        router.push('/');
     }
   };
 
   return (
     <>
+      <div className="text-center mb-6">
+        <ReadOutlined style={{ fontSize: '48px', color: 'var(--ant-primary-color)' }} />
+      </div>
       <Title level={2} className="text-center mb-8 text-primary">
-        Login
+        School System Login
       </Title>
       {error && (
-        <Alert message={error} type="error" showIcon className="mb-4" />
+        <Alert message={error} type="error" showIcon closable className="mb-4" onClose={() => setError(null)} />
       )}
       <Form
         name="login"
-        initialValues={{ remember: true }}
+        initialValues={{ remember: true, schoolCode: initialSchoolCode }}
         onFinish={onFinish}
         layout="vertical"
+        key={initialSchoolCode} // Re-initialize form if schoolCode from query changes
       >
         <Form.Item
           name="email"
@@ -71,30 +103,28 @@ export default function LoginPage() {
 
         <Form.Item
           name="schoolCode"
-          tooltip="Leave empty if you are a Super Administrator."
+          tooltip="Leave empty if you are a Super Administrator. Otherwise, enter your school's unique code."
         >
           <Input prefix={<HomeOutlined />} placeholder="School Code (Optional)" size="large" />
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading} block size="large">
+          <Button type="primary" htmlType="submit" loading={loading} block size="large" className="mt-2">
             Log in
           </Button>
         </Form.Item>
       </Form>
-       <Paragraph className="text-center mt-4 text-sm">
-        <Link href="/">
-          <Button type="link">Back to Home</Button>
-        </Link>
+       <Paragraph className="text-center mt-6 text-sm">
+        <Text type="secondary">
+          Accessing a public school website? 
+          <Link href="/"> Find a school.</Link> 
+        </Text>
       </Paragraph>
     </>
   );
 }
 
-// Minimalist Link and Paragraph for this page as they are not complex components
+// Minimalist Link for this page
 const Link: React.FC<React.AnchorHTMLAttributes<HTMLAnchorElement>> = ({ href, children, ...props }) => (
-  <a href={href} {...props}>{children}</a>
-);
-const Paragraph: React.FC<React.HTMLAttributes<HTMLParagraphElement>> = ({ children, ...props }) => (
-  <p {...props}>{children}</p>
+  <a href={href} {...props} className="text-primary hover:underline">{children}</a>
 );

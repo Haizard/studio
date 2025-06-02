@@ -1,10 +1,10 @@
 
 import type { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-// import { connectToSuperAdminDB, getTenantConnection } from './db';
-// import SuperAdminUserModel from '@/models/SuperAdmin/SuperAdminUser';
-// import TenantUserModel from '@/models/Tenant/User'; // Assuming User model for tenants
-// import bcrypt from 'bcryptjs';
+import { connectToSuperAdminDB, getTenantConnection } from './db';
+import SuperAdminUserModel, { ISuperAdminUser } from '@/models/SuperAdmin/SuperAdminUser';
+import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
+import bcrypt from 'bcryptjs';
 
 // Extend NextAuthUser to include role and potentially schoolCode
 interface CustomUser extends NextAuthUser {
@@ -26,41 +26,95 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         if (!credentials) return null;
 
-        // TODO: Implement actual database user lookup and password verification
-        // This is a placeholder for demonstration.
-        // In a real app, you would:
-        // 1. Determine if it's a superadmin login (e.g., if schoolCode is empty or based on email domain)
-        //    or a tenant login (if schoolCode is provided).
-        // 2. Connect to the appropriate database (SuperAdmin DB or Tenant DB via getTenantConnection).
-        // 3. Fetch the user by email/username.
-        // 4. Compare the provided password with the stored hashed password using bcrypt.compare.
-        // 5. Return the user object if credentials are valid, otherwise null.
+        const { email, password, schoolCode } = credentials;
 
-        // Placeholder logic:
-        if (credentials.email === 'admin@example.com' && credentials.password === 'password') {
-          return { 
-            id: 'superadmin-1', 
-            email: 'admin@example.com', 
-            name: 'Super Admin',
-            role: 'superadmin' 
+        try {
+          if (schoolCode && schoolCode.trim() !== '') {
+            // Attempt Tenant Login
+            const tenantDb = await getTenantConnection(schoolCode.trim().toLowerCase());
+            // Ensure model is registered on this specific connection
+            const TenantUserOnDB = tenantDb.models.User || tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
+            const user = await TenantUserOnDB.findOne({ email: email.toLowerCase() }).lean();
+
+            if (user && user.passwordHash) {
+              const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+              if (passwordMatch) {
+                return {
+                  id: user._id.toString(),
+                  email: user.email,
+                  name: `${user.firstName} ${user.lastName}`,
+                  role: user.role,
+                  schoolCode: schoolCode.trim().toLowerCase(),
+                } as CustomUser;
+              }
+            }
+          } else {
+            // Attempt SuperAdmin Login
+            const superAdminDbInstance = await connectToSuperAdminDB();
+            // Ensure model is registered on this specific connection
+            const SuperAdminUserOnDB = superAdminDbInstance.models.SuperAdminUser || superAdminDbInstance.model<ISuperAdminUser>('SuperAdminUser', SuperAdminUserModel.schema);
+            const user = await SuperAdminUserOnDB.findOne({ email: email.toLowerCase() }).lean();
+
+            if (user && user.passwordHash) {
+              const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+              if (passwordMatch) {
+                return {
+                  id: user._id.toString(),
+                  email: user.email,
+                  name: user.name,
+                  role: user.role, // Should be 'superadmin'
+                } as CustomUser;
+              }
+            }
+          }
+        } catch (error: any) {
+          console.error("Authorization database error:", error.message);
+          // Fall through to hardcoded credentials if DB operations fail (e.g., URI not set, school not found)
+        }
+
+        // Fallback to placeholder logic if DB auth fails or no user found
+        // IMPORTANT: For production, remove these or secure them properly.
+        // These are for development without needing a fully seeded DB initially.
+        // Ensure placeholder passwords would be hashed in a real scenario or only use DB.
+        const placeholderPassword = "password"; // Standard placeholder password
+
+        if (email === 'admin@example.com' && password === placeholderPassword && (!schoolCode || schoolCode.trim() === '')) {
+          console.warn("Using SuperAdmin placeholder login for admin@example.com");
+          return {
+            id: 'superadmin-placeholder-1',
+            email: 'admin@example.com',
+            name: 'Super Admin (Placeholder)',
+            role: 'superadmin',
           } as CustomUser;
         }
-        if (credentials.email === 'teacher@schoola.com' && credentials.password === 'password' && credentials.schoolCode === 'SCHA') {
-          return { 
-            id: 'teacher-1-scha', 
-            email: 'teacher@schoola.com', 
-            name: 'SchoolA Teacher', 
+        if (email === 'teacher@schoola.com' && password === placeholderPassword && schoolCode?.toLowerCase() === 'scha') {
+          console.warn("Using Tenant placeholder login for teacher@schoola.com (SCHA)");
+          return {
+            id: 'teacher-placeholder-1-scha',
+            email: 'teacher@schoola.com',
+            name: 'SchoolA Teacher (Placeholder)',
             role: 'teacher',
-            schoolCode: 'SCHA'
+            schoolCode: 'scha',
           } as CustomUser;
         }
-        if (credentials.email === 'student@schoolb.com' && credentials.password === 'password' && credentials.schoolCode === 'SCHB') {
-          return { 
-            id: 'student-1-schb', 
-            email: 'student@schoolb.com', 
-            name: 'SchoolB Student', 
+         if (email === 'admin@schoola.com' && password === placeholderPassword && schoolCode?.toLowerCase() === 'scha') {
+          console.warn("Using Tenant Admin placeholder login for admin@schoola.com (SCHA)");
+          return {
+            id: 'admin-scha-placeholder-1',
+            email: 'admin@schoola.com',
+            name: 'SchoolA Admin (Placeholder)',
+            role: 'admin',
+            schoolCode: 'scha',
+          } as CustomUser;
+        }
+        if (email === 'student@schoolb.com' && password === placeholderPassword && schoolCode?.toLowerCase() === 'schb') {
+          console.warn("Using Tenant placeholder login for student@schoolb.com (SCHB)");
+          return {
+            id: 'student-placeholder-1-schb',
+            email: 'student@schoolb.com',
+            name: 'SchoolB Student (Placeholder)',
             role: 'student',
-            schoolCode: 'SCHB'
+            schoolCode: 'schb',
           } as CustomUser;
         }
         
@@ -73,23 +127,21 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      // Persist user id and role to the token
       if (user) {
         const customUser = user as CustomUser;
         token.uid = customUser.id;
         token.role = customUser.role;
-        token.schoolCode = customUser.schoolCode;
-        token.email = customUser.email;
+        token.schoolCode = customUser.schoolCode; // This could be undefined for superadmin
+        token.email = customUser.email; // Ensure email and name are passed too
         token.name = customUser.name;
       }
       return token;
     },
     async session({ session, token }) {
-      // Add id and role to the session object
       if (session.user) {
         const customSessionUser = session.user as CustomUser;
         customSessionUser.id = token.uid as string;
-        customSessionUser.role = token.role as string;
+        customSessionUser.role = token.role as string | undefined;
         customSessionUser.schoolCode = token.schoolCode as string | undefined;
         customSessionUser.email = token.email as string | undefined;
         customSessionUser.name = token.name as string | undefined;
@@ -99,7 +151,8 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/login',
-    // error: '/auth/error', // Custom error handling page
+    // error: '/auth/error', // Custom error handling page for NextAuth errors
   },
-  secret: process.env.NEXTAUTH_SECRET, // Make sure this is set in .env.local
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development', // Enable debug logs in development
 };
