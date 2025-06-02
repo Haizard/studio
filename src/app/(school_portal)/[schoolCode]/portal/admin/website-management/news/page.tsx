@@ -1,10 +1,11 @@
 
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, Table, Modal, Form, Input, DatePicker, Switch, message, Tag, Space, Spin, Upload } from 'antd';
-import { PlusOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons';
-import type { INewsArticle } from '@/models/Tenant/NewsArticle'; // Adjust path as necessary
-import moment from 'moment'; // For date handling
+import { Button, Typography, Table, Modal, Form, Input, DatePicker, Switch, message, Tag, Space, Spin, Row, Col } from 'antd';
+import { PlusOutlined, EditOutlined, AimOutlined } from '@ant-design/icons';
+import type { INewsArticle } from '@/models/Tenant/NewsArticle'; 
+import moment from 'moment'; 
+import { summarizeText, type SummarizeTextInput } from '@/ai/flows/summarize-text-flow';
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -24,13 +25,12 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingArticle, setEditingArticle] = useState<NewsArticleDataType | null>(null);
   const [form] = Form.useForm();
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const fetchArticles = async () => {
     setLoading(true);
     try {
-      // This API might need to be adjusted if public GET and admin GET are different
-      // For now, assuming an admin-specific endpoint or logic within the existing one
-      const response = await fetch(`/api/${schoolCode}/website/news?adminView=true`); // Hypothetical adminView param
+      const response = await fetch(`/api/${schoolCode}/website/news?adminView=true`); 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch news articles');
@@ -64,6 +64,7 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
     setEditingArticle(article);
     form.setFieldsValue({
       ...article,
+      tags: Array.isArray(article.tags) ? article.tags.join(', ') : article.tags,
       publishedDate: article.publishedDate ? moment(article.publishedDate) : undefined,
     });
     setIsModalVisible(true);
@@ -75,17 +76,16 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
       const payload = { 
         ...values,
         publishedDate: values.publishedDate ? values.publishedDate.toISOString() : new Date().toISOString(),
-        // Handle file upload if featuredImageUrl is part of form
+        tags: values.tags ? (values.tags as string).split(',').map(tag => tag.trim()).filter(Boolean) : [],
       };
       
-      // Slug generation (simple example, consider a library for robustness)
       if (!payload.slug && payload.title) {
         payload.slug = payload.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
       }
 
 
       const url = editingArticle ? `/api/${schoolCode}/website/news/${editingArticle._id}` : `/api/${schoolCode}/website/news`;
-      const method = editingArticle ? 'PUT' : 'POST'; // Assuming PUT for update API route
+      const method = editingArticle ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
@@ -107,11 +107,36 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
     }
   };
 
+  const handleGenerateSummary = async () => {
+    const content = form.getFieldValue('content');
+    if (!content || content.trim() === '') {
+      message.warning('Please enter some content for the article before generating a summary.');
+      return;
+    }
+    setIsGeneratingSummary(true);
+    try {
+      const input: SummarizeTextInput = { textToSummarize: content };
+      const result = await summarizeText(input);
+      if (result && result.summary) {
+        form.setFieldsValue({ summary: result.summary });
+        message.success('Summary generated successfully!');
+      } else {
+        message.error('Failed to generate summary.');
+      }
+    } catch (error: any) {
+      console.error('Error generating summary:', error);
+      message.error(error.message || 'An error occurred while generating the summary.');
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
+
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title', sorter: (a:NewsArticleDataType, b:NewsArticleDataType) => a.title.localeCompare(b.title) },
     { title: 'Slug', dataIndex: 'slug', key: 'slug' },
     { title: 'Published Date', dataIndex: 'publishedDate', key: 'publishedDate', render: (date: moment.Moment) => date ? date.format('YYYY-MM-DD') : '-', sorter: (a: NewsArticleDataType, b: NewsArticleDataType) => moment(a.publishedDate).unix() - moment(b.publishedDate).unix()},
-    { title: 'Category', dataIndex: 'category', key: 'category' },
+    { title: 'Category', dataIndex: 'category', key: 'category', render: (cat?: string) => cat || '-' },
     { title: 'Status', dataIndex: 'isActive', key: 'isActive', render: (isActive: boolean) => <Tag color={isActive ? 'green' : 'red'}>{isActive ? 'Published' : 'Draft'}</Tag> },
     {
       title: 'Actions',
@@ -143,7 +168,7 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
         open={isModalVisible}
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
-        confirmLoading={form.isSubmitting}
+        confirmLoading={form.isSubmitting || isGeneratingSummary}
         destroyOnClose
         width={800}
       >
@@ -151,14 +176,30 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
           <Form.Item name="title" label="Title" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="slug" label="Slug (URL Path)" rules={[{ required: true }]} help="Auto-generated if left blank. E.g., 'my-article-title'">
-            <Input disabled={!!editingArticle} />
+          <Form.Item name="slug" label="Slug (URL Path)" rules={[{ required: true }]} help="Auto-generated from title if left blank. E.g., 'my-article-title'">
+            <Input disabled={!!editingArticle && !!editingArticle.slug}/>
           </Form.Item>
           <Form.Item name="content" label="Content (Markdown or HTML)" rules={[{ required: true }]}>
             <TextArea rows={10} placeholder="Write your article content here..." />
           </Form.Item>
-           <Form.Item name="summary" label="Summary (Optional)">
-            <TextArea rows={3} placeholder="A short summary for article listings." />
+          <Form.Item label="Summary (Optional)">
+            <Row gutter={8}>
+              <Col flex="auto">
+                <Form.Item name="summary" noStyle>
+                  <TextArea rows={3} placeholder="A short summary for article listings." />
+                </Form.Item>
+              </Col>
+              <Col flex="none">
+                <Button 
+                  icon={<AimOutlined />} 
+                  onClick={handleGenerateSummary} 
+                  loading={isGeneratingSummary}
+                  title="Generate Summary with AI"
+                >
+                 {isGeneratingSummary ? 'Generating...' : 'AI Summary'}
+                </Button>
+              </Col>
+            </Row>
           </Form.Item>
           <Form.Item name="category" label="Category (Optional)">
             <Input />
@@ -168,7 +209,6 @@ export default function NewsManagementPage({ params }: NewsManagementPageProps) 
           </Form.Item>
            <Form.Item name="featuredImageUrl" label="Featured Image URL (Optional)">
             <Input placeholder="https://example.com/image.jpg" />
-            {/* Or use AntD Upload component for direct uploads */}
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
