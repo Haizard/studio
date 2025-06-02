@@ -42,8 +42,8 @@ export async function GET(
     const AlevelCombination = tenantDb.models.AlevelCombination as mongoose.Model<IAlevelCombination>;
     
     const combinations = await AlevelCombination.find({})
-      .populate('academicYearId', 'name')
-      .populate('subjects', 'name code')
+      .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
+      .populate<{ subjects: ISubject[] }>('subjects', 'name code')
       .sort({ 'academicYearId.name': -1, name: 1 })
       .lean(); 
 
@@ -81,6 +81,13 @@ export async function POST(
     if (!name || !code || !subjects || !academicYearId || subjects.length === 0) {
       return NextResponse.json({ error: 'Missing required fields: name, code, subjects, academicYearId' }, { status: 400 });
     }
+    if (!mongoose.Types.ObjectId.isValid(academicYearId)){
+      return NextResponse.json({ error: 'Invalid Academic Year ID format.' }, { status: 400 });
+    }
+    if (!Array.isArray(subjects) || subjects.some(subId => !mongoose.Types.ObjectId.isValid(subId))) {
+      return NextResponse.json({ error: 'Invalid Subject ID format in subjects array.' }, { status: 400 });
+    }
+
 
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
@@ -101,8 +108,8 @@ export async function POST(
 
     await newCombination.save();
     const populatedCombination = await AlevelCombination.findById(newCombination._id)
-        .populate('academicYearId', 'name')
-        .populate('subjects', 'name code')
+        .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
+        .populate<{ subjects: ISubject[] }>('subjects', 'name code')
         .lean();
     return NextResponse.json(populatedCombination, { status: 201 });
   } catch (error: any) {

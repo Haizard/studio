@@ -42,8 +42,8 @@ export async function GET(
     const AlevelCombination = tenantDb.models.AlevelCombination as mongoose.Model<IAlevelCombination>;
 
     const combination = await AlevelCombination.findById(combinationId)
-      .populate('academicYearId', 'name')
-      .populate('subjects', 'name code')
+      .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
+      .populate<{ subjects: ISubject[] }>('subjects', 'name code')
       .lean();
       
     if (!combination) {
@@ -80,6 +80,13 @@ export async function PUT(
     if (!name || !code || !subjects || !academicYearId || subjects.length === 0) {
       return NextResponse.json({ error: 'Missing required fields: name, code, subjects, academicYearId' }, { status: 400 });
     }
+    if (!mongoose.Types.ObjectId.isValid(academicYearId)){
+      return NextResponse.json({ error: 'Invalid Academic Year ID format.' }, { status: 400 });
+    }
+    if (!Array.isArray(subjects) || subjects.some(subId => !mongoose.Types.ObjectId.isValid(subId))) {
+      return NextResponse.json({ error: 'Invalid Subject ID format in subjects array.' }, { status: 400 });
+    }
+
 
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
@@ -90,7 +97,7 @@ export async function PUT(
       return NextResponse.json({ error: 'A-Level Combination not found' }, { status: 404 });
     }
 
-    if ((code !== combinationToUpdate.code || academicYearId.toString() !== combinationToUpdate.academicYearId.toString())) {
+    if ((code !== combinationToUpdate.code || academicYearId.toString() !== (combinationToUpdate.academicYearId as mongoose.Types.ObjectId).toString())) {
         const existingCombination = await AlevelCombination.findOne({ code, academicYearId, _id: { $ne: combinationId } });
         if (existingCombination) {
           return NextResponse.json({ error: 'Another combination with this code already exists for the selected academic year.' }, { status: 409 });
@@ -105,8 +112,8 @@ export async function PUT(
 
     await combinationToUpdate.save();
     const populatedCombination = await AlevelCombination.findById(combinationToUpdate._id)
-        .populate('academicYearId', 'name')
-        .populate('subjects', 'name code')
+        .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
+        .populate<{ subjects: ISubject[] }>('subjects', 'name code')
         .lean();
     return NextResponse.json(populatedCombination);
   } catch (error: any) {
