@@ -58,6 +58,9 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Exam Management**:
     - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status).
     - [x] **Assessment Management**: CRUD operations for individual assessments (papers, practicals) under an exam, linking to subjects and classes.
+- [x] **Student Attendance Records (Admin View)**:
+    - [x] Admin page to filter and view attendance records (Academic Year, Class, Subject, Date Range).
+    - [x] API endpoint to fetch attendance records with necessary population.
 - [x] **Website Content Management**:
     - [x] **Website Management Overview Page**.
     - [x] **News Article Management**: CRUD operations for news articles (title, slug, content, images, etc.).
@@ -65,6 +68,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Gallery Management**: CRUD operations for gallery images (upload, title, album, tags).
 - [x] **School Settings**:
     - [x] Manage basic website settings (School Name, Logo, Tagline, Contact Info, Footer, Colors).
+    - [x] Manage "About Us" page content using Rich Text Editor.
 - [x] **Admin Reports**: Placeholder page.
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
@@ -72,12 +76,18 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Selection page: Filter by Academic Year, Exam, Class, Subject to find assessments.
     - [x] Detailed Marks Entry page: Enter/update marks and comments for students for a specific assessment.
     - [x] API for batch mark submission with teacher authorization.
-- [x] **My Classes**: Placeholder page.
+- [x] **My Classes**:
+    - [x] View classes assigned for the active academic year.
+    - [x] Link to student roster for each class.
 - [x] **Resources**: Placeholder page.
+- [x] **Attendance**:
+    - [x] Selection page for class, subject, date.
+    - [x] Entry page to mark attendance for students.
 
 ### V. School Portal - Student Section (`/[schoolCode]/portal/student/...`)
 - [x] **My Profile**: Students can view their own detailed profile information.
 - [x] **My Results**: Students can view their marks for published exams, filtered by academic year and term.
+- [x] **My Attendance**: Students can view their attendance records.
 - [x] **Resources**: Placeholder page.
 
 ### VI. Public School Website (`/[schoolCode]/...`)
@@ -87,6 +97,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Single News Article Page**: Displays full content of a news article by slug.
 - [x] **Events Listing Page**: Displays active upcoming and past events.
 - [x] **Gallery Page**: Displays active gallery items, with album filtering.
+- [x] **About Us Page**: Displays content managed from School Settings.
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -115,33 +126,23 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Create and manage class timetables
     - [ ] Teacher timetable view
     - [ ] Student timetable view
-- [ ] **Student Attendance**:
-    - [ ] Mark student attendance (class-wise, daily)
-    - [ ] Attendance reporting
 - [ ] **Grading & Promotion**:
     - [ ] Define grading scales
     - [ ] Process student promotions/repetitions based on results
     - [ ] Generate report cards/transcripts
-- [ ] **Detailed Admin Reports**: Implementation of various report generation tools.
+- [ ] **Detailed Admin Reports**: Implementation of various report generation tools (beyond basic attendance view).
 - [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments.
 
 ### School Portal - Teacher Section
-- [ ] **My Classes**:
-    - [ ] View student lists for assigned classes
-    - [ ] Manage student attendance for their classes
-    - [ ] View class timetables
 - [ ] **Resources**:
-    - [ ] Upload and manage teaching resources
-    - [ ] Share resources with specific classes/students
+    - [ ] Upload and manage teaching resources.
+    - [ ] Share resources with specific classes/students.
 
 ### School Portal - Student Section
 - [ ] **My Timetable**: View personal class timetable.
-- [ ] **My Attendance**: View own attendance records.
-- [ ] **Resources**: Access learning materials shared by teachers.
-- [ ] **Fee Payment**: View fee status and potentially integrate payment.
+- [ ] **Resources**: Access learning materials shared by teachers (currently placeholder).
 
 ### Public School Website
-- [ ] **About Us Page**: Content management for school history, mission, vision.
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.
 - [ ] **Contact Page**: Contact form, map, detailed contact information.
 - [ ] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
@@ -157,7 +158,7 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Accessibility (A11Y) improvements**.
 - [ ] **Mobile Responsiveness**: Thorough testing and refinement.
 - [ ] **Theming Customization**: Allow admins more control over portal and public site appearance beyond basic colors.
-- [ ] **AI Features (Genkit)**: Specific integrations (e.g., content generation, support chatbot, data analysis).
+- [ ] **AI Features (Genkit)**: Specific integrations (e.g., support chatbot, data analysis, beyond news summary/generation).
 - [ ] **Backup & Restore**: Strategies for tenant data.
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
