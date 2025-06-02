@@ -23,6 +23,6 @@ const TermSchema: Schema = new Schema(
 );
 
 TermSchema.index({ name: 1, academicYearId: 1 }, { unique: true });
-TermSchema.index({ isActive: 1, academicYearId: 1 });
+TermSchema.index({ academicYearId: 1, isActive: 1 }); // To quickly find active term for a year
 
 export default mongoose.models.Term || mongoose.model<ITerm>('Term', TermSchema);

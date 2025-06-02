@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { CalendarOutlined, UnorderedListOutlined, TeamOutlined, AppstoreAddOutlined } from '@ant-design/icons';
+import { CalendarOutlined, UnorderedListOutlined, TeamOutlined, AppstoreAddOutlined, ScheduleOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -16,7 +16,8 @@ export default function AcademicsDashboardPage({ params }: AcademicsDashboardPag
   const basePortalPath = `/${schoolCode}/portal/admin/academics`;
 
   const academicSections = [
-    { title: 'Academic Years', icon: <CalendarOutlined />, link: `${basePortalPath}/academic-years`, description: 'Manage school academic years and terms.' },
+    { title: 'Academic Years', icon: <CalendarOutlined />, link: `${basePortalPath}/academic-years`, description: 'Manage school academic years.' },
+    { title: 'Terms', icon: <ScheduleOutlined />, link: `${basePortalPath}/terms`, description: 'Manage academic terms within years.' },
     { title: 'Subjects', icon: <UnorderedListOutlined />, link: `${basePortalPath}/subjects`, description: 'Define and manage subjects offered.' },
     { title: 'Classes', icon: <TeamOutlined />, link: `${basePortalPath}/classes`, description: 'Manage classes, streams, and class teachers.' },
     { title: 'A-Level Combinations', icon: <AppstoreAddOutlined />, link: `${basePortalPath}/alevel-combinations`, description: 'Manage A-Level subject combinations.' },
@@ -27,7 +28,7 @@ export default function AcademicsDashboardPage({ params }: AcademicsDashboardPag
     <div>
       <Title level={2} className="mb-8">Academics Management</Title>
       <Paragraph className="mb-8">
-        Oversee all academic settings for {schoolCode.toUpperCase()}, including academic years, subjects, classes, and more.
+        Oversee all academic settings for {schoolCode.toUpperCase()}, including academic years, terms, subjects, classes, and more.
       </Paragraph>
       <Row gutter={[16, 24]}>
         {academicSections.map(section => (

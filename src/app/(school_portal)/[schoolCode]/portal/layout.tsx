@@ -17,10 +17,12 @@ import {
   MedicineBoxOutlined,
   HomeOutlined,
   BarChartOutlined,
-  DesktopOutlined, // For Website Management
-  CalendarOutlined, // For Academic Years
-  UnorderedListOutlined, // For Subjects
-  AppstoreAddOutlined // For A-Level Combinations
+  DesktopOutlined, 
+  CalendarOutlined, 
+  UnorderedListOutlined, 
+  AppstoreAddOutlined,
+  ScheduleOutlined, // For Terms
+  FileTextOutlined // For Exams
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -69,12 +71,13 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               children: [
                 { key: `${basePortalPath}/admin/academics`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/academics`}>Overview</Link> },
                 { key: `${basePortalPath}/admin/academics/academic-years`, icon: <CalendarOutlined />, label: <Link href={`${basePortalPath}/admin/academics/academic-years`}>Academic Years</Link> },
+                { key: `${basePortalPath}/admin/academics/terms`, icon: <ScheduleOutlined />, label: <Link href={`${basePortalPath}/admin/academics/terms`}>Terms</Link> },
                 { key: `${basePortalPath}/admin/academics/subjects`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/admin/academics/subjects`}>Subjects</Link> },
                 { key: `${basePortalPath}/admin/academics/classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/academics/classes`}>Classes</Link> },
                 { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreAddOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
               ]
             },
-            { key: `${basePortalPath}/admin/exams`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
+            { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
           ],
@@ -86,10 +89,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           children: [
             { key: `${basePortalPath}/admin/website-management`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/website-management`}>Overview</Link> },
             { key: `${basePortalPath}/admin/website-management/news`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/news`}>News</Link> },
-            // Add more links here for Events, Gallery, Website Settings etc.
-            // { key: `${basePortalPath}/admin/website-management/events`, icon: <CalendarOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/events`}>Events</Link> },
-            // { key: `${basePortalPath}/admin/website-management/gallery`, icon: <PictureOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/gallery`}>Gallery</Link> },
-            // { key: `${basePortalPath}/admin/website-management/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/settings`}>Settings</Link> },
           ]
         },
         { key: `${basePortalPath}/finance`, icon: <DollarCircleOutlined />, label: <Link href={`${basePortalPath}/finance`}>Finance</Link> },
@@ -135,6 +134,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           return { selected: childResult.selected, open: [item.key, ...(childResult.open || [])].filter(Boolean) as string[] };
         }
       } else if (item.key && currentPath.startsWith(item.key)) {
+        // Exact match or if currentPath is a sub-path of the item.key (e.g., for dynamic routes like assessments)
         if (currentPath === item.key || currentPath.startsWith(item.key + '/')) {
            return { selected: item.key, open: [] };
         }
@@ -145,17 +145,44 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   
   const activeKeysResult = findActiveKeys(menuItems, pathname);
   selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
+  // If the direct key isn't found but it's a sub-route (e.g. assessments page), try to find the parent exam key
+  if (!activeKeysResult.selected && pathname.includes('/admin/exams/') && pathname.split('/').length > 5) { // e.g. /sch/portal/admin/exams/[examId]/assessments
+    selectedKey = `/${schoolCode}/portal/admin/exams`;
+  }
   openKeys = activeKeysResult.open || [];
+  if(selectedKey === `/${schoolCode}/portal/admin/exams` && pathname.includes('/admin/exams/')){
+      openKeys.push('admin-management'); // Ensure parent is open
+  }
 
 
   const breadcrumbItemsGen = () => {
     const pathSnippets = pathname.split('/').filter(i => i);
     const portalIndex = pathSnippets.findIndex(p => p === 'portal');
+    // Handle case where path is just /[schoolCode]/portal (portalIndex = 1, pathSnippets.length = 2)
+    if (portalIndex === -1 || pathSnippets.length <= portalIndex +1 ) {
+         return [{ title: <Link href={`/${schoolCode}/portal/dashboard`}>Home</Link>, key: `/${schoolCode}/portal/dashboard` }];
+    }
     const relevantSnippets = pathSnippets.slice(portalIndex + 1);
+
 
     const items = relevantSnippets.map((snippet, index) => {
       const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
-      const title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
+      let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
+      
+      // If snippet is a Mongo ObjectId, try to replace it with a more descriptive name (e.g., Exam Name)
+      // This is a simplified example; real implementation might need data fetching or context
+      if (mongoose.Types.ObjectId.isValid(snippet) && index > 0 && relevantSnippets[index-1] === 'exams') {
+        // Placeholder - in a real app, you'd fetch the exam name here or pass it via props/context
+        // title = "Manage Assessments"; // Or fetch exam name: examDetails?.name || snippet;
+        // For now, let's make it generic for dynamic ID routes
+        if (relevantSnippets[index+1] === 'assessments') {
+            title = "Assessments";
+        } else {
+            title = "Details"; // Default for an ID
+        }
+      }
+
+
       const isLast = index === relevantSnippets.length - 1;
       return {
         title: isLast ? title : <Link href={url}>{title}</Link>,
@@ -184,7 +211,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         breakpoint="lg"
         collapsedWidth="0"
       >
-        <div className="h-16 flex items-center justify-center bg-primary-dark"> {/* Use a theme color */}
+        <div className="h-16 flex items-center justify-center bg-primary-dark">
           <Link href={`/${schoolCode}/portal/dashboard`}>
             <Title level={3} style={{ color: 'white', margin: 0, cursor: 'pointer', padding: '0 10px', textAlign: 'center' }}>
               {schoolCode.toUpperCase()} Portal
