@@ -14,6 +14,12 @@ import type { IAssessment } from '@/models/Tenant/Assessment';
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
+interface TeacherAssignment {
+  classId: { _id: string; name: string; level?: string; stream?: string };
+  subjectId: { _id: string; name: string; code?: string };
+  academicYearId: { _id: string; name: string };
+}
+
 interface AssessmentWithDetails extends IAssessment {
   subjectName?: string;
   className?: string;
@@ -27,27 +33,26 @@ export default function MarksEntrySelectionPage() {
   const [academicYears, setAcademicYears] = useState<IAcademicYear[]>([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string | undefined>();
   
+  const [teacherAssignments, setTeacherAssignments] = useState<TeacherAssignment[]>([]);
+  const [assignedClasses, setAssignedClasses] = useState<IClass[]>([]);
+  const [assignedSubjects, setAssignedSubjects] = useState<ISubject[]>([]);
+
   const [exams, setExams] = useState<IExam[]>([]);
   const [selectedExam, setSelectedExam] = useState<string | undefined>();
 
-  const [classes, setClasses] = useState<IClass[]>([]);
   const [selectedClass, setSelectedClass] = useState<string | undefined>();
-  
-  const [subjects, setSubjects] = useState<ISubject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string | undefined>();
   
   const [assessments, setAssessments] = useState<AssessmentWithDetails[]>([]);
   
   const [loadingYears, setLoadingYears] = useState(true);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
   const [loadingExams, setLoadingExams] = useState(false);
-  const [loadingClasses, setLoadingClasses] = useState(false);
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingAssessments, setLoadingAssessments] = useState(false);
 
   const ACADEMIC_YEARS_API = `/api/${schoolCode}/portal/academics/academic-years`;
-  const EXAMS_API = `/api/${schoolCode}/portal/exams`;
-  const CLASSES_API = `/api/${schoolCode}/portal/academics/classes`;
-  const SUBJECTS_API = `/api/${schoolCode}/portal/academics/subjects`;
+  const TEACHER_ASSIGNMENTS_API = `/api/${schoolCode}/portal/teachers/my-assignments`;
+  const EXAMS_API_BASE = `/api/${schoolCode}/portal/exams`; // Query by academicYearId
   const ASSESSMENTS_API_BASE = `/api/${schoolCode}/portal/exams`; // /:examId/assessments
 
   // Fetch Academic Years
@@ -59,7 +64,6 @@ export default function MarksEntrySelectionPage() {
         if (!res.ok) throw new Error('Failed to fetch academic years');
         const data: IAcademicYear[] = await res.json();
         setAcademicYears(data);
-        // Auto-select active year if available
         const activeYear = data.find(y => y.isActive);
         if (activeYear) setSelectedAcademicYear(activeYear._id);
       } catch (err: any) {
@@ -71,6 +75,54 @@ export default function MarksEntrySelectionPage() {
     fetchYears();
   }, [schoolCode, ACADEMIC_YEARS_API]);
 
+  // Fetch Teacher Assignments when Academic Year changes
+  useEffect(() => {
+    if (!selectedAcademicYear) {
+      setTeacherAssignments([]);
+      setAssignedClasses([]);
+      setAssignedSubjects([]);
+      setSelectedClass(undefined);
+      setSelectedSubject(undefined);
+      return;
+    }
+    const fetchAssignments = async () => {
+      setLoadingAssignments(true);
+      try {
+        const res = await fetch(`${TEACHER_ASSIGNMENTS_API}?academicYearId=${selectedAcademicYear}`);
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch teacher assignments');
+        const data: TeacherAssignment[] = await res.json();
+        setTeacherAssignments(data);
+
+        // Populate unique classes
+        const uniqueClasses = Array.from(new Map(data.map(item => [item.classId._id, item.classId])).values());
+        setAssignedClasses(uniqueClasses as IClass[]);
+
+      } catch (err: any) {
+        message.error(err.message || 'Could not load teacher assignments.');
+        setTeacherAssignments([]);
+        setAssignedClasses([]);
+      } finally {
+        setLoadingAssignments(false);
+      }
+    };
+    fetchAssignments();
+  }, [selectedAcademicYear, schoolCode, TEACHER_ASSIGNMENTS_API]);
+
+  // Update assigned subjects when class changes
+  useEffect(() => {
+    if (!selectedClass || teacherAssignments.length === 0) {
+      setAssignedSubjects([]);
+      setSelectedSubject(undefined);
+      return;
+    }
+    const subjectsForClass = teacherAssignments
+      .filter(assign => assign.classId._id === selectedClass)
+      .map(assign => assign.subjectId);
+    setAssignedSubjects(subjectsForClass as ISubject[]);
+    setSelectedSubject(undefined); // Reset subject selection
+  }, [selectedClass, teacherAssignments]);
+
+
   // Fetch Exams when Academic Year changes
   useEffect(() => {
     if (!selectedAcademicYear) {
@@ -81,10 +133,10 @@ export default function MarksEntrySelectionPage() {
     const fetchExams = async () => {
       setLoadingExams(true);
       try {
-        const res = await fetch(`${EXAMS_API}?academicYearId=${selectedAcademicYear}`);
+        const res = await fetch(`${EXAMS_API_BASE}?academicYearId=${selectedAcademicYear}`);
         if (!res.ok) throw new Error('Failed to fetch exams');
         const data: IExam[] = await res.json();
-        setExams(data.filter(e => ['Scheduled', 'Ongoing', 'Grading'].includes(e.status))); // Filter for relevant statuses
+        setExams(data.filter(e => ['Scheduled', 'Ongoing', 'Grading'].includes(e.status)));
       } catch (err: any) {
         message.error(err.message || 'Could not load exams.');
       } finally {
@@ -92,50 +144,7 @@ export default function MarksEntrySelectionPage() {
       }
     };
     fetchExams();
-  }, [selectedAcademicYear, EXAMS_API]);
-
-  // Fetch Classes when Academic Year changes (or could be exam, depending on logic)
-   useEffect(() => {
-    if (!selectedAcademicYear) {
-      setClasses([]);
-      setSelectedClass(undefined);
-      return;
-    }
-    const fetchClasses = async () => {
-      setLoadingClasses(true);
-      try {
-        // Assuming classes are tied to an academic year
-        const res = await fetch(`${CLASSES_API}?academicYearId=${selectedAcademicYear}`);
-        if (!res.ok) throw new Error('Failed to fetch classes');
-        const data: IClass[] = await res.json();
-        setClasses(data);
-      } catch (err: any) {
-        message.error(err.message || 'Could not load classes.');
-      } finally {
-        setLoadingClasses(false);
-      }
-    };
-    fetchClasses();
-  }, [selectedAcademicYear, CLASSES_API]);
-
-
-  // Fetch Subjects - general list, could be filtered by class later
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      setLoadingSubjects(true);
-      try {
-        const res = await fetch(SUBJECTS_API);
-        if (!res.ok) throw new Error('Failed to fetch subjects');
-        const data: ISubject[] = await res.json();
-        setSubjects(data);
-      } catch (err: any) {
-        message.error(err.message || 'Could not load subjects.');
-      } finally {
-        setLoadingSubjects(false);
-      }
-    };
-    fetchSubjects();
-  }, [SUBJECTS_API]);
+  }, [selectedAcademicYear, EXAMS_API_BASE]);
 
 
   // Fetch Assessments when Exam, Class, and Subject are selected
@@ -147,17 +156,16 @@ export default function MarksEntrySelectionPage() {
     setLoadingAssessments(true);
     try {
       const res = await fetch(`${ASSESSMENTS_API_BASE}/${selectedExam}/assessments?classId=${selectedClass}&subjectId=${selectedSubject}`);
-      if (!res.ok) throw new Error('Failed to fetch assessments');
+      if (!res.ok) throw new Error('Failed to fetch assessments for the selected criteria.');
       const data: IAssessment[] = await res.json();
 
-      // Add subject and class names for display
       const detailedData = data.map(asm => {
-          const subject = subjects.find(s => s._id === (typeof asm.subjectId === 'string' ? asm.subjectId : (asm.subjectId as any)._id));
-          const cls = classes.find(c => c._id === (typeof asm.classId === 'string' ? asm.classId : (asm.classId as any)._id));
+          const subjectDetails = assignedSubjects.find(s => s._id === (typeof asm.subjectId === 'string' ? asm.subjectId : (asm.subjectId as any)._id));
+          const classDetails = assignedClasses.find(c => c._id === (typeof asm.classId === 'string' ? asm.classId : (asm.classId as any)._id));
           return {
               ...asm,
-              subjectName: subject?.name || 'N/A',
-              className: cls?.name || 'N/A',
+              subjectName: subjectDetails?.name || 'N/A',
+              className: classDetails?.name || 'N/A',
           }
       });
       setAssessments(detailedData);
@@ -168,7 +176,7 @@ export default function MarksEntrySelectionPage() {
     } finally {
       setLoadingAssessments(false);
     }
-  }, [selectedExam, selectedClass, selectedSubject, ASSESSMENTS_API_BASE, subjects, classes]);
+  }, [selectedExam, selectedClass, selectedSubject, ASSESSMENTS_API_BASE, assignedSubjects, assignedClasses]);
 
   useEffect(() => {
     fetchAssessments();
@@ -236,10 +244,11 @@ export default function MarksEntrySelectionPage() {
               placeholder="Select Class"
               value={selectedClass}
               onChange={setSelectedClass}
-              loading={loadingClasses}
-              disabled={!selectedAcademicYear || loadingClasses}
+              loading={loadingAssignments}
+              disabled={!selectedAcademicYear || loadingAssignments || assignedClasses.length === 0}
+              notFoundContent={loadingAssignments ? <Spin size="small" /> : "No classes assigned for this year, or select academic year."}
             >
-              {classes.map(cls => <Option key={cls._id} value={cls._id}>{cls.name} ({cls.level})</Option>)}
+              {assignedClasses.map(cls => <Option key={cls._id} value={cls._id}>{cls.name} {cls.level ? `(${cls.level})` : ''}</Option>)}
             </Select>
           </Card>
         </Col>
@@ -250,22 +259,23 @@ export default function MarksEntrySelectionPage() {
               placeholder="Select Subject"
               value={selectedSubject}
               onChange={setSelectedSubject}
-              loading={loadingSubjects}
-              disabled={loadingSubjects || !selectedClass } // Subject selection enabled once class is chosen
+              loading={loadingAssignments && !!selectedClass} // only show loading if class is selected and still processing assignments
+              disabled={!selectedClass || loadingAssignments || assignedSubjects.length === 0}
+              notFoundContent={loadingAssignments && !!selectedClass ? <Spin size="small" /> : "No subjects assigned for this class, or select class."}
             >
-              {subjects.map(sub => <Option key={sub._id} value={sub._id}>{sub.name} {sub.code ? `(${sub.code})` : ''}</Option>)}
+              {assignedSubjects.map(sub => <Option key={sub._id} value={sub._id}>{sub.name} {sub.code ? `(${sub.code})` : ''}</Option>)}
             </Select>
           </Card>
         </Col>
       </Row>
 
-      <Title level={4} className="my-6">Available Assessments</Title>
-      {loadingAssessments ? <Spin tip="Loading assessments..." /> : (
+      <Title level={4} className="my-6">Available Assessments for Selected Criteria</Title>
+      {loadingAssessments ? <div className="text-center p-4"><Spin tip="Loading assessments..." /></div> : (
         <Table 
           columns={assessmentColumns} 
           dataSource={assessments} 
           rowKey="_id"
-          locale={{ emptyText: <Empty description="No assessments found for the selected criteria, or not all criteria selected." /> }}
+          locale={{ emptyText: <Empty description="No assessments found for the selected criteria. Please ensure all filters (Academic Year, Exam, Class, Subject) are selected and have valid assignments." /> }}
         />
       )}
     </div>
