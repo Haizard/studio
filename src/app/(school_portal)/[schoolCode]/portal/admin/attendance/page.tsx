@@ -1,25 +1,37 @@
 
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Typography, Select, Card, Row, Col, message, Spin, DatePicker, Table, Empty, Space as AntSpace } from 'antd';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { Button, Typography, Select, Card, Row, Col, message, Spin, DatePicker, Table, Empty, Space as AntSpace, Tag } from 'antd';
 import { CheckSquareOutlined, CalendarOutlined, TeamOutlined, BookOutlined, FilterOutlined, SearchOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation';
 import type { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import type { IClass } from '@/models/Tenant/Class';
 import type { ISubject } from '@/models/Tenant/Subject';
-import type { IAttendance } from '@/models/Tenant/Attendance'; // Assuming ITenantUser might be needed for 'recordedBy'
+import type { IAttendance, AttendanceStatus } from '@/models/Tenant/Attendance';
 import moment from 'moment';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-interface AdminAttendanceRecord extends IAttendance {
-  // Potentially add populated fields like studentName, className, subjectName, recordedByName
+// Define interfaces for populated data returned by the API
+interface PopulatedUser { _id: string; firstName?: string; lastName?: string; username: string; }
+interface PopulatedClass { _id: string; name: string; level?: string; }
+interface PopulatedSubject { _id: string; name: string; code?: string; }
+interface PopulatedAcademicYear { _id: string; name: string; }
+
+interface AdminAttendanceRecordClient extends Omit<IAttendance, 'studentId' | 'classId' | 'subjectId' | 'recordedById' | 'academicYearId'> {
   key: string;
+  _id: string; 
+  studentId: PopulatedUser;
+  classId: PopulatedClass;
+  subjectId?: PopulatedSubject;
+  recordedById: PopulatedUser;
+  academicYearId: PopulatedAcademicYear;
 }
 
-export default function AdminAttendanceRecordsPage() {
+
+function AdminAttendanceRecordsPageCore() {
   const params = useParams();
   const router = useRouter();
   const schoolCode = params.schoolCode as string;
@@ -27,26 +39,27 @@ export default function AdminAttendanceRecordsPage() {
   const [academicYears, setAcademicYears] = useState<IAcademicYear[]>([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string | undefined>();
   
-  const [classes, setClasses] = useState<IClass[]>([]);
+  const [classes, setClasses] = useState<IClass[]>([]); // Classes for the selected AY
   const [selectedClass, setSelectedClass] = useState<string | undefined>();
 
-  const [subjects, setSubjects] = useState<ISubject[]>([]);
+  const [allSchoolSubjects, setAllSchoolSubjects] = useState<ISubject[]>([]); // All subjects in the school
+  const [displayableSubjects, setDisplayableSubjects] = useState<ISubject[]>([]); // Subjects for dropdown (filtered or all)
   const [selectedSubject, setSelectedSubject] = useState<string | undefined>();
   
   const [selectedDateRange, setSelectedDateRange] = useState<[moment.Moment, moment.Moment] | null>(null);
   
-  const [attendanceRecords, setAttendanceRecords] = useState<AdminAttendanceRecord[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AdminAttendanceRecordClient[]>([]);
   
   const [loadingYears, setLoadingYears] = useState(true);
   const [loadingClasses, setLoadingClasses] = useState(false);
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [loadingAllSubjects, setLoadingAllSubjects] = useState(false);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
 
   const ACADEMIC_YEARS_API = `/api/${schoolCode}/portal/academics/academic-years`;
   const CLASSES_API_BASE = `/api/${schoolCode}/portal/academics/classes`;
   const SUBJECTS_API_BASE = `/api/${schoolCode}/portal/academics/subjects`;
-  // const ADMIN_ATTENDANCE_API = `/api/${schoolCode}/portal/admin/attendance/records`; // API to be created
+  const ADMIN_ATTENDANCE_API = `/api/${schoolCode}/portal/admin/attendance/records`;
 
   // Fetch Academic Years
   useEffect(() => {
@@ -54,7 +67,7 @@ export default function AdminAttendanceRecordsPage() {
       setLoadingYears(true);
       try {
         const res = await fetch(ACADEMIC_YEARS_API);
-        if (!res.ok) throw new Error('Failed to fetch academic years');
+        if (!res.ok) throw new Error((await res.json()).error ||'Failed to fetch academic years');
         const data: IAcademicYear[] = await res.json();
         setAcademicYears(data.sort((a,b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
         const activeYear = data.find(y => y.isActive);
@@ -80,10 +93,10 @@ export default function AdminAttendanceRecordsPage() {
       setLoadingClasses(true);
       try {
         const res = await fetch(`${CLASSES_API_BASE}?academicYearId=${selectedAcademicYear}`);
-        if (!res.ok) throw new Error('Failed to fetch classes for the selected year');
+        if (!res.ok) throw new Error((await res.json()).error ||'Failed to fetch classes for the selected year');
         const data: IClass[] = await res.json();
         setClasses(data.sort((a,b) => a.name.localeCompare(b.name)));
-        setSelectedClass(undefined); // Reset class selection
+        setSelectedClass(undefined); 
       } catch (err: any) {
         message.error(err.message || 'Could not load classes.');
         setClasses([]);
@@ -94,48 +107,45 @@ export default function AdminAttendanceRecordsPage() {
     fetchClasses();
   }, [selectedAcademicYear, schoolCode, CLASSES_API_BASE]);
 
-  // Fetch Subjects when Class changes (or from general list if preferred)
-  useEffect(() => {
-    if (!selectedClass) {
-      // Option 1: Load all subjects if no class selected, or only subjects for the selected class
-      // For admin view, maybe load all subjects for the school and let admin filter
-      const fetchAllSubjects = async () => {
-        setLoadingSubjects(true);
+  // Fetch all school subjects once
+   useEffect(() => {
+    const fetchAllSubjects = async () => {
+        setLoadingAllSubjects(true);
         try {
             const res = await fetch(SUBJECTS_API_BASE);
-            if (!res.ok) throw new Error('Failed to fetch subjects');
+            if (!res.ok) throw new Error((await res.json()).error ||'Failed to fetch subjects');
             const data: ISubject[] = await res.json();
-            setSubjects(data.sort((a,b) => a.name.localeCompare(b.name)));
+            setAllSchoolSubjects(data.sort((a,b) => a.name.localeCompare(b.name)));
+            setDisplayableSubjects(data.sort((a,b) => a.name.localeCompare(b.name))); // Initially show all
         } catch (err:any) {
             message.error(err.message || 'Could not load subjects.');
-            setSubjects([]);
+            setAllSchoolSubjects([]);
+            setDisplayableSubjects([]);
         } finally {
-            setLoadingSubjects(false);
+            setLoadingAllSubjects(false);
         }
       };
       fetchAllSubjects();
+  }, [schoolCode, SUBJECTS_API_BASE]);
+
+  // Filter displayable subjects when selectedClass or allSchoolSubjects change
+  useEffect(() => {
+    if (!selectedClass) {
+      setDisplayableSubjects(allSchoolSubjects); // Show all subjects if no class selected
       setSelectedSubject(undefined);
       return;
     }
-    // Option 2: If you want to filter subjects based on what the selected class offers:
+
     const selectedClassDetails = classes.find(c => c._id === selectedClass);
     if (selectedClassDetails && selectedClassDetails.subjectsOffered && selectedClassDetails.subjectsOffered.length > 0) {
-        const offeredSubjectIds = selectedClassDetails.subjectsOffered.map(s => (typeof s === 'string' ? s : (s as any)._id));
-        // This assumes 'subjects' state holds ALL subjects. Filter from there.
-        // Or, fetch specific subjects by IDs if `selectedClassDetails.subjectsOffered` contains full objects or just IDs.
-        // For simplicity, if `subjectsOffered` are just IDs, you'd fetch ALL subjects and then filter client-side,
-        // or your API would need to support fetching subjects by an array of IDs.
-        // The current `CLASSES_API` populates `subjectsOffered` with name and code.
-        // So we can use them directly for the dropdown if we fetch subjects generally first.
-        // For now, we'll assume `subjects` state (all subjects) is populated and filter from it.
-        const filtered = subjects.filter(s => offeredSubjectIds.includes(s._id));
-        setSubjects(filtered.sort((a,b) => a.name.localeCompare(b.name)));
+        const offeredSubjectIds = selectedClassDetails.subjectsOffered.map(s => (typeof s === 'string' ? s : (s as ISubject)._id));
+        const filtered = allSchoolSubjects.filter(s => offeredSubjectIds.includes(s._id));
+        setDisplayableSubjects(filtered.sort((a,b) => a.name.localeCompare(b.name)));
     } else {
-        setSubjects([]); // No subjects offered by this class, or still loading all subjects
+        setDisplayableSubjects(allSchoolSubjects); // Show all subjects if class has no specific offerings
     }
     setSelectedSubject(undefined);
-
-  }, [selectedClass, classes, schoolCode, SUBJECTS_API_BASE, subjects]); // `subjects` added as dep
+  }, [selectedClass, classes, allSchoolSubjects]);
 
 
   const handleFetchAttendance = useCallback(async () => {
@@ -145,39 +155,74 @@ export default function AdminAttendanceRecordsPage() {
       return;
     }
     setLoadingAttendance(true);
-    // TODO: Implement API call to fetch attendance records
-    // Example structure:
-    // const queryString = new URLSearchParams({
-    //   academicYearId: selectedAcademicYear,
-    //   classId: selectedClass,
-    //   startDate: selectedDateRange[0].format('YYYY-MM-DD'),
-    //   endDate: selectedDateRange[1].format('YYYY-MM-DD'),
-    // });
-    // if (selectedSubject) queryString.append('subjectId', selectedSubject);
-    // try {
-    //   const res = await fetch(`${ADMIN_ATTENDANCE_API}?${queryString.toString()}`);
-    //   if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch attendance records');
-    //   const data: AdminAttendanceRecord[] = await res.json(); // Adjust type based on API response
-    //   setAttendanceRecords(data.map(r => ({...r, key: r._id})));
-    // } catch (err: any) {
-    //   message.error(err.message || 'Could not load attendance records.');
-    //   setAttendanceRecords([]);
-    // } finally {
-    //   setLoadingAttendance(false);
-    // }
-    message.info("Data fetching for attendance records is not yet implemented.");
-    setAttendanceRecords([]); // Clear previous records
-    setLoadingAttendance(false);
-  }, [selectedAcademicYear, selectedClass, selectedSubject, selectedDateRange, schoolCode]);
+    try {
+      const queryParams = new URLSearchParams({
+        academicYearId: selectedAcademicYear,
+        classId: selectedClass,
+        startDate: selectedDateRange[0].format('YYYY-MM-DD'),
+        endDate: selectedDateRange[1].format('YYYY-MM-DD'),
+      });
+      if (selectedSubject) queryParams.append('subjectId', selectedSubject);
+      
+      const res = await fetch(`${ADMIN_ATTENDANCE_API}?${queryParams.toString()}`);
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch attendance records');
+      const data: AdminAttendanceRecordClient[] = await res.json();
+      setAttendanceRecords(data.map(r => ({...r, key: r._id})));
+    } catch (err: any) {
+      message.error(err.message || 'Could not load attendance records.');
+      setAttendanceRecords([]);
+    } finally {
+      setLoadingAttendance(false);
+    }
+  }, [selectedAcademicYear, selectedClass, selectedSubject, selectedDateRange, schoolCode, ADMIN_ATTENDANCE_API]);
 
   const columns = [
-    { title: 'Date', dataIndex: 'date', key: 'date', render: (date: string) => moment(date).format('LL'), sorter: (a:AdminAttendanceRecord, b:AdminAttendanceRecord) => moment(a.date).unix() - moment(b.date).unix() },
-    { title: 'Student Name', dataIndex: ['studentId', 'name'], key: 'studentName' }, // Placeholder, needs population
-    { title: 'Class', dataIndex: ['classId', 'name'], key: 'className' }, // Placeholder, needs population
-    { title: 'Subject', dataIndex: ['subjectId', 'name'], key: 'subjectName', render: (name?:string) => name || 'N/A' }, // Placeholder
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (status: string) => <Tag>{status}</Tag> },
-    { title: 'Remarks', dataIndex: 'remarks', key: 'remarks', render: (text?: string) => text || '-' },
-    { title: 'Recorded By', dataIndex: ['recordedById', 'username'], key: 'recordedBy' }, // Placeholder
+    { 
+        title: 'Date', 
+        dataIndex: 'date', 
+        key: 'date', 
+        render: (date: string) => moment(date).format('LL'), 
+        sorter: (a:AdminAttendanceRecordClient, b:AdminAttendanceRecordClient) => moment(a.date).unix() - moment(b.date).unix() 
+    },
+    { 
+        title: 'Student Name', 
+        key: 'studentName',
+        render: (text: any, record: AdminAttendanceRecordClient) => record.studentId ? `${record.studentId.firstName} ${record.studentId.lastName}` : 'N/A',
+        sorter: (a:AdminAttendanceRecordClient, b:AdminAttendanceRecordClient) => 
+            `${a.studentId?.firstName} ${a.studentId?.lastName}`.localeCompare(`${b.studentId?.firstName} ${b.studentId?.lastName}`)
+    },
+    { 
+        title: 'Class', 
+        key: 'className',
+        render: (text: any, record: AdminAttendanceRecordClient) => record.classId ? `${record.classId.name} ${record.classId.level ? `(${record.classId.level})` : ''}` : 'N/A'
+    },
+    { 
+        title: 'Subject', 
+        key: 'subjectName', 
+        render: (text: any, record: AdminAttendanceRecordClient) => record.subjectId ? `${record.subjectId.name} ${record.subjectId.code ? `(${record.subjectId.code})` : ''}` : 'General'
+    },
+    { 
+        title: 'Status', 
+        dataIndex: 'status', 
+        key: 'status', 
+        render: (status: AttendanceStatus) => <Tag color={
+            status === 'Present' ? 'success' :
+            status === 'Absent' ? 'error' :
+            status === 'Late' ? 'warning' :
+            status === 'Excused' ? 'blue' : 'default'
+        }>{status}</Tag> 
+    },
+    { 
+        title: 'Remarks', 
+        dataIndex: 'remarks', 
+        key: 'remarks', 
+        render: (text?: string) => text || '-' 
+    },
+    { 
+        title: 'Recorded By', 
+        key: 'recordedBy',
+        render: (text:any, record: AdminAttendanceRecordClient) => record.recordedById ? record.recordedById.username : 'N/A'
+    },
   ];
 
 
@@ -210,7 +255,7 @@ export default function AdminAttendanceRecordsPage() {
                     style={{ width: '100%' }}
                     placeholder="Select Class"
                     value={selectedClass}
-                    onChange={val => { setSelectedClass(val); setSelectedSubject(undefined); }}
+                    onChange={val => { setSelectedClass(val); }}
                     loading={loadingClasses}
                     disabled={!selectedAcademicYear || loadingClasses}
                     suffixIcon={<TeamOutlined />}
@@ -227,12 +272,12 @@ export default function AdminAttendanceRecordsPage() {
                     placeholder="Select Subject"
                     value={selectedSubject}
                     onChange={setSelectedSubject}
-                    loading={loadingSubjects}
-                    disabled={loadingSubjects} // Or disable if !selectedClass && specific subject filtering logic
+                    loading={loadingAllSubjects && displayableSubjects.length === 0}
+                    disabled={loadingAllSubjects && displayableSubjects.length === 0}
                     allowClear
                     suffixIcon={<BookOutlined />}
                 >
-                    {subjects.map(sub => <Option key={sub._id} value={sub._id}>{sub.name} {sub.code ? `(${sub.code})` : ''}</Option>)}
+                    {displayableSubjects.map(sub => <Option key={sub._id} value={sub._id}>{sub.name} {sub.code ? `(${sub.code})` : ''}</Option>)}
                 </Select>
             </AntSpace>
           </Col>
@@ -273,13 +318,18 @@ export default function AdminAttendanceRecordsPage() {
           rowKey="key"
           bordered
           size="small"
-          scroll={{ x: 1000 }}
-          locale={{ emptyText: <Empty description="No attendance records found for the selected criteria, or data fetching is not yet implemented." /> }}
+          scroll={{ x: 1200 }} // Increased scroll width
+          locale={{ emptyText: <Empty description={attendanceRecords.length === 0 && (selectedAcademicYear && selectedClass && selectedDateRange) ? "No attendance records found for the selected criteria." : "Please select filters and click 'Fetch Records'."} /> }}
         />
       )}
     </div>
   );
 }
 
-    
-    
+export default function AdminAttendanceRecordsPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center h-screen"><Spin size="large" tip="Loading page..." /></div>}>
+            <AdminAttendanceRecordsPageCore />
+        </Suspense>
+    );
+}
