@@ -20,7 +20,7 @@ interface TeacherAssignmentClass {
 
 interface TeacherAssignment {
   classId: TeacherAssignmentClass;
-  subjectId: { _id: string; name: string; code?: string };
+  subjectId: { _id: string; name: string; code?: string }; // Subject info might be useful context later
   academicYearId: { _id: string; name: string };
 }
 
@@ -37,13 +37,13 @@ export default function TeacherMyClassesPage() {
   const fetchActiveAcademicYear = useCallback(async () => {
     try {
       const res = await fetch(`/api/${schoolCode}/portal/academics/academic-years?active=true`);
-      if (!res.ok) throw new Error('Failed to fetch active academic year');
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch active academic year');
       const years: IAcademicYear[] = await res.json();
       if (years.length > 0) {
         setActiveAcademicYear(years[0]);
         return years[0];
       } else {
-        setError("No active academic year found. Please contact an administrator.");
+        setError("No active academic year found. Class assignments cannot be displayed for the current period. Please contact an administrator.");
         return null;
       }
     } catch (err: any) {
@@ -55,14 +55,16 @@ export default function TeacherMyClassesPage() {
   const fetchTeacherAssignments = useCallback(async (yearId: string) => {
     try {
       const res = await fetch(`/api/${schoolCode}/portal/teachers/my-assignments?academicYearId=${yearId}`);
-      if (!res.ok) throw new Error('Failed to fetch teacher assignments');
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch teacher assignments');
       const assignments: TeacherAssignment[] = await res.json();
       
+      // Extract unique classes from assignments
       const uniqueClasses = Array.from(new Map(assignments.map(item => [item.classId._id, item.classId])).values());
       setAssignedClasses(uniqueClasses.sort((a,b) => a.name.localeCompare(b.name)));
 
     } catch (err: any) {
-      setError(err.message || 'Could not load teacher assignments.');
+      setError(err.message || 'Could not load your class assignments.');
+      setAssignedClasses([]);
     }
   }, [schoolCode]);
 
@@ -74,13 +76,14 @@ export default function TeacherMyClassesPage() {
         if (activeYear) {
           fetchTeacherAssignments(activeYear._id).finally(() => setLoading(false));
         } else {
-          setLoading(false);
+          setLoading(false); // Stop loading if no active year
         }
       });
     } else if (sessionStatus === 'unauthenticated') {
-        setError("User not authenticated.");
+        setError("User not authenticated. Please log in.");
         setLoading(false);
     }
+    // If sessionStatus is 'loading', the outer conditional will handle it
   }, [sessionStatus, fetchActiveAcademicYear, fetchTeacherAssignments]);
 
   if (loading || sessionStatus === 'loading') {
@@ -92,43 +95,45 @@ export default function TeacherMyClassesPage() {
   }
 
   if (!activeAcademicYear) {
+    // Error message for no active year is handled by the error state set in fetchActiveAcademicYear
     return <Alert message="Information" description="No active academic year is set. Class assignments cannot be displayed." type="info" showIcon />;
   }
   
-  if (assignedClasses.length === 0) {
-    return (
-      <div>
-        <Title level={2} className="mb-6"><TeamOutlined className="mr-2" /> My Classes for {activeAcademicYear.name}</Title>
-        <Empty description="You are not currently assigned to any classes for the active academic year." />
-      </div>
-    );
-  }
-
   return (
     <div>
-      <Title level={2} className="mb-6"><TeamOutlined className="mr-2" /> My Classes for {activeAcademicYear.name}</Title>
-      <Paragraph className="mb-6">Here are the classes you are assigned to for the current academic year. Click on a class to view its student roster.</Paragraph>
-      <Row gutter={[16, 16]}>
-        {assignedClasses.map(cls => (
-          <Col xs={24} sm={12} md={8} key={cls._id}>
-            <Card 
-              hoverable 
-              title={`${cls.name} ${cls.level ? `(${cls.level}${cls.stream ? ` - ${cls.stream}` : ''})` : ''}`}
-              className="h-full"
-              actions={[
-                <Link href={`/${schoolCode}/portal/teacher/my-classes/${cls._id}`} key="view">
-                  <Button type="primary" icon={<ArrowRightOutlined />}>View Roster</Button>
-                </Link>
-              ]}
-            >
-              <Paragraph type="secondary">
-                View students enrolled in this class.
-              </Paragraph>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <Title level={2} className="mb-2">
+        <TeamOutlined className="mr-2" /> My Classes
+      </Title>
+      <Paragraph className="mb-6">
+        Showing classes assigned to you for the active academic year: <Typography.Text strong>{activeAcademicYear.name}</Typography.Text>.
+        Click on a class to view its student roster.
+      </Paragraph>
+
+      {assignedClasses.length === 0 ? (
+        <Empty description="You are not currently assigned to any classes for the active academic year." />
+      ) : (
+        <Row gutter={[16, 24]}>
+          {assignedClasses.map(cls => (
+            <Col xs={24} sm={12} md={8} lg={6} key={cls._id}>
+              <Card 
+                hoverable 
+                title={<span className="truncate">{`${cls.name} ${cls.level ? `(${cls.level}${cls.stream ? ` - ${cls.stream}` : ''})` : ''}`}</span>}
+                className="h-full shadow-md rounded-lg"
+                actions={[
+                  <Link href={`/${schoolCode}/portal/teacher/my-classes/${cls._id}`} key="view_roster">
+                    <Button type="primary" icon={<ArrowRightOutlined />} block>View Roster</Button>
+                  </Link>
+                ]}
+              >
+                <Paragraph type="secondary" className="min-h-[40px]">
+                  Access student list and details for this class.
+                </Paragraph>
+                {/* Future actions could be added here like "View Timetable", "Enter Attendance" */}
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
     </div>
   );
 }
-    
