@@ -19,7 +19,7 @@ export default function WebsiteManagementDashboardPage({ params }: WebsiteManage
     { title: 'Manage News Articles', icon: <ReadOutlined />, link: `${basePortalPath}/news`, description: 'Create, edit, and publish school news.' },
     { title: 'Manage Events', icon: <CalendarOutlined />, link: `${basePortalPath}/events`, description: 'Add and update school events calendar.' },
     { title: 'Manage Gallery', icon: <PictureOutlined />, link: `${basePortalPath}/gallery`, description: 'Upload and organize photos for the public gallery.' },
-    { title: 'Website Settings', icon: <SettingOutlined />, link: `${basePortalPath}/settings`, description: 'Configure general website appearance and information.' },
+    { title: 'Website Settings', icon: <SettingOutlined />, link: `/${schoolCode}/portal/admin/settings`, description: 'Configure general website appearance and information.' },
   ];
 
   return (

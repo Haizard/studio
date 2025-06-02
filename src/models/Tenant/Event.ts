@@ -11,6 +11,7 @@ export interface IEvent extends Document {
   audience?: string[]; // e.g., "Students", "Teachers", "Parents", "Form 1"
   featuredImageUrl?: string;
   isActive: boolean; // To control visibility on the website/calendar
+  authorId?: mongoose.Schema.Types.ObjectId; // User who created/last updated
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +27,7 @@ const EventSchema: Schema = new Schema(
     audience: [{ type: String, trim: true }],
     featuredImageUrl: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
+    authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );

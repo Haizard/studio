@@ -23,7 +23,8 @@ import {
   AppstoreAddOutlined,
   ScheduleOutlined, 
   FileTextOutlined,
-  UsergroupAddOutlined // Added for Teachers
+  UsergroupAddOutlined, // Added for Teachers
+  PictureOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -95,6 +96,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           children: [
             { key: `${basePortalPath}/admin/website-management`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/website-management`}>Overview</Link> },
             { key: `${basePortalPath}/admin/website-management/news`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/news`}>News</Link> },
+            { key: `${basePortalPath}/admin/website-management/events`, icon: <CalendarOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/events`}>Events</Link> },
+            { key: `${basePortalPath}/admin/website-management/gallery`, icon: <PictureOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/gallery`}>Gallery</Link> },
           ]
         },
         { key: `${basePortalPath}/finance`, icon: <DollarCircleOutlined />, label: <Link href={`${basePortalPath}/finance`}>Finance</Link> },
@@ -144,7 +147,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           return { selected: childResult.selected, open: [item.key, ...(childResult.open || [])].filter(Boolean) as string[] };
         }
       } else if (item.key && currentPath.startsWith(item.key)) {
-        // Exact match or if currentPath is a sub-route of item.key (e.g., for dynamic segments like [id])
         if (currentPath === item.key || currentPath.startsWith(item.key + '/')) {
            return { selected: item.key, open: [] };
         }
@@ -157,17 +159,18 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
   
   if (!activeKeysResult.selected) {
-    // Handle cases where the path is deeper than the menu structure, e.g., dynamic ID pages
     if (pathname.includes('/admin/exams/') && pathname.includes('/assessments')) { 
-        selectedKey = `/${schoolCode}/portal/admin/exams`; // Parent menu item for .../exams/[examId]/assessments
-    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) { // .../marks-entry/[examId]/[assessmentId]
-        selectedKey = `/${schoolCode}/portal/teacher/marks-entry`; // Parent menu item
+        selectedKey = `/${schoolCode}/portal/admin/exams`; 
+    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) { 
+        selectedKey = `/${schoolCode}/portal/teacher/marks-entry`; 
+    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/website-management/`)) {
+        selectedKey = `/${schoolCode}/portal/admin/website-management`;
     }
   }
   openKeys = activeKeysResult.open || [];
 
   if(selectedKey === `/${schoolCode}/portal/admin/exams` && pathname.includes('/admin/exams/')){
-      openKeys.push('admin-management'); // Ensure parent group is open
+      openKeys.push('admin-management');
   }
    if(selectedKey === `/${schoolCode}/portal/admin/students` && pathname.includes('/admin/students')){
       openKeys.push('admin-management'); 
@@ -178,6 +181,9 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
    if(selectedKey === `/${schoolCode}/portal/admin/settings` && pathname.includes('/admin/settings')){
       openKeys.push('admin-management'); 
   }
+   if(selectedKey === `/${schoolCode}/portal/admin/website-management` && pathname.includes('/admin/website-management/')){
+      openKeys.push('website-management'); 
+  }
   if (selectedKey === `/${schoolCode}/portal/teacher/marks-entry` && pathname.includes('/teacher/marks-entry/')) {
     // No specific parent group for teacher standalone items unless explicitly created.
   }
@@ -187,31 +193,30 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     const pathSnippets = pathname.split('/').filter(i => i);
     const portalIndex = pathSnippets.findIndex(p => p === 'portal');
     
-    if (portalIndex === -1 || pathSnippets.length <= portalIndex + 1 ) { // Only 'portal' or nothing after
+    if (portalIndex === -1 || pathSnippets.length <= portalIndex + 1 ) { 
          return [{ title: <Link href={`/${schoolCode}/portal/dashboard`}>Home</Link>, key: `/${schoolCode}/portal/dashboard` }];
     }
-    const relevantSnippets = pathSnippets.slice(portalIndex + 1); // e.g., ['dashboard'] or ['admin', 'users']
+    const relevantSnippets = pathSnippets.slice(portalIndex + 1); 
 
 
     const items = relevantSnippets.map((snippet, index) => {
       const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
-      // Specific title overrides based on path structure
       if (mongoose.Types.ObjectId.isValid(snippet)) {
         const prevSegment = relevantSnippets[index-1];
         const secondPrevSegment = relevantSnippets[index-2];
         const nextSegment = relevantSnippets[index+1];
 
-        if (prevSegment === 'exams' && nextSegment === 'assessments') { // For /exams/[examId]/assessments
-            title = "Manage Assessments"; // When snippet is [examId]
-        } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { // For /marks-entry/[examId]/[assessmentId], snippet is assessmentId
+        if (prevSegment === 'exams' && nextSegment === 'assessments') { 
+            title = "Manage Assessments"; 
+        } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { 
              title = "Enter Marks";
-        } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(snippet)) { // For /marks-entry/[examId], snippet is examId
+        } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(snippet)) { 
              title = `Exam Details`; 
         }
          else {
-            title = "Details"; // Generic for other ID pages
+            title = "Details"; 
         }
       }
 
@@ -287,5 +292,3 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 };
 
 export default SchoolPortalLayout;
-
-    
