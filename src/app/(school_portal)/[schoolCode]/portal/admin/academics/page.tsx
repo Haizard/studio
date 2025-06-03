@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { CalendarOutlined, UnorderedListOutlined, TeamOutlined, AppstoreAddOutlined, ScheduleOutlined } from '@ant-design/icons';
+import { CalendarOutlined, UnorderedListOutlined, TeamOutlined, AppstoreAddOutlined, ScheduleOutlined as ScheduleIcon, CarryOutOutlined } from '@ant-design/icons'; // Changed ScheduleOutlined to ScheduleIcon to avoid conflict
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -17,11 +17,11 @@ export default function AcademicsDashboardPage({ params }: AcademicsDashboardPag
 
   const academicSections = [
     { title: 'Academic Years', icon: <CalendarOutlined />, link: `${basePortalPath}/academic-years`, description: 'Manage school academic years.' },
-    { title: 'Terms', icon: <ScheduleOutlined />, link: `${basePortalPath}/terms`, description: 'Manage academic terms within years.' },
+    { title: 'Terms', icon: <CarryOutOutlined />, link: `${basePortalPath}/terms`, description: 'Manage academic terms within years.' },
     { title: 'Subjects', icon: <UnorderedListOutlined />, link: `${basePortalPath}/subjects`, description: 'Define and manage subjects offered.' },
     { title: 'Classes', icon: <TeamOutlined />, link: `${basePortalPath}/classes`, description: 'Manage classes, streams, and class teachers.' },
     { title: 'A-Level Combinations', icon: <AppstoreAddOutlined />, link: `${basePortalPath}/alevel-combinations`, description: 'Manage A-Level subject combinations.' },
-    // Add more sections like Timetable, Promotions etc.
+    { title: 'Timetable Management', icon: <ScheduleIcon />, link: `${basePortalPath}/timetables`, description: 'Create and manage class timetables.' },
   ];
 
   return (
