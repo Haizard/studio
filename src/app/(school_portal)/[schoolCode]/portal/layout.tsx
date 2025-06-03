@@ -28,6 +28,7 @@ import {
   IdcardOutlined, 
   CheckSquareOutlined,
   FolderOpenOutlined, 
+  ProjectOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -84,6 +85,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
                 { key: `${basePortalPath}/admin/academics/subjects`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/admin/academics/subjects`}>Subjects</Link> },
                 { key: `${basePortalPath}/admin/academics/classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/academics/classes`}>Classes</Link> },
                 { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreAddOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
+                { key: `${basePortalPath}/admin/academics/timetables`, icon: <ProjectOutlined />, label: <Link href={`${basePortalPath}/admin/academics/timetables`}>Timetables</Link> },
               ]
             },
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
@@ -168,10 +170,12 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   if (!activeKeysResult.selected) {
     if (pathname.includes('/admin/exams/') && pathname.includes('/assessments')) { 
         selectedKey = `/${schoolCode}/portal/admin/exams`; 
-    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) { // e.g. /portal/teacher/marks-entry/examId/assessmentId
+    } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) {
         selectedKey = `/${schoolCode}/portal/teacher/marks-entry`; 
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/website-management/`)) {
         selectedKey = `/${schoolCode}/portal/admin/website-management`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/timetables`) && pathname.includes('/periods')) {
+        selectedKey = `/${schoolCode}/portal/admin/academics/timetables`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) {
         selectedKey = `/${schoolCode}/portal/admin/academics`;
     } else if (pathname.includes('/teacher/my-classes/') && mongoose.Types.ObjectId.isValid(pathname.split('/').pop() || '')) {
@@ -219,7 +223,10 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
              title = "Enter Marks"; 
         } else if (prevSegment === 'my-classes' && mongoose.Types.ObjectId.isValid(snippet)) { 
              title = `Class Roster`; 
-        } else {
+        } else if (prevSegment === 'timetables' && nextSegment === 'periods') {
+             title = 'Manage Periods';
+        }
+        else {
             title = "Details"; 
         }
       } else if (snippet === 'entry' && relevantSnippets[index-1] === 'attendance') {
@@ -266,7 +273,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           theme="dark" 
           mode="inline" 
           selectedKeys={[selectedKey]} 
-          defaultOpenKeys={Array.from(new Set(openKeys))} // Ensure unique open keys
+          defaultOpenKeys={Array.from(new Set(openKeys))} 
           items={menuItems} 
           className="mt-2"
         />
@@ -298,3 +305,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 };
 
 export default SchoolPortalLayout;
+
+
+    

@@ -2,14 +2,15 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Table, Modal, Form, Input, Select, Switch, message, Tag, Space, Spin, Popconfirm, Row, Col } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ScheduleOutlined, CalendarOutlined, TeamOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ScheduleOutlined, CalendarOutlined, TeamOutlined, ProjectOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 import type { ITimetable } from '@/models/Tenant/Timetable';
 import type { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import type { IClass } from '@/models/Tenant/Class';
 import type { ITerm } from '@/models/Tenant/Term';
 import moment from 'moment';
 
-const { Title } = Typography;
+const { Title, Paragraph } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -71,7 +72,6 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
         ...tt, 
         key: tt._id, 
         _id: tt._id,
-        // Ensure these fields are correctly structured for display
         academicYearId: tt.academicYearId as any, 
         classId: tt.classId as any,
         termId: tt.termId as any,
@@ -91,7 +91,6 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
     fetchData();
   }, [fetchData]);
 
-  // Filter classes and terms in modal when selectedAcademicYearInModal changes
   useEffect(() => {
     if (selectedAcademicYearInModal) {
       setFilteredClasses(allClasses.filter(cls => 
@@ -104,7 +103,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
       setFilteredClasses([]);
       setFilteredTerms([]);
     }
-    if (!isModalVisible || (editingTimetable && editingTimetable.academicYearId !== selectedAcademicYearInModal)) {
+    if (!isModalVisible || (editingTimetable && (typeof editingTimetable.academicYearId === 'object' ? editingTimetable.academicYearId._id : editingTimetable.academicYearId) !== selectedAcademicYearInModal)) {
         form.setFieldsValue({ classId: undefined, termId: undefined });
     }
   }, [selectedAcademicYearInModal, allClasses, allTerms, isModalVisible, form, editingTimetable]);
@@ -165,7 +164,6 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      // For now, periods array is not managed here. Send empty or existing if editing.
       const payload = { 
           ...values,
           periods: editingTimetable?.periods || [] 
@@ -223,11 +221,10 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
       key: 'actions',
       render: (_: any, record: TimetableDataType) => (
         <Space>
+          <Link href={`/${schoolCode}/portal/admin/academics/timetables/${record._id}/periods`}>
+            <Button icon={<ProjectOutlined />}>Manage Periods</Button>
+          </Link>
           <Button icon={<EditOutlined />} onClick={() => handleEditTimetable(record)}>Edit Details</Button>
-          {/* Future: Link to manage periods page */}
-          {/* <Link href={`/${schoolCode}/portal/admin/academics/timetables/${record._id}/periods`}>
-             <Button>Manage Periods</Button>
-          </Link> */}
           <Popconfirm
             title="Delete this timetable?"
             description="This action cannot be undone. All associated periods will be lost."
@@ -254,7 +251,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
           Add New Timetable
         </Button>
       </div>
-      <Table columns={columns} dataSource={timetables} rowKey="_id" scroll={{ x: 1200 }} />
+      <Table columns={columns} dataSource={timetables} rowKey="_id" scroll={{ x: 1300 }} />
 
       <Modal
         title={editingTimetable ? 'Edit Timetable Details' : 'Add New Timetable'}
@@ -317,12 +314,13 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
             <TextArea rows={3} placeholder="Any specific notes about this timetable version or scope." />
           </Form.Item>
           <Paragraph type="secondary" className="text-sm">
-            Note: Detailed period scheduling (days, times, subjects, teachers) will be managed after creating the timetable shell.
+            Detailed period scheduling (days, times, subjects, teachers) will be managed on the next page after creating or selecting a timetable.
           </Paragraph>
         </Form>
       </Modal>
     </div>
   );
 }
+    
 
     
