@@ -11,6 +11,7 @@ export interface IExam extends Document {
   endDate: Date;
   description?: string;
   status: ExamStatus;
+  weight?: number; // e.g., 30 for 30% contribution to term/year total
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +30,7 @@ const ExamSchema: Schema = new Schema(
       default: 'Scheduled',
       required: true,
     },
+    weight: { type: Number, min: 0, max: 100 }, // Assuming percentage
   },
   { timestamps: true }
 );

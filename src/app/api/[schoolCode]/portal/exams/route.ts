@@ -76,7 +76,7 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const { name, academicYearId, termId, startDate, endDate, description, status } = body;
+    const { name, academicYearId, termId, startDate, endDate, description, status, weight } = body;
 
     if (!name || !academicYearId || !startDate || !endDate || !status) {
       return NextResponse.json({ error: 'Missing required fields: name, academicYearId, startDate, endDate, status' }, { status: 400 });
@@ -87,6 +87,10 @@ export async function POST(
     if (termId && !mongoose.Types.ObjectId.isValid(termId)) {
         return NextResponse.json({ error: 'Invalid Term ID' }, { status: 400 });
     }
+    if (weight !== undefined && (typeof weight !== 'number' || weight < 0 || weight > 100)) {
+        return NextResponse.json({ error: 'Weight must be a number between 0 and 100.' }, { status: 400 });
+    }
+
 
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
@@ -105,6 +109,7 @@ export async function POST(
       endDate: new Date(endDate),
       description,
       status,
+      weight: weight !== undefined ? weight : undefined,
     });
 
     await newExam.save();

@@ -1,7 +1,7 @@
 
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Typography, Table, Modal, Form, Input, DatePicker, Select, message, Tag, Space, Spin, Popconfirm, Row, Col } from 'antd';
+import { Button, Typography, Table, Modal, Form, Input, DatePicker, Select, message, Tag, Space, Spin, Popconfirm, Row, Col, InputNumber } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, ReadOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import type { IExam, ExamStatus } from '@/models/Tenant/Exam';
@@ -20,6 +20,7 @@ interface ExamDataType extends Omit<IExam, 'academicYearId' | 'termId'> {
   termId?: { _id: string; name: string } | string | null;
   startDate: moment.Moment;
   endDate: moment.Moment;
+  weight?: number;
 }
 
 interface ExamsPageProps {
@@ -66,6 +67,7 @@ export default function ExamsPage({ params }: ExamsPageProps) {
         termId: exam.termId as any,
         startDate: moment(exam.startDate),
         endDate: moment(exam.endDate),
+        weight: exam.weight,
       })));
       setAcademicYears(yearsData);
       setTerms(termsData); // Store all terms
@@ -91,7 +93,7 @@ export default function ExamsPage({ params }: ExamsPageProps) {
     setEditingExam(null);
     form.resetFields();
     setFilteredTerms([]);
-    form.setFieldsValue({ status: 'Scheduled' });
+    form.setFieldsValue({ status: 'Scheduled', weight: null });
     setIsModalVisible(true);
   };
 
@@ -111,6 +113,7 @@ export default function ExamsPage({ params }: ExamsPageProps) {
       termId: exam.termId && typeof exam.termId === 'object' ? exam.termId._id : exam.termId,
       startDate: exam.startDate ? moment(exam.startDate) : undefined,
       endDate: exam.endDate ? moment(exam.endDate) : undefined,
+      weight: exam.weight,
     });
     setIsModalVisible(true);
   };
@@ -137,6 +140,7 @@ export default function ExamsPage({ params }: ExamsPageProps) {
         ...values,
         startDate: values.startDate ? values.startDate.toISOString() : undefined,
         endDate: values.endDate ? values.endDate.toISOString() : undefined,
+        weight: values.weight !== null && values.weight !== undefined ? Number(values.weight) : undefined,
       };
       
       const url = editingExam ? `${API_URL_BASE}/${editingExam._id}` : API_URL_BASE;
@@ -181,6 +185,7 @@ export default function ExamsPage({ params }: ExamsPageProps) {
     { title: 'Start Date', dataIndex: 'startDate', key: 'startDate', render: (date: moment.Moment) => date ? date.format('YYYY-MM-DD') : '-' },
     { title: 'End Date', dataIndex: 'endDate', key: 'endDate', render: (date: moment.Moment) => date ? date.format('YYYY-MM-DD') : '-' },
     { title: 'Status', dataIndex: 'status', key: 'status', render: (status: ExamStatus) => <Tag>{status}</Tag> },
+    { title: 'Weight (%)', dataIndex: 'weight', key: 'weight', render: (weight?: number) => weight !== undefined ? `${weight}%` : '-' },
     {
       title: 'Actions',
       key: 'actions',
@@ -258,16 +263,21 @@ export default function ExamsPage({ params }: ExamsPageProps) {
                 <DatePicker style={{width: "100%"}} format="YYYY-MM-DD"/>
               </Form.Item>
             </Col>
-            <Col span={24}>
-               <Form.Item name="description" label="Description (Optional)">
-                <Input.TextArea rows={3} placeholder="Additional details about the exam schedule or scope." />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
+             <Col span={12}>
               <Form.Item name="status" label="Status" rules={[{ required: true }]}>
                 <Select placeholder="Select status">
                   {examStatuses.map(status => <Option key={status} value={status}>{status}</Option>)}
                 </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="weight" label="Weight (%)" tooltip="Contribution to term/annual total, e.g., 30 for 30%. Leave blank if not applicable.">
+                <InputNumber min={0} max={100} style={{width: "100%"}} placeholder="e.g. 30"/>
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+               <Form.Item name="description" label="Description (Optional)">
+                <Input.TextArea rows={3} placeholder="Additional details about the exam schedule or scope." />
               </Form.Item>
             </Col>
           </Row>
