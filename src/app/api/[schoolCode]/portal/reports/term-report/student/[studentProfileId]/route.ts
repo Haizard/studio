@@ -67,7 +67,7 @@ interface TermReportData {
 
 
 function applyGradingScale(percentage: number | undefined | null, gradingScale: IGradingScale | null): { grade: string; remarks: string; points?: number } {
-  if (percentage === undefined || percentage === null || isNaN(percentage) || !gradingScale) {
+  if (percentage === undefined || percentage === null || isNaN(percentage) || !gradingScale || !gradingScale.grades || gradingScale.grades.length === 0) {
     return { grade: 'N/A', remarks: 'N/A - Grading scale not applied or score missing' };
   }
 
@@ -80,9 +80,10 @@ function applyGradingScale(percentage: number | undefined | null, gradingScale: 
       };
     }
   }
-  return { grade: 'N/A', remarks: 'N/A - Out of range' };
+  return { grade: 'N/A', remarks: 'N/A - Score out of defined grade ranges' };
 }
 
+// Placeholder - specific division logic needs to be implemented based on exact rules
 function determineOverallDivision(totalPoints: number, gradingScale: IGradingScale | null): { division: string, description?: string } {
     if (!gradingScale || gradingScale.scaleType !== 'O-Level Division Points' || !gradingScale.divisionConfigs || totalPoints === undefined || isNaN(totalPoints)) {
         return { division: 'N/A' };
@@ -110,12 +111,16 @@ export async function GET(
   }
 
   const { searchParams } = new URL(request.url);
-  const academicYearId = searchParams.get('academicYearId');
-  const termId = searchParams.get('termId');
+  const academicYearIdParam = searchParams.get('academicYearId');
+  const termIdParam = searchParams.get('termId');
 
-  if (!mongoose.Types.ObjectId.isValid(studentProfileId) || !academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId) || !termId || !mongoose.Types.ObjectId.isValid(termId)) {
+  if (!mongoose.Types.ObjectId.isValid(studentProfileId) || !academicYearIdParam || !mongoose.Types.ObjectId.isValid(academicYearIdParam) || !termIdParam || !mongoose.Types.ObjectId.isValid(termIdParam)) {
     return NextResponse.json({ error: 'Invalid or missing Student ID, Academic Year ID, or Term ID.' }, { status: 400 });
   }
+
+  const academicYearId = new mongoose.Types.ObjectId(academicYearIdParam);
+  const termId = new mongoose.Types.ObjectId(termIdParam);
+
 
   try {
     const tenantDb = await getTenantConnection(schoolCode);
@@ -147,20 +152,34 @@ export async function GET(
     const assessmentIds = studentAssessments.map(a => a._id);
 
     const studentMarks = await Mark.find({
-      studentId: studentProfile.userId._id, // Assuming Mark.studentId links to User._id
+      studentId: studentProfile.userId._id,
       assessmentId: { $in: assessmentIds },
     }).lean();
 
     const marksMap = new Map(studentMarks.map(mark => [mark.assessmentId.toString(), mark]));
+    
+    // Refined Grading Scale Selection Logic
+    const studentClassLevel = (studentProfile.currentClassId as IClass)?.level || null;
+    let gradingScale: IGradingScale | null = null;
+    const gradingScaleQueries: any[] = [];
 
-    // Try to find a default grading scale for the academic year, or a general default.
-    let gradingScale: IGradingScale | null = await GradingScale.findOne({
-      academicYearId,
-      isDefault: true,
-      // Optionally add level filter if studentProfile.currentClassId.level is available
-    }).lean();
-    if (!gradingScale) {
-      gradingScale = await GradingScale.findOne({ isDefault: true, academicYearId: { $exists: false }, level: { $exists: false } }).lean();
+    if (studentClassLevel) {
+        gradingScaleQueries.push({ academicYearId, level: studentClassLevel, isDefault: true }); // Prio 1
+        gradingScaleQueries.push({ academicYearId, level: studentClassLevel }); // Prio 2
+    }
+    gradingScaleQueries.push({ academicYearId, level: { $in: [null, ''] }, isDefault: true }); // Prio 3
+    gradingScaleQueries.push({ academicYearId, level: { $in: [null, ''] } }); // Prio 4
+    if (studentClassLevel) {
+        gradingScaleQueries.push({ academicYearId: { $in: [null, undefined] }, level: studentClassLevel, isDefault: true }); // Prio 5
+        gradingScaleQueries.push({ academicYearId: { $in: [null, undefined] }, level: studentClassLevel }); // Prio 6
+    }
+    gradingScaleQueries.push({ isDefault: true, academicYearId: { $in: [null, undefined] }, level: { $in: [null, ''] } }); // Prio 7
+    gradingScaleQueries.push({ academicYearId: { $in: [null, undefined] }, level: { $in: [null, ''] } }); // Prio 8
+
+
+    for (const query of gradingScaleQueries) {
+      gradingScale = await GradingScale.findOne(query).sort({ createdAt: -1 }).lean();
+      if (gradingScale) break;
     }
 
 
@@ -179,8 +198,8 @@ export async function GET(
         const mark = marksMap.get(assessment._id.toString());
         const marksObtained = mark?.marksObtained;
         
-        if (marksObtained !== undefined && marksObtained !== null) examTotalMarksObtained += marksObtained;
-        examTotalMaxMarks += assessment.maxMarks;
+        if (marksObtained !== undefined && marksObtained !== null && !isNaN(marksObtained)) examTotalMarksObtained += marksObtained;
+        if (assessment.maxMarks && !isNaN(assessment.maxMarks)) examTotalMaxMarks += assessment.maxMarks;
         
         const subject = assessment.subjectId as ISubject | undefined;
         assessmentsForThisExam.push({
@@ -188,8 +207,8 @@ export async function GET(
           assessmentType: assessment.assessmentType,
           subjectName: subject?.name || 'N/A',
           marksObtained: marksObtained === null ? undefined : marksObtained,
-          maxMarks: assessment.maxMarks,
-          percentage: (marksObtained !== undefined && marksObtained !== null && assessment.maxMarks > 0) ? (marksObtained / assessment.maxMarks) * 100 : undefined,
+          maxMarks: assessment.maxMarks || 0,
+          percentage: (marksObtained !== undefined && marksObtained !== null && assessment.maxMarks && assessment.maxMarks > 0) ? (marksObtained / assessment.maxMarks) * 100 : undefined,
         });
       }
 
@@ -215,25 +234,16 @@ export async function GET(
     }
 
     let termOverallPercentage: number | undefined;
-    if (totalPossibleTermWeight > 0) {
-        termOverallPercentage = (totalTermWeightedScore / totalPossibleTermWeight) * 100; // Normalize if weights don't sum to 100
-    } else if (examResults.length > 0) { // Fallback to simple average if no weights
-        const validExamPercentages = examResults.map(er => er.examPercentage).filter(p => p !== undefined) as number[];
+    if (totalPossibleTermWeight > 0 && totalTermWeightedScore > 0) { // ensure totalPossibleTermWeight is not zero
+        termOverallPercentage = (totalTermWeightedScore / totalPossibleTermWeight) * 100;
+    } else if (examResults.length > 0) {
+        const validExamPercentages = examResults.map(er => er.examPercentage).filter(p => p !== undefined && !isNaN(p)) as number[];
         if (validExamPercentages.length > 0) {
             termOverallPercentage = validExamPercentages.reduce((sum, p) => sum + p, 0) / validExamPercentages.length;
         }
     }
     
     const { grade: termGrade, remarks: termRemarks } = applyGradingScale(termOverallPercentage, gradingScale);
-
-    // Handle O-Level Division if applicable
-    if (gradingScale && gradingScale.scaleType === 'O-Level Division Points' && termOverallPercentage !== undefined) {
-        // This part is tricky. O-Level division is usually sum of points from best N subjects.
-        // The current `termOverallPercentage` is an average of percentages, not sum of points.
-        // This section needs a dedicated logic path for O-Level point calculation if required.
-        // For now, termGrade and termRemarks are based on the overall percentage.
-        // If specific division logic is required, this would need to be revisited.
-    }
 
     const reportData: TermReportData = {
       student: {
@@ -252,7 +262,7 @@ export async function GET(
       termGrade,
       termRemarks,
       chartData,
-      gradingScaleUsed: gradingScale?.name || 'N/A (Default or not found)',
+      gradingScaleUsed: gradingScale?.name || 'N/A (Default or general scale not found)',
     };
 
     return NextResponse.json(reportData);
@@ -262,3 +272,4 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to generate student term report', details: String(error.message || 'Unknown server error') }, { status: 500 });
   }
 }
+
