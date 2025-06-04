@@ -2,13 +2,13 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Table, Modal, Form, Input, Select, Switch, message, Tag, Space, Spin, Popconfirm, Row, Col } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ScheduleOutlined, CalendarOutlined, TeamOutlined, ProjectOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ScheduleOutlined, ProjectOutlined, CopyOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import type { ITimetable } from '@/models/Tenant/Timetable';
 import type { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import type { IClass } from '@/models/Tenant/Class';
 import type { ITerm } from '@/models/Tenant/Term';
-import moment from 'moment';
+// import moment from 'moment'; // Not directly used for dates in this component
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -26,19 +26,22 @@ interface TimetableManagementPageProps {
   params: { schoolCode: string };
 }
 
+type ModalMode = 'add' | 'edit' | 'copy';
+
 export default function TimetableManagementPage({ params }: TimetableManagementPageProps) {
   const { schoolCode } = params;
   const [timetables, setTimetables] = useState<TimetableDataType[]>([]);
   const [academicYears, setAcademicYears] = useState<IAcademicYear[]>([]);
-  const [allClasses, setAllClasses] = useState<IClass[]>([]); // All classes for the school
-  const [allTerms, setAllTerms] = useState<ITerm[]>([]); // All terms for the school
+  const [allClasses, setAllClasses] = useState<IClass[]>([]);
+  const [allTerms, setAllTerms] = useState<ITerm[]>([]);
   
-  const [filteredClasses, setFilteredClasses] = useState<IClass[]>([]); // Classes for selected AY in modal
-  const [filteredTerms, setFilteredTerms] = useState<ITerm[]>([]); // Terms for selected AY in modal
+  const [filteredClasses, setFilteredClasses] = useState<IClass[]>([]);
+  const [filteredTerms, setFilteredTerms] = useState<ITerm[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingTimetable, setEditingTimetable] = useState<TimetableDataType | null>(null);
+  const [modalMode, setModalMode] = useState<ModalMode>('add');
+  const [editingTimetable, setEditingTimetable] = useState<TimetableDataType | null>(null); // Used for edit and as source for copy
   const [form] = Form.useForm();
   
   const selectedAcademicYearInModal = Form.useWatch('academicYearId', form);
@@ -103,23 +106,30 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
       setFilteredClasses([]);
       setFilteredTerms([]);
     }
-    if (!isModalVisible || (editingTimetable && (typeof editingTimetable.academicYearId === 'object' ? editingTimetable.academicYearId._id : editingTimetable.academicYearId) !== selectedAcademicYearInModal)) {
+    // Reset class and term if AY changes and it's not matching the editing/copying source's AY
+    if (isModalVisible && editingTimetable) {
+      const sourceAYId = typeof editingTimetable.academicYearId === 'object' ? editingTimetable.academicYearId._id : editingTimetable.academicYearId;
+      if (sourceAYId !== selectedAcademicYearInModal) {
         form.setFieldsValue({ classId: undefined, termId: undefined });
+      }
+    } else if (isModalVisible && modalMode !== 'edit') { // For 'add' or 'copy' mode, if AY changes, reset class/term
+         form.setFieldsValue({ classId: undefined, termId: undefined });
     }
-  }, [selectedAcademicYearInModal, allClasses, allTerms, isModalVisible, form, editingTimetable]);
+  }, [selectedAcademicYearInModal, allClasses, allTerms, isModalVisible, form, editingTimetable, modalMode]);
 
 
   const handleAddTimetable = () => {
     setEditingTimetable(null);
+    setModalMode('add');
     form.resetFields();
     const activeYear = academicYears.find(ay => ay.isActive);
     form.setFieldsValue({ 
         isActive: false,
         academicYearId: activeYear?._id 
     });
+    // Trigger filtering for initial active year if set
     if (activeYear?._id) {
-        setFilteredClasses(allClasses.filter(cls => (typeof cls.academicYearId === 'string' ? cls.academicYearId : (cls.academicYearId as IAcademicYear)?._id) === activeYear._id));
-        setFilteredTerms(allTerms.filter(term => (typeof term.academicYearId === 'string' ? term.academicYearId : (term.academicYearId as IAcademicYear)?._id) === activeYear._id));
+        handleAcademicYearChangeInModal(activeYear._id, true);
     } else {
         setFilteredClasses([]);
         setFilteredTerms([]);
@@ -129,22 +139,57 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
 
   const handleEditTimetable = (timetable: TimetableDataType) => {
     setEditingTimetable(timetable);
+    setModalMode('edit');
     const ayId = typeof timetable.academicYearId === 'object' ? timetable.academicYearId._id : timetable.academicYearId;
     const classIdVal = typeof timetable.classId === 'object' ? timetable.classId._id : timetable.classId;
     const termIdVal = timetable.termId && typeof timetable.termId === 'object' ? timetable.termId._id : timetable.termId;
-
-    if (ayId) {
-        setFilteredClasses(allClasses.filter(cls => (typeof cls.academicYearId === 'string' ? cls.academicYearId : (cls.academicYearId as IAcademicYear)?._id) === ayId));
-        setFilteredTerms(allTerms.filter(term => (typeof term.academicYearId === 'string' ? term.academicYearId : (term.academicYearId as IAcademicYear)?._id) === ayId));
-    }
     
+    if (ayId) handleAcademicYearChangeInModal(ayId, false); // Populate filtered lists
+
     form.setFieldsValue({
-      ...timetable,
+      name: timetable.name,
       academicYearId: ayId,
       classId: classIdVal,
       termId: termIdVal || undefined,
+      description: timetable.description,
+      isActive: timetable.isActive,
     });
     setIsModalVisible(true);
+  };
+  
+  const handleCopyTimetable = (sourceTimetable: TimetableDataType) => {
+    setEditingTimetable(sourceTimetable); // Source for copying
+    setModalMode('copy');
+    const activeYear = academicYears.find(ay => ay.isActive);
+    const defaultAYForCopy = activeYear?._id || (typeof sourceTimetable.academicYearId === 'object' ? sourceTimetable.academicYearId._id : sourceTimetable.academicYearId) || (academicYears.length > 0 ? academicYears[0]._id : undefined);
+
+    if (defaultAYForCopy) handleAcademicYearChangeInModal(defaultAYForCopy as string, false);
+
+    form.resetFields(); // Clear previous form values
+    form.setFieldsValue({
+      name: `${sourceTimetable.name} - Copy`,
+      academicYearId: defaultAYForCopy,
+      // Class and Term will be set based on selected AY or user interaction
+      classId: defaultAYForCopy === (typeof sourceTimetable.academicYearId === 'object' ? sourceTimetable.academicYearId._id : sourceTimetable.academicYearId) ? (typeof sourceTimetable.classId === 'object' ? sourceTimetable.classId._id : sourceTimetable.classId) : undefined,
+      termId: defaultAYForCopy === (typeof sourceTimetable.academicYearId === 'object' ? sourceTimetable.academicYearId._id : sourceTimetable.academicYearId) && sourceTimetable.termId ? (typeof sourceTimetable.termId === 'object' ? sourceTimetable.termId._id : sourceTimetable.termId) : undefined,
+      description: sourceTimetable.description,
+      isActive: false, // Copies are inactive by default
+    });
+    setIsModalVisible(true);
+  };
+
+  const handleAcademicYearChangeInModal = (yearId: string | undefined, isNewEntry: boolean) => {
+    if (yearId) {
+        setFilteredClasses(allClasses.filter(cls => (typeof cls.academicYearId === 'string' ? cls.academicYearId : (cls.academicYearId as IAcademicYear)?._id) === yearId));
+        setFilteredTerms(allTerms.filter(term => (typeof term.academicYearId === 'string' ? term.academicYearId : (term.academicYearId as IAcademicYear)?._id) === yearId));
+        if(isNewEntry || modalMode !== 'edit' || (editingTimetable && (typeof editingTimetable.academicYearId === 'object' ? editingTimetable.academicYearId._id : editingTimetable.academicYearId) !== yearId)) {
+            form.setFieldsValue({ classId: undefined, termId: undefined });
+        }
+    } else {
+        setFilteredClasses([]);
+        setFilteredTerms([]);
+        form.setFieldsValue({ classId: undefined, termId: undefined });
+    }
   };
 
   const handleDeleteTimetable = async (timetableId: string) => {
@@ -164,14 +209,33 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      const payload = { 
-          ...values,
-          periods: editingTimetable?.periods || [] 
-      };
-      
-      const url = editingTimetable ? `${API_URL_BASE}/${editingTimetable._id}` : API_URL_BASE;
-      const method = editingTimetable ? 'PUT' : 'POST';
+      let url = '';
+      let method = '';
+      let payload: any = {};
 
+      if (modalMode === 'add') {
+        url = API_URL_BASE;
+        method = 'POST';
+        payload = { ...values, periods: [] }; // New timetables start with no periods
+      } else if (modalMode === 'edit' && editingTimetable) {
+        url = `${API_URL_BASE}/${editingTimetable._id}`;
+        method = 'PUT';
+        payload = { ...values, periods: editingTimetable.periods || [] }; // Preserve existing periods
+      } else if (modalMode === 'copy' && editingTimetable) {
+        url = `${API_URL_BASE}/${editingTimetable._id}/copy`;
+        method = 'POST';
+        payload = { // Payload for copy includes new definition fields
+            name: values.name,
+            academicYearId: values.academicYearId,
+            classId: values.classId,
+            termId: values.termId,
+            description: values.description
+        };
+      } else {
+        message.error("Invalid operation mode.");
+        return;
+      }
+      
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -180,14 +244,14 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to ${editingTimetable ? 'update' : 'add'} timetable`);
+        throw new Error(errorData.error || `Failed to ${modalMode} timetable`);
       }
 
-      message.success(`Timetable ${editingTimetable ? 'updated' : 'added'} successfully`);
+      message.success(`Timetable ${modalMode === 'add' ? 'added' : (modalMode === 'edit' ? 'updated' : 'copied')} successfully`);
       setIsModalVisible(false);
       fetchData();
     } catch (error: any) {
-      message.error(error.message || `Could not ${editingTimetable ? 'update' : 'add'} timetable.`);
+      message.error(error.message || `Could not ${modalMode} timetable.`);
     }
   };
 
@@ -225,6 +289,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
             <Button icon={<ProjectOutlined />}>Manage Periods</Button>
           </Link>
           <Button icon={<EditOutlined />} onClick={() => handleEditTimetable(record)}>Edit Details</Button>
+          <Button icon={<CopyOutlined />} onClick={() => handleCopyTimetable(record)}>Copy</Button>
           <Popconfirm
             title="Delete this timetable?"
             description="This action cannot be undone. All associated periods will be lost."
@@ -243,18 +308,26 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
     return <div className="flex justify-center items-center h-full"><Spin size="large" /></div>;
   }
 
+  const getModalTitle = () => {
+    if (modalMode === 'add') return 'Add New Timetable Definition';
+    if (modalMode === 'edit') return 'Edit Timetable Details';
+    if (modalMode === 'copy') return 'Copy Timetable As...';
+    return 'Manage Timetable';
+  };
+
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <Title level={2}><ScheduleOutlined className="mr-2"/>Timetable Management</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTimetable}>
-          Add New Timetable
+          Add New Timetable Definition
         </Button>
       </div>
       <Table columns={columns} dataSource={timetables} rowKey="_id" scroll={{ x: 1300 }} />
 
       <Modal
-        title={editingTimetable ? 'Edit Timetable Details' : 'Add New Timetable'}
+        title={getModalTitle()}
         open={isModalVisible}
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
@@ -262,14 +335,22 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
         destroyOnClose
         width={700}
       >
-        <Form form={form} layout="vertical" name="timetableForm" className="mt-4">
+        <Form form={form} layout="vertical" name="timetableForm" className="mt-4"
+          onValuesChange={(changedValues) => {
+            if (changedValues.academicYearId !== undefined) {
+                handleAcademicYearChangeInModal(changedValues.academicYearId, modalMode === 'add' || modalMode === 'copy');
+            }
+          }}
+        >
           <Form.Item name="name" label="Timetable Name" rules={[{ required: true, message: "E.g., 'Form 1A - Term 1 Regular'" }]}>
             <Input placeholder="e.g., Form 1A - Term 1 Regular" />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="academicYearId" label="Academic Year" rules={[{ required: true }]}>
-                <Select placeholder="Select academic year">
+                <Select 
+                    placeholder="Select academic year"
+                >
                   {academicYears.map(year => <Option key={year._id} value={year._id}>{year.name}</Option>)}
                 </Select>
               </Form.Item>
@@ -279,7 +360,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
                 <Select 
                     placeholder="Select class"
                     disabled={!selectedAcademicYearInModal}
-                    loading={loading && !selectedAcademicYearInModal}
+                    loading={loading && !selectedAcademicYearInModal && filteredClasses.length === 0} 
                 >
                   {filteredClasses.map(cls => <Option key={cls._id} value={cls._id}>{cls.name} {cls.level ? `(${cls.level})` : ''}</Option>)}
                 </Select>
@@ -293,34 +374,41 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
                     placeholder="Select term" 
                     allowClear 
                     disabled={!selectedAcademicYearInModal}
-                    loading={loading && !selectedAcademicYearInModal}
+                    loading={loading && !selectedAcademicYearInModal && filteredTerms.length === 0}
                 >
                   {filteredTerms.map(term => <Option key={term._id} value={term._id}>{term.name}</Option>)}
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item 
-                name="isActive" 
-                label="Set as Active Timetable" 
-                valuePropName="checked"
-                tooltip="Setting this active will deactivate other timetables for the same class/year/term."
-              >
-                <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
-              </Form.Item>
+              {modalMode !== 'copy' && ( 
+                <Form.Item 
+                    name="isActive" 
+                    label="Set as Active Timetable" 
+                    valuePropName="checked"
+                    tooltip="Setting this active will deactivate other timetables for the same class/year/term."
+                >
+                    <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+                </Form.Item>
+              )}
             </Col>
           </Row>
           <Form.Item name="description" label="Description (Optional)">
             <TextArea rows={3} placeholder="Any specific notes about this timetable version or scope." />
           </Form.Item>
-          <Paragraph type="secondary" className="text-sm">
-            Detailed period scheduling (days, times, subjects, teachers) will be managed on the next page after creating or selecting a timetable.
-          </Paragraph>
+          {modalMode !== 'copy' && (
+            <Paragraph type="secondary" className="text-sm">
+                Detailed period scheduling (days, times, subjects, teachers) will be managed on the next page after creating or selecting a timetable definition.
+            </Paragraph>
+          )}
+           {modalMode === 'copy' && (
+            <Paragraph type="warning" className="text-sm">
+                You are copying the structure and periods from an existing timetable. Adjust the name and academic context as needed for the new copy. The new timetable will be created as inactive by default.
+            </Paragraph>
+          )}
         </Form>
       </Modal>
     </div>
   );
 }
-    
-
     

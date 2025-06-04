@@ -55,7 +55,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Subject Management**: CRUD operations for school subjects.
     - [x] **Class Management**: CRUD operations, linking classes to academic years, class teachers (optional), and subjects offered.
     - [x] **A-Level Combination Management**: CRUD operations for A-Level subject combinations, linked to academic years and subjects.
-    - [x] **Timetable Management (Admin Shell & Period Management)**: CRUD for timetable definitions (name, year, class, term, status). Management of individual periods.
+    - [x] **Timetable Management (Admin Shell & Period Management)**: CRUD for timetable definitions (name, year, class, term, status). Management of individual periods. Includes conflict detection for periods and copy timetable functionality.
 - [x] **Exam Management**:
     - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status).
     - [x] **Assessment Management**: CRUD operations for individual assessments (papers, practicals) under an exam, linking to subjects and classes.
@@ -133,6 +133,7 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Generate report cards/transcripts
 - [ ] **Detailed Admin Reports**: Implementation of various report generation tools (beyond basic attendance view).
 - [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments.
+- [ ] **Timetable Generation Tools**: (Advanced) Tools to assist in or automate timetable creation.
 
 ### Public School Website
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.
@@ -155,3 +156,4 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
+

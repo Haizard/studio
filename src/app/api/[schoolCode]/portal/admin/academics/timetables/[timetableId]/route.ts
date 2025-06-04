@@ -19,9 +19,7 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
 }
 
-// Helper function to check for time overlaps
 function timesOverlap(startA: string, endA: string, startB: string, endB: string): boolean {
-  // Convert HH:mm to minutes from midnight for easier comparison
   const parseTime = (timeStr: string): number => {
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
@@ -35,32 +33,36 @@ function timesOverlap(startA: string, endA: string, startB: string, endB: string
 }
 
 async function checkConflicts(
-  periods: ITimetabledPeriod[],
+  periods: ITimetabledPeriod[], // Periods from request body (subjectId, teacherId might be strings)
   currentTimetableId: string,
   academicYearId: mongoose.Types.ObjectId,
   termId: mongoose.Types.ObjectId | null | undefined,
-  classId: mongoose.Types.ObjectId,
+  classId: mongoose.Types.ObjectId, // classId of the timetable being checked
   tenantDb: mongoose.Connection
 ): Promise<string | null> {
   const Timetable = tenantDb.models.Timetable as mongoose.Model<ITimetable>;
-  const Class = tenantDb.models.Class as mongoose.Model<IClass>;
   const User = tenantDb.models.User as mongoose.Model<ITenantUser>;
   const Subject = tenantDb.models.Subject as mongoose.Model<ISubject>;
 
-  // 1. Internal conflicts within the current timetable's proposed periods
+  // Validate incoming periods ensure string IDs are valid ObjectIds before use
+  for (const p of periods) {
+    if (!mongoose.Types.ObjectId.isValid(p.subjectId.toString())) return `Invalid Subject ID format: ${p.subjectId}`;
+    if (!mongoose.Types.ObjectId.isValid(p.teacherId.toString())) return `Invalid Teacher ID format: ${p.teacherId}`;
+  }
+
+
   for (let i = 0; i < periods.length; i++) {
     for (let j = i + 1; j < periods.length; j++) {
       const p1 = periods[i];
       const p2 = periods[j];
       if (p1.dayOfWeek === p2.dayOfWeek && timesOverlap(p1.startTime, p1.endTime, p2.startTime, p2.endTime)) {
-        const p1Subject = await Subject.findById(p1.subjectId).select('name').lean();
-        const p2Subject = await Subject.findById(p2.subjectId).select('name').lean();
-        return `Class conflict: Periods for ${p1Subject?.name} (${p1.startTime}-${p1.endTime}) and ${p2Subject?.name} (${p2.startTime}-${p2.endTime}) on ${p1.dayOfWeek} overlap.`;
+        const p1Subject = await Subject.findById(p1.subjectId.toString()).select('name').lean();
+        const p2Subject = await Subject.findById(p2.subjectId.toString()).select('name').lean();
+        return `Class conflict: Periods for ${p1Subject?.name || 'Unknown Subject'} (${p1.startTime}-${p1.endTime}) and ${p2Subject?.name || 'Unknown Subject'} (${p2.startTime}-${p2.endTime}) on ${p1.dayOfWeek} overlap within this timetable.`;
       }
     }
   }
 
-  // 2. External conflicts (Teacher and Location)
   const otherActiveTimetablesQuery: any = {
     _id: { $ne: new mongoose.Types.ObjectId(currentTimetableId) },
     academicYearId: academicYearId,
@@ -76,7 +78,7 @@ async function checkConflicts(
     .populate<{ classId: IClass }>('classId', 'name')
     .populate<{ periods: { subjectId: ISubject, teacherId: ITenantUser}[] }>([
         { path: 'periods.subjectId', model: 'Subject', select: 'name' },
-        { path: 'periods.teacherId', model: 'User', select: 'firstName lastName username' }
+        { path: 'periods.teacherId', model: 'User', select: 'firstName lastName username _id' } // Ensure _id is selected
     ])
     .lean();
 
@@ -84,12 +86,10 @@ async function checkConflicts(
     for (const otherTT of otherActiveTimetables) {
       for (const otherPeriod of otherTT.periods) {
         if (currentPeriod.dayOfWeek === otherPeriod.dayOfWeek && timesOverlap(currentPeriod.startTime, currentPeriod.endTime, otherPeriod.startTime, otherPeriod.endTime)) {
-          // Check Teacher Conflict
-          if (currentPeriod.teacherId && otherPeriod.teacherId && currentPeriod.teacherId.toString() === (otherPeriod.teacherId as any)?._id.toString()) {
-            const conflictTeacher = await User.findById(currentPeriod.teacherId).select('firstName lastName').lean();
+          if (currentPeriod.teacherId && (otherPeriod.teacherId as any)?._id && currentPeriod.teacherId.toString() === (otherPeriod.teacherId as any)?._id.toString()) {
+            const conflictTeacher = otherPeriod.teacherId as ITenantUser; // Now this is the populated user object
             return `Teacher Conflict: ${conflictTeacher?.firstName} ${conflictTeacher?.lastName} is already scheduled for class ${(otherTT.classId as IClass).name} - subject ${(otherPeriod.subjectId as ISubject).name} on ${currentPeriod.dayOfWeek} from ${otherPeriod.startTime} to ${otherPeriod.endTime}.`;
           }
-          // Check Location Conflict (if location is not empty or null)
           if (currentPeriod.location && otherPeriod.location && currentPeriod.location.trim() !== '' && currentPeriod.location.trim().toLowerCase() === otherPeriod.location.trim().toLowerCase()) {
             return `Location Conflict: Location "${currentPeriod.location}" is already booked for class ${(otherTT.classId as IClass).name} - subject ${(otherPeriod.subjectId as ISubject).name} on ${currentPeriod.dayOfWeek} from ${otherPeriod.startTime} to ${otherPeriod.endTime}.`;
           }
@@ -97,7 +97,7 @@ async function checkConflicts(
       }
     }
   }
-  return null; // No conflicts found
+  return null; 
 }
 
 
@@ -137,7 +137,7 @@ export async function GET(
     return NextResponse.json(timetable);
   } catch (error: any) {
     console.error(`Error fetching timetable ${timetableId} for ${schoolCode}:`, error);
-    return NextResponse.json({ error: 'Failed to fetch timetable', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch timetable', details: String(error.message || 'Unknown error') }, { status: 500 });
   }
 }
 
@@ -181,7 +181,6 @@ export async function PUT(
       return NextResponse.json({ error: 'Timetable not found' }, { status: 404 });
     }
 
-    // Uniqueness check for timetable definition
     if (name !== timetableToUpdate.name || 
         academicYearId.toString() !== timetableToUpdate.academicYearId.toString() ||
         classId.toString() !== timetableToUpdate.classId.toString() ||
@@ -195,10 +194,17 @@ export async function PUT(
       }
     }
     
-    // Conflict detection for periods
-    if (periods && periods.length > 0) {
+    const validPeriods = (periods || []).map((p: any) => ({
+      ...p,
+      _id: p._id ? new mongoose.Types.ObjectId(p._id.toString()) : new mongoose.Types.ObjectId(), // Ensure _id is ObjectId
+      subjectId: new mongoose.Types.ObjectId(p.subjectId.toString()),
+      teacherId: new mongoose.Types.ObjectId(p.teacherId.toString()),
+    }));
+
+
+    if (validPeriods && validPeriods.length > 0) {
         const conflictMessage = await checkConflicts(
-            periods as ITimetabledPeriod[], 
+            validPeriods as ITimetabledPeriod[], 
             timetableId, 
             new mongoose.Types.ObjectId(academicYearId),
             termId ? new mongoose.Types.ObjectId(termId) : null,
@@ -222,7 +228,7 @@ export async function PUT(
     timetableToUpdate.academicYearId = academicYearId;
     timetableToUpdate.classId = classId;
     timetableToUpdate.termId = termId || undefined;
-    timetableToUpdate.periods = periods || [];
+    timetableToUpdate.periods = validPeriods;
     timetableToUpdate.description = description;
     timetableToUpdate.isActive = isActive !== undefined ? isActive : timetableToUpdate.isActive;
     timetableToUpdate.version = (timetableToUpdate.version || 0) + 1; 
@@ -241,7 +247,11 @@ export async function PUT(
     if (error.code === 11000) {
       return NextResponse.json({ error: 'Timetable name, class, academic year, and term combination must be unique.' }, { status: 409 });
     }
-    return NextResponse.json({ error: 'Failed to update timetable', details: error.message }, { status: 500 });
+    if (error instanceof mongoose.Error.ValidationError) {
+        const messages = Object.values(error.errors).map((e: any) => e.message).join(', ');
+        return NextResponse.json({ error: 'Validation failed', details: messages || 'Please check your input.' }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Failed to update timetable', details: String(error.message || 'Unknown error') }, { status: 500 });
   }
 }
 
@@ -274,7 +284,6 @@ export async function DELETE(
     return NextResponse.json({ message: 'Timetable deleted successfully' });
   } catch (error: any) {
     console.error(`Error deleting timetable ${timetableId} for ${schoolCode}:`, error);
-    return NextResponse.json({ error: 'Failed to delete timetable', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete timetable', details: String(error.message || 'Unknown error') }, { status: 500 });
   }
 }
-
