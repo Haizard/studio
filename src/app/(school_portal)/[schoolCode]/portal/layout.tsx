@@ -21,7 +21,7 @@ import {
   CalendarOutlined, 
   UnorderedListOutlined, 
   AppstoreAddOutlined,
-  ScheduleOutlined as TimetableIcon, // Renamed to avoid conflict
+  ScheduleOutlined as TimetableIcon,
   FileTextOutlined,
   UsergroupAddOutlined, 
   PictureOutlined,
@@ -30,7 +30,7 @@ import {
   FolderOpenOutlined, 
   ProjectOutlined,
   PercentageOutlined,
-  BarsOutlined, // For Fee Structure
+  BarsOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -98,13 +98,12 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           ],
         },
         {
-          key: 'admin-finance',
+          key: 'admin-finance', // Key for the Finance parent menu
           icon: <DollarCircleOutlined />,
           label: 'Finance',
           children: [
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
-            // Add more finance links here as developed (e.g., Student Fees, Reports)
           ]
         },
         {
@@ -118,12 +117,27 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/website-management/gallery`, icon: <PictureOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/gallery`}>Gallery</Link> },
           ]
         },
-        // { key: `${basePortalPath}/library`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/library`}>Library</Link> },
-        // { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
-        // { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> },
+        { key: `${basePortalPath}/library`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/library`}>Library</Link> },
+        { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
+        { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> }
       );
     }
     
+    if (role === 'finance') {
+      items.push(
+        {
+          key: 'admin-finance', // Key for the Finance parent menu
+          icon: <DollarCircleOutlined />,
+          label: 'Finance Management',
+          children: [
+            { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
+            { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
+            // Add more finance-specific links here
+          ]
+        }
+      );
+    }
+
     if (role === 'teacher') {
       items.push(
         { key: `${basePortalPath}/teacher/my-profile`, icon: <IdcardOutlined />, label: <Link href={`${basePortalPath}/teacher/my-profile`}>My Profile</Link> },
@@ -142,14 +156,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         { key: `${basePortalPath}/student/my-attendance`, icon: <CheckSquareOutlined />, label: <Link href={`${basePortalPath}/student/my-attendance`}>My Attendance</Link> },
         { key: `${basePortalPath}/student/resources`, icon: <FolderOpenOutlined />, label: <Link href={`${basePortalPath}/student/resources`}>Resources</Link> },
         { key: `${basePortalPath}/student/my-timetable`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/student/my-timetable`}>My Timetable</Link> },
-      );
-    }
-    // Adding general modules like Library, Pharmacy, Dormitory if user is admin
-    if (role === 'admin' || role === 'superadmin') {
-      items.push(
-          { key: `${basePortalPath}/library`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/library`}>Library</Link> },
-          { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
-          { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> }
       );
     }
 
@@ -211,15 +217,10 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   }
   openKeys = activeKeysResult.open || [];
 
-  // Ensure parent menu groups are open for nested items
   if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
-  if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports')) openKeys.push('admin-management');
-  if(selectedKey.includes('/admin/students')) openKeys.push('admin-management'); 
-  if(selectedKey.includes('/admin/teachers')) openKeys.push('admin-management'); 
-  if(selectedKey.includes('/admin/settings')) openKeys.push('admin-management'); 
+  if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports') || selectedKey.includes('/admin/settings') || selectedKey.includes('/admin/users') || selectedKey.includes('/admin/students') || selectedKey.includes('/admin/teachers')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
-  if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance','admin-management'); // Open finance parent
-
+  if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance'); // Open finance parent if its child is selected
 
   const breadcrumbItemsGen = () => {
     const pathSnippets = pathname.split('/').filter(i => i);
@@ -235,7 +236,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
-      // Customize titles for dynamic segments
       if (mongoose.Types.ObjectId.isValid(snippet)) {
         const prevSegment = relevantSnippets[index-1];
         const secondPrevSegment = relevantSnippets[index-2]; 

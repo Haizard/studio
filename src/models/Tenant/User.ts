@@ -45,3 +45,4 @@ TenantUserSchemaDefinition.index({ role: 1 });
 // The model name 'User' here is scoped to the tenant's database connection.
 // Default export for convenience, but prefer using the schema definition for explicit registration on tenant connections.
 export default mongoose.models.User || mongoose.model<ITenantUser>('User', TenantUserSchemaDefinition);
+
