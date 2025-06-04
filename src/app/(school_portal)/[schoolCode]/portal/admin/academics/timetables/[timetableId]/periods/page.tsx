@@ -9,6 +9,8 @@ import type { ITimetable, ITimetabledPeriod } from '@/models/Tenant/Timetable';
 import type { ISubject } from '@/models/Tenant/Subject';
 import type { ITenantUser } from '@/models/Tenant/User';
 import type { IClass } from '@/models/Tenant/Class';
+import type { IAcademicYear } from '@/models/Tenant/AcademicYear'; // For timetable header
+import type { ITerm } from '@/models/Tenant/Term'; // For timetable header
 import moment from 'moment';
 import mongoose from 'mongoose';
 
@@ -21,10 +23,9 @@ interface PeriodManagementPageProps {
   params: { schoolCode: string; timetableId: string };
 }
 
+// ITimetabledPeriod already includes _id and populated subjectId/teacherId from API
 interface PeriodClientDataType extends ITimetabledPeriod {
-  key: string; // Corresponds to period._id
-  subjectName?: string;
-  teacherName?: string;
+  key: string; // for AntD table, will be _id.toString()
 }
 
 export default function PeriodManagementPage({ params: routeParams }: PeriodManagementPageProps) {
@@ -42,14 +43,15 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
   const [form] = Form.useForm();
 
   const TIMETABLE_API_URL = `/api/${schoolCode}/portal/admin/academics/timetables/${timetableId}`;
-  const SUBJECTS_API_BASE = `/api/${schoolCode}/portal/academics/subjects`; // To fetch all subjects if class has none specified
-  const USERS_API = `/api/${schoolCode}/portal/users?role=teacher&isActive=true`; // To fetch active teachers
-  const CLASS_SUBJECTS_API = (classId: string) => `/api/${schoolCode}/portal/academics/classes/${classId}`; // To get subjects of specific class
+  const SUBJECTS_API_BASE = `/api/${schoolCode}/portal/academics/subjects`; 
+  const USERS_API = `/api/${schoolCode}/portal/users?role=teacher&isActive=true`;
+  const CLASS_DETAILS_API_BASE = `/api/${schoolCode}/portal/academics/classes/`;
 
   const fetchTimetableDetails = useCallback(async () => {
     if (!mongoose.Types.ObjectId.isValid(timetableId)) {
       message.error("Invalid Timetable ID.");
       router.push(`/${schoolCode}/portal/admin/academics/timetables`);
+      setLoading(false);
       return null;
     }
     setLoading(true);
@@ -62,8 +64,6 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
       const populatedPeriods = (data.periods || []).map(p => ({
         ...p,
         key: p._id.toString(),
-        subjectName: (p.subjectId as ISubject)?.name || 'N/A',
-        teacherName: (p.teacherId as ITenantUser)?.firstName ? `${(p.teacherId as ITenantUser).firstName} ${(p.teacherId as ITenantUser).lastName}` : ((p.teacherId as ITenantUser)?.username || 'N/A'),
       }));
       setPeriods(populatedPeriods);
       return data;
@@ -72,25 +72,25 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
       setTimetable(null);
       return null;
     } finally {
-      // Defer setLoading(false) until other data is fetched
+      // Defer setLoading(false) until other supporting data is fetched
     }
   }, [schoolCode, timetableId, router, TIMETABLE_API_URL]);
 
   const fetchSupportingData = useCallback(async (currentTimetable: ITimetable) => {
     try {
-      const classId = (currentTimetable.classId as IClass)._id;
+      const classId = (currentTimetable.classId as IClass)._id; // Assuming classId is populated or is an ObjectId string
       let classSubjects: ISubject[] = [];
 
-      // Fetch subjects specific to the class
       if (classId) {
-        const classDetailsRes = await fetch(CLASS_SUBJECTS_API(classId.toString()));
+        const classDetailsRes = await fetch(`${CLASS_DETAILS_API_BASE}${classId.toString()}`);
         if (classDetailsRes.ok) {
             const classData: IClass = await classDetailsRes.json();
             if (classData.subjectsOffered && classData.subjectsOffered.length > 0) {
-                 // Assuming subjectsOffered are populated or are at least Ids that we can use
-                 // For simplicity, if they are just Ids, we would need another fetch to get their names
-                 // Or ensure the /classes/:id endpoint populates subjectsOffered properly
-                 classSubjects = classData.subjectsOffered as ISubject[]; // Assuming populated
+                 // subjectsOffered should be an array of populated ISubject or at least their IDs
+                 // If they are just IDs, and the GET /classes/:id populates them, then this is fine.
+                 // Otherwise, we'd need to fetch subject details based on these IDs.
+                 // Assuming they are populated or compatible with ISubject structure here.
+                 classSubjects = (classData.subjectsOffered as ISubject[]).filter(s => s && s._id && s.name);
             }
         } else {
             console.warn("Could not fetch class-specific subjects, falling back to all subjects.");
@@ -99,30 +99,30 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
       
       if (classSubjects.length === 0) { // Fallback: Fetch all subjects if class has no specific ones
         const allSubjectsRes = await fetch(SUBJECTS_API_BASE);
-        if (allSubjectsRes.ok) classSubjects = await allSubjectsRes.json();
+        if (allSubjectsRes.ok) classSubjects = (await allSubjectsRes.json() as ISubject[]).filter(s => s && s._id && s.name);
         else console.error("Failed to fetch all subjects.");
       }
       setSubjects(classSubjects.sort((a,b) => a.name.localeCompare(b.name)));
       
 
       const teachersRes = await fetch(USERS_API);
-      if (!teachersRes.ok) throw new Error('Failed to fetch teachers');
+      if (!teachersRes.ok) throw new Error((await teachersRes.json()).error || 'Failed to fetch teachers');
       const teachersData: ITenantUser[] = await teachersRes.json();
-      setTeachers(teachersData.sort((a,b)=>(a.firstName || "").localeCompare(b.firstName || "")));
+      setTeachers(teachersData.filter(t => t && t._id && t.username).sort((a,b)=>(a.firstName || "").localeCompare(b.firstName || "")));
 
     } catch (error: any) {
       message.error(error.message || "Failed to load subjects or teachers.");
     } finally {
-      setLoading(false); // All data fetching attempts complete
+      setLoading(false); 
     }
-  }, [schoolCode, SUBJECTS_API_BASE, USERS_API]);
+  }, [schoolCode, SUBJECTS_API_BASE, USERS_API, CLASS_DETAILS_API_BASE]);
 
   useEffect(() => {
     fetchTimetableDetails().then(currentTimetable => {
       if (currentTimetable) {
         fetchSupportingData(currentTimetable);
       } else {
-        setLoading(false); // No timetable, stop loading
+        setLoading(false); 
       }
     });
   }, [fetchTimetableDetails, fetchSupportingData]);
@@ -131,6 +131,11 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
   const handleAddPeriod = () => {
     setEditingPeriod(null);
     form.resetFields();
+    form.setFieldsValue({
+        dayOfWeek: 'Monday', // Default day
+        startTime: moment('08:00', 'HH:mm'),
+        endTime: moment('09:00', 'HH:mm'),
+    });
     setIsModalVisible(true);
   };
 
@@ -167,7 +172,8 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
     if (!timetable) return;
     try {
       const values = await form.validateFields();
-      const newPeriodData: Omit<ITimetabledPeriod, '_id' | 'createdAt' | 'updatedAt'> = {
+      // Prepare new period data, excluding _id and timestamps
+      const periodDataPayload: Omit<ITimetabledPeriod, '_id' | 'createdAt' | 'updatedAt'> = {
         dayOfWeek: values.dayOfWeek,
         startTime: values.startTime.format('HH:mm'),
         endTime: values.endTime.format('HH:mm'),
@@ -176,26 +182,29 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
         location: values.location,
       };
 
-      let updatedPeriods;
+      let updatedPeriodsArray;
       if (editingPeriod) {
-        updatedPeriods = timetable.periods.map(p => 
-          p._id.toString() === editingPeriod.key ? { ...p, ...newPeriodData } : p
+        updatedPeriodsArray = timetable.periods.map(p => 
+          p._id.toString() === editingPeriod.key 
+          ? { ...p, ...periodDataPayload } // Spread existing period 'p' to keep its _id
+          : p
         );
       } else {
-        updatedPeriods = [...timetable.periods, { ...newPeriodData, _id: new mongoose.Types.ObjectId() as any }];
+        // For new periods, Mongoose will assign an _id on save.
+        updatedPeriodsArray = [...timetable.periods, periodDataPayload as ITimetabledPeriod];
       }
       
       const response = await fetch(TIMETABLE_API_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...timetable, periods: updatedPeriods }),
+        body: JSON.stringify({ ...timetable, periods: updatedPeriodsArray }),
       });
 
       if (!response.ok) throw new Error((await response.json()).error || `Failed to ${editingPeriod ? 'update' : 'add'} period`);
       
       message.success(`Period ${editingPeriod ? 'updated' : 'added'} successfully`);
       setIsModalVisible(false);
-      fetchTimetableDetails(); // Refetch
+      fetchTimetableDetails(); 
     } catch (error: any) {
       message.error(error.message || `Could not ${editingPeriod ? 'update' : 'add'} period.`);
     }
@@ -205,8 +214,22 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
     { title: 'Day', dataIndex: 'dayOfWeek', key: 'dayOfWeek', sorter: (a: PeriodClientDataType, b: PeriodClientDataType) => daysOfWeek.indexOf(a.dayOfWeek) - daysOfWeek.indexOf(b.dayOfWeek) },
     { title: 'Start Time', dataIndex: 'startTime', key: 'startTime', sorter: (a: PeriodClientDataType, b: PeriodClientDataType) => a.startTime.localeCompare(b.startTime) },
     { title: 'End Time', dataIndex: 'endTime', key: 'endTime' },
-    { title: 'Subject', dataIndex: 'subjectName', key: 'subjectName' },
-    { title: 'Teacher', dataIndex: 'teacherName', key: 'teacherName' },
+    { 
+      title: 'Subject', 
+      key: 'subjectName',
+      render: (_: any, record: PeriodClientDataType) => {
+        const subject = record.subjectId as ISubject | undefined; // subjectId is populated
+        return subject ? `${subject.name} ${subject.code ? `(${subject.code})` : ''}` : 'N/A';
+      }
+    },
+    { 
+      title: 'Teacher', 
+      key: 'teacherName',
+      render: (_: any, record: PeriodClientDataType) => {
+        const teacher = record.teacherId as ITenantUser | undefined; // teacherId is populated
+        return teacher ? `${teacher.firstName} ${teacher.lastName || ''} (${teacher.username})` : 'N/A';
+      }
+    },
     { title: 'Location', dataIndex: 'location', key: 'location', render: (loc?: string) => loc || '-' },
     {
       title: 'Actions',
@@ -216,7 +239,7 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
           <Button icon={<EditOutlined />} onClick={() => handleEditPeriod(record)}>Edit</Button>
           <Popconfirm
             title="Delete this period?"
-            onConfirm={() => handleDeletePeriod(record.key)}
+            onConfirm={() => handleDeletePeriod(record.key)} // key is _id.toString()
             okText="Yes, Delete"
             cancelText="No"
           >
@@ -234,7 +257,7 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
     { title: timetable ? `Manage Periods: ${timetable.name}` : 'Loading Timetable...' },
   ];
 
-  if (loading) {
+  if (loading && !timetable) {
     return <div className="flex justify-center items-center h-full"><Spin size="large" tip="Loading timetable data..." /></div>;
   }
 
@@ -242,8 +265,9 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
     return <Alert message="Error" description="Timetable details could not be loaded. Please go back and try again." type="error" showIcon action={<Button onClick={() => router.back()}>Back to Timetables</Button>} />;
   }
   
-  const timetableClass = timetable.classId as IClass;
-  const timetableAcademicYear = timetable.academicYearId as IAcademicYear;
+  // Types for populated fields on timetable object itself
+  const timetableClass = timetable.classId as IClass | undefined;
+  const timetableAcademicYear = timetable.academicYearId as IAcademicYear | undefined;
   const timetableTerm = timetable.termId as ITerm | undefined;
 
 
@@ -252,7 +276,9 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
       <Breadcrumb items={breadcrumbItems} className="mb-4" />
       <Title level={2} className="mb-2">Manage Periods for: {timetable.name}</Title>
       <Text type="secondary" className="block mb-4">
-        Class: {timetableClass?.name} ({timetableClass?.level}) | Academic Year: {timetableAcademicYear?.name} {timetableTerm ? `| Term: ${timetableTerm.name}` : ''}
+        Class: {timetableClass?.name || 'N/A'} {timetableClass?.level ? `(${timetableClass.level})` : ''} | 
+        Academic Year: {timetableAcademicYear?.name || 'N/A'} 
+        {timetableTerm ? ` | Term: ${timetableTerm.name}` : ''}
       </Text>
       
       <div className="flex justify-between items-center mb-6">
@@ -261,15 +287,16 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
         </Button>
          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push(`/${schoolCode}/portal/admin/academics/timetables`)}>Back to Timetables List</Button>
       </div>
-
-      <Table columns={periodColumns} dataSource={periods} rowKey="key" bordered />
+      <Spin spinning={loading}>
+        <Table columns={periodColumns} dataSource={periods} rowKey="key" bordered />
+      </Spin>
 
       <Modal
         title={editingPeriod ? 'Edit Period' : 'Add New Period'}
         open={isModalVisible}
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
-        confirmLoading={form.isSubmitting}
+        confirmLoading={form.isSubmitting || loading } // Also consider main loading state if PUT is very fast
         destroyOnClose
         width={600}
       >
@@ -293,12 +320,12 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="startTime" label="Start Time" rules={[{ required: true }]}>
-                <TimePicker format="HH:mm" style={{width: "100%"}} minuteStep={5} />
+                <TimePicker format="HH:mm" style={{width: "100%"}} minuteStep={5} use12Hours={false} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="endTime" label="End Time" rules={[{ required: true }]}>
-                <TimePicker format="HH:mm" style={{width: "100%"}} minuteStep={5}/>
+                <TimePicker format="HH:mm" style={{width: "100%"}} minuteStep={5} use12Hours={false}/>
               </Form.Item>
             </Col>
           </Row>
@@ -321,5 +348,4 @@ export default function PeriodManagementPage({ params: routeParams }: PeriodMana
     </div>
   );
 }
-
     
