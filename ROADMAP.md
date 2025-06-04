@@ -55,6 +55,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Subject Management**: CRUD operations for school subjects.
     - [x] **Class Management**: CRUD operations, linking classes to academic years, class teachers (optional), and subjects offered.
     - [x] **A-Level Combination Management**: CRUD operations for A-Level subject combinations, linked to academic years and subjects.
+    - [x] **Timetable Management (Admin Shell)**: CRUD for timetable definitions (name, year, class, term, status). Management of individual periods.
 - [x] **Exam Management**:
     - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status).
     - [x] **Assessment Management**: CRUD operations for individual assessments (papers, practicals) under an exam, linking to subjects and classes.
@@ -63,12 +64,12 @@ This document tracks the features implemented and planned for the Unified School
     - [x] API endpoint to fetch attendance records with necessary population.
 - [x] **Website Content Management**:
     - [x] **Website Management Overview Page**.
-    - [x] **News Article Management**: CRUD operations for news articles (title, slug, content, images, etc.).
+    - [x] **News Article Management**: CRUD operations for news articles (title, slug, content, images, etc.). Includes AI summary & content generation.
     - [x] **Event Management**: CRUD operations for school events (details, dates, images, etc.).
     - [x] **Gallery Management**: CRUD operations for gallery images (upload, title, album, tags).
 - [x] **School Settings**:
     - [x] Manage basic website settings (School Name, Logo, Tagline, Contact Info, Footer, Colors).
-    - [x] Manage "About Us" page content using Rich Text Editor.
+    - [x] Manage "About Us" page content using Rich Text Editor with HTML sanitization.
 - [x] **Admin Reports**: Placeholder page.
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
@@ -91,6 +92,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **My Results**: Students can view their marks for published exams, filtered by academic year and term.
 - [x] **My Attendance**: Students can view their attendance records.
 - [x] **Resources**: Access learning materials shared by teachers.
+- [x] **My Timetable**: View personal class timetable based on active class and academic year.
 
 ### VI. Public School Website (`/[schoolCode]/...`)
 - [x] **Dynamic Layout**: Header (logo, nav) and Footer driven by School Settings.
@@ -99,7 +101,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Single News Article Page**: Displays full content of a news article by slug.
 - [x] **Events Listing Page**: Displays active upcoming and past events.
 - [x] **Gallery Page**: Displays active gallery items, with album filtering.
-- [x] **About Us Page**: Displays content managed from School Settings.
+- [x] **About Us Page**: Displays content managed from School Settings (sanitized HTML).
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -124,10 +126,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Dormitory/Room setup
     - [ ] Student room allocation
     - [ ] Check-in/Check-out
-- [ ] **Timetable Management**:
-    - [ ] Create and manage class timetables
-    - [ ] Teacher timetable view
-    - [ ] Student timetable view
 - [ ] **Grading & Promotion**:
     - [ ] Define grading scales
     - [ ] Process student promotions/repetitions based on results
@@ -136,11 +134,8 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments.
 
 ### School Portal - Teacher Section
+- [ ] **Teacher Timetable View**: Display comprehensive timetable for the teacher.
 {/* Teacher Resources already marked above */}
-
-### School Portal - Student Section
-- [ ] **My Timetable**: View personal class timetable.
-{/* Student Resources already marked above */}
 
 ### Public School Website
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.
