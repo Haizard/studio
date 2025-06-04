@@ -79,6 +79,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
     - [x] **Book borrowing and returns** (Core API logic for borrow/return)
+    - [x] **UI for Book borrowing and returns (Circulation Desk)**
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -122,7 +123,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Expense tracking
     - [ ] Financial reporting
 - [ ] **Library Management**:
-    - [ ] UI for Book borrowing and returns (Circulation Desk)
     - [ ] List book transactions (borrowing history)
     - [ ] Fine management for overdue books
     - [ ] Library inventory and reporting

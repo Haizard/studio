@@ -29,9 +29,9 @@ export default function LibraryDashboardPage({ params }: LibraryPageProps) {
       description: 'View list of students and teachers as potential library members.' 
     },
      { 
-      title: 'Borrowing & Returns', 
+      title: 'Circulation Desk', 
       icon: <ContainerOutlined />, 
-      link: `${basePortalPath}/transactions`, // Placeholder
+      link: `${basePortalPath}/circulation`, 
       description: 'Handle book check-outs, check-ins, and renewals.' 
     },
     { 

@@ -37,10 +37,10 @@ export async function POST(
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token || !['admin', 'superadmin', 'librarian'].includes(token.role as string)) {
-    return NextResponse.json({ error: 'Unauthorized: Only admins or librarians can manage book transactions.' }, { status: 403 });
+    return NextResponse.json({ error: 'Unauthorized: Only admins or librarians can manage book transactions.', details: 'User role not permitted for this action.' }, { status: 403 });
   }
   if (token.role !== 'superadmin' && token.schoolCode !== schoolCode) {
-    return NextResponse.json({ error: 'Unauthorized for this school' }, { status: 403 });
+    return NextResponse.json({ error: 'Unauthorized for this school', details: 'User not authorized for the specified school.' }, { status: 403 });
   }
 
   const body: RequestBody = await request.json();
@@ -55,19 +55,19 @@ export async function POST(
     if (body.action === 'borrow') {
       const { bookId, memberId, dueDate, notes } = body;
       if (!mongoose.Types.ObjectId.isValid(bookId) || !mongoose.Types.ObjectId.isValid(memberId)) {
-        return NextResponse.json({ error: 'Invalid Book ID or Member ID' }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid Book ID or Member ID', details: 'The provided Book ID or Member ID is not a valid format.' }, { status: 400 });
       }
       
       const book = await Book.findById(bookId);
-      if (!book) return NextResponse.json({ error: 'Book not found' }, { status: 404 });
-      if (book.availableCopies <= 0) return NextResponse.json({ error: 'Book not available for borrowing' }, { status: 400 });
+      if (!book) return NextResponse.json({ error: 'Book not found', details: `Book with ID ${bookId} could not be found.` }, { status: 404 });
+      if (book.availableCopies <= 0) return NextResponse.json({ error: 'Book not available for borrowing', details: 'There are no available copies of this book.' }, { status: 400 });
 
       const member = await User.findById(memberId).lean();
-      if (!member) return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+      if (!member) return NextResponse.json({ error: 'Member not found', details: `Member with ID ${memberId} could not be found.` }, { status: 404 });
 
       const existingActiveBorrow = await BookTransaction.findOne({ bookId, memberId, isReturned: false });
       if (existingActiveBorrow) {
-        return NextResponse.json({ error: 'This member has already borrowed this book and not returned it.' }, { status: 400 });
+        return NextResponse.json({ error: 'This member has already borrowed this book and not returned it.', details: 'An active borrowing record already exists for this member and book.' }, { status: 400 });
       }
 
       book.availableCopies -= 1;
@@ -92,17 +92,17 @@ export async function POST(
     } else if (body.action === 'return') {
       const { bookTransactionId, notes } = body;
       if (!mongoose.Types.ObjectId.isValid(bookTransactionId)) {
-        return NextResponse.json({ error: 'Invalid Book Transaction ID' }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid Book Transaction ID', details: 'The provided Book Transaction ID is not a valid format.' }, { status: 400 });
       }
 
       const transaction = await BookTransaction.findById(bookTransactionId);
-      if (!transaction) return NextResponse.json({ error: 'Borrow transaction not found' }, { status: 404 });
-      if (transaction.isReturned) return NextResponse.json({ error: 'This book has already been returned' }, { status: 400 });
+      if (!transaction) return NextResponse.json({ error: 'Borrow transaction not found', details: `Transaction with ID ${bookTransactionId} not found.` }, { status: 404 });
+      if (transaction.isReturned) return NextResponse.json({ error: 'This book has already been returned', details: 'The selected transaction indicates the book was already returned.' }, { status: 400 });
 
       const book = await Book.findById(transaction.bookId);
       if (!book) {
         console.error(`Book with ID ${transaction.bookId} not found during return for transaction ${transaction._id}`);
-        return NextResponse.json({ error: 'Associated book not found. Data inconsistency.' }, { status: 500 });
+        return NextResponse.json({ error: 'Associated book not found. Data inconsistency.', details: `Book ID ${transaction.bookId} from transaction ${transaction._id} could not be found.` }, { status: 500 });
       }
 
       transaction.isReturned = true;
@@ -120,7 +120,7 @@ export async function POST(
       return NextResponse.json(populatedTransaction);
 
     } else {
-      return NextResponse.json({ error: 'Invalid action specified in request body' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid action specified in request body', details: "The 'action' field must be either 'borrow' or 'return'." }, { status: 400 });
     }
 
   } catch (error: any) {
@@ -135,12 +135,11 @@ export async function POST(
     } else if (typeof error === 'string') {
         errorDetailString = error;
     } else if (error && typeof error.toString === 'function') {
-        // Fallback to toString() if message is not available or not a string
         const errStr = error.toString();
         errorDetailString = errStr === '[object Object]' ? 'An unexpected error object was thrown.' : errStr;
     }
 
-    return NextResponse.json({ error: 'Failed to process book transaction', details: errorDetailString }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to process book transaction', details: String(errorDetailString) }, { status: 500 });
   }
 }
 
@@ -153,10 +152,10 @@ export async function GET(
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token || !['admin', 'superadmin', 'librarian'].includes(token.role as string)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    return NextResponse.json({ error: 'Unauthorized', details: 'User role not permitted for this action.' }, { status: 403 });
   }
   if (token.role !== 'superadmin' && token.schoolCode !== schoolCode) {
-    return NextResponse.json({ error: 'Unauthorized for this school' }, { status: 403 });
+    return NextResponse.json({ error: 'Unauthorized for this school', details: 'User not authorized for the specified school.' }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -193,6 +192,6 @@ export async function GET(
         const errStr = error.toString();
         errorDetailString = errStr === '[object Object]' ? 'An unexpected error object was thrown.' : errStr;
     }
-    return NextResponse.json({ error: 'Failed to fetch book transactions', details: errorDetailString }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch book transactions', details: String(errorDetailString) }, { status: 500 });
   }
 }
