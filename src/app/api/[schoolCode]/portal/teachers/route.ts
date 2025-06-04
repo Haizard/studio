@@ -52,7 +52,7 @@ export async function GET(
     return NextResponse.json(sanitizedTeachers);
   } catch (error: any) {
     console.error(`Error fetching teachers for ${schoolCode}:`, error);
-    return NextResponse.json({ error: 'Failed to fetch teachers', details: error.message, stack: error.stack }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch teachers', details: String(error.message || 'Unknown server error') }, { status: 500 });
   }
 }
 
@@ -136,6 +136,6 @@ export async function POST(
     if (error.code === 11000) {
         return NextResponse.json({ error: 'A unique field (e.g., username, email, teacher ID) already exists.' }, { status: 409 });
     }
-    return NextResponse.json({ error: 'Failed to create teacher', details: error.message, stack: error.stack }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create teacher', details: String(error.message || 'Unknown server error') }, { status: 500 });
   }
 }

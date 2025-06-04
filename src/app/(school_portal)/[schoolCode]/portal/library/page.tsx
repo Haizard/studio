@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { ReadOutlined, BookOutlined, UsergroupAddOutlined, ContainerOutlined, IssuesCloseOutlined } from '@ant-design/icons';
+import { ReadOutlined, BookOutlined, UsergroupAddOutlined, ContainerOutlined, IssuesCloseOutlined, TeamOutlined as MembersIcon } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -24,9 +24,9 @@ export default function LibraryDashboardPage({ params }: LibraryPageProps) {
     },
     { 
       title: 'Member Management', 
-      icon: <UsergroupAddOutlined />, 
-      link: `${basePortalPath}/members`, // Placeholder
-      description: 'Manage library members (students and staff) and their borrowing privileges.' 
+      icon: <MembersIcon />, 
+      link: `${basePortalPath}/members`,
+      description: 'View list of students and teachers as potential library members.' 
     },
      { 
       title: 'Borrowing & Returns', 

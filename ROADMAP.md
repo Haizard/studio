@@ -77,6 +77,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
+    - [x] **Member management (students, teachers)**: View list of potential members.
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -120,7 +121,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Expense tracking
     - [ ] Financial reporting
 - [ ] **Library Management**:
-    - [ ] Member management (students, teachers)
     - [ ] Book borrowing and returns
     - [ ] Fine management for overdue books
     - [ ] Library inventory and reporting

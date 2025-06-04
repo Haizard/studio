@@ -31,7 +31,8 @@ import {
   ProjectOutlined,
   PercentageOutlined,
   BarsOutlined,
-  BookFilled, // Added for Library child items
+  BookFilled, 
+  TeamOutlined as MembersIcon, // Added for Library Member Management
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -99,7 +100,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           ],
         },
         {
-          key: 'admin-finance', // Key for the Finance parent menu
+          key: 'admin-finance', 
           icon: <DollarCircleOutlined />,
           label: 'Finance',
           children: [
@@ -119,13 +120,13 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           ]
         },
         { 
-          key: 'library-management', // Changed key to indicate group
+          key: 'library-management', 
           icon: <ReadOutlined />, 
           label: 'Library',
           children: [
             { key: `${basePortalPath}/library`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/library`}>Library Overview</Link> },
             { key: `${basePortalPath}/library/books`, icon: <BookFilled />, label: <Link href={`${basePortalPath}/library/books`}>Book Catalog</Link> },
-            // Add more library sub-items here, e.g., Members, Borrowing
+            { key: `${basePortalPath}/library/members`, icon: <MembersIcon />, label: <Link href={`${basePortalPath}/library/members`}>Member Management</Link> },
           ]
         },
         { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
@@ -136,27 +137,27 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     if (role === 'finance') {
       items.push(
         {
-          key: 'admin-finance', // Key for the Finance parent menu
+          key: 'admin-finance', 
           icon: <DollarCircleOutlined />,
           label: 'Finance Management',
           children: [
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
-            // Add more finance-specific links here
           ]
         }
       );
     }
     
-    if (role === 'librarian') { // Adding specific role for librarian
+    if (role === 'librarian') { 
       items.push(
          { 
-          key: 'library-management', // Changed key to indicate group
+          key: 'library-management', 
           icon: <ReadOutlined />, 
           label: 'Library Management',
           children: [
             { key: `${basePortalPath}/library`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/library`}>Library Overview</Link> },
             { key: `${basePortalPath}/library/books`, icon: <BookFilled />, label: <Link href={`${basePortalPath}/library/books`}>Book Catalog</Link> },
+            { key: `${basePortalPath}/library/members`, icon: <MembersIcon />, label: <Link href={`${basePortalPath}/library/members`}>Member Management</Link> },
           ]
         }
       );
@@ -220,7 +221,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   const activeKeysResult = findActiveKeys(menuItems, pathname);
   selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
   
-  // Specific logic to ensure the correct key is selected for nested dynamic routes
   if (!activeKeysResult.selected) {
     if (pathname.includes('/admin/exams/') && pathname.includes('/assessments')) { 
         selectedKey = `/${schoolCode}/portal/admin/exams`; 
@@ -239,8 +239,9 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/finance/`)){
         selectedKey = `/${schoolCode}/portal/admin/finance`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/library/`)){
-        selectedKey = `/${schoolCode}/portal/library`; // For overview
+        selectedKey = `/${schoolCode}/portal/library`; 
         if (pathname.includes('/books')) selectedKey = `/${schoolCode}/portal/library/books`;
+        if (pathname.includes('/members')) selectedKey = `/${schoolCode}/portal/library/members`;
     }
   }
   openKeys = activeKeysResult.open || [];
@@ -249,7 +250,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports') || selectedKey.includes('/admin/settings') || selectedKey.includes('/admin/users') || selectedKey.includes('/admin/students') || selectedKey.includes('/admin/teachers')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
   if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
-  if(selectedKey.includes('/library')) openKeys.push('library-management'); // Open Library parent if its child is selected
+  if(selectedKey.includes('/library')) openKeys.push('library-management'); 
 
 
   const breadcrumbItemsGen = () => {
