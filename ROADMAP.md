@@ -56,8 +56,9 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Class Management**: CRUD operations, linking classes to academic years, class teachers (optional), and subjects offered.
     - [x] **A-Level Combination Management**: CRUD operations for A-Level subject combinations, linked to academic years and subjects.
     - [x] **Timetable Management (Admin Shell & Period Management)**: CRUD for timetable definitions (name, year, class, term, status). Management of individual periods. Includes conflict detection for periods and copy timetable functionality.
+    - [x] **Grading Scale Management**: CRUD for grading scales, including specific types for O-Level divisions, A-Level points, and grade definitions with points/GPA.
 - [x] **Exam Management**:
-    - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status).
+    - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status, weight).
     - [x] **Assessment Management**: CRUD operations for individual assessments (papers, practicals) under an exam, linking to subjects and classes.
 - [x] **Student Attendance Records (Admin View)**:
     - [x] Admin page to filter and view attendance records (Academic Year, Class, Subject, Date Range).
@@ -70,7 +71,8 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **School Settings**:
     - [x] Manage basic website settings (School Name, Logo, Tagline, Contact Info, Footer, Colors).
     - [x] Manage "About Us" page content using Rich Text Editor with HTML sanitization.
-- [x] **Admin Reports**: Placeholder page.
+- [x] **Admin Reports**:
+    - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -86,7 +88,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Attendance**:
     - [x] Selection page for class, subject, date.
     - [x] Entry page to mark attendance for students.
-- [x] **Teacher Timetable View**: Display comprehensive timetable for the teacher.
+- [x] **Teacher Timetable View**: Display comprehensive timetable for the teacher for the active academic year.
 
 ### V. School Portal - Student Section (`/[schoolCode]/portal/student/...`)
 - [x] **My Profile**: Students can view their own detailed profile information.
@@ -128,12 +130,11 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Student room allocation
     - [ ] Check-in/Check-out
 - [ ] **Grading & Promotion**:
-    - [ ] Define grading scales (In Progress)
-    - [ ] Process student promotions/repetitions based on results
-    - [ ] Generate report cards/transcripts
-- [ ] **Detailed Admin Reports**: Implementation of various report generation tools (beyond basic attendance view).
-- [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments.
-- [ ] **Timetable Generation Tools**: (Advanced) Tools to assist in or automate timetable creation.
+    - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
+    - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
+- [ ] **Detailed Admin Reports**: Implementation of various other report generation tools (beyond basic attendance and term report).
+- [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments directly.
+- [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
 ### Public School Website
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.
