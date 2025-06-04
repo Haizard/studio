@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
-import TimetableModel, { ITimetable } from '@/models/Tenant/Timetable';
+import TimetableModel, { ITimetable, ITimetabledPeriod } from '@/models/Tenant/Timetable';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import TermModel, { ITerm } from '@/models/Tenant/Term';
@@ -18,6 +18,88 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Subject) tenantDb.model<ISubject>('Subject', SubjectModel.schema);
   if (!tenantDb.models.User) tenantDb.model<ITenantUser>('User', TenantUserModel.schema);
 }
+
+// Helper function to check for time overlaps
+function timesOverlap(startA: string, endA: string, startB: string, endB: string): boolean {
+  // Convert HH:mm to minutes from midnight for easier comparison
+  const parseTime = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+  const startAMin = parseTime(startA);
+  const endAMin = parseTime(endA);
+  const startBMin = parseTime(startB);
+  const endBMin = parseTime(endB);
+
+  return startAMin < endBMin && endAMin > startBMin;
+}
+
+async function checkConflicts(
+  periods: ITimetabledPeriod[],
+  currentTimetableId: string,
+  academicYearId: mongoose.Types.ObjectId,
+  termId: mongoose.Types.ObjectId | null | undefined,
+  classId: mongoose.Types.ObjectId,
+  tenantDb: mongoose.Connection
+): Promise<string | null> {
+  const Timetable = tenantDb.models.Timetable as mongoose.Model<ITimetable>;
+  const Class = tenantDb.models.Class as mongoose.Model<IClass>;
+  const User = tenantDb.models.User as mongoose.Model<ITenantUser>;
+  const Subject = tenantDb.models.Subject as mongoose.Model<ISubject>;
+
+  // 1. Internal conflicts within the current timetable's proposed periods
+  for (let i = 0; i < periods.length; i++) {
+    for (let j = i + 1; j < periods.length; j++) {
+      const p1 = periods[i];
+      const p2 = periods[j];
+      if (p1.dayOfWeek === p2.dayOfWeek && timesOverlap(p1.startTime, p1.endTime, p2.startTime, p2.endTime)) {
+        const p1Subject = await Subject.findById(p1.subjectId).select('name').lean();
+        const p2Subject = await Subject.findById(p2.subjectId).select('name').lean();
+        return `Class conflict: Periods for ${p1Subject?.name} (${p1.startTime}-${p1.endTime}) and ${p2Subject?.name} (${p2.startTime}-${p2.endTime}) on ${p1.dayOfWeek} overlap.`;
+      }
+    }
+  }
+
+  // 2. External conflicts (Teacher and Location)
+  const otherActiveTimetablesQuery: any = {
+    _id: { $ne: new mongoose.Types.ObjectId(currentTimetableId) },
+    academicYearId: academicYearId,
+    isActive: true,
+  };
+  if (termId) {
+    otherActiveTimetablesQuery.termId = termId;
+  } else {
+    otherActiveTimetablesQuery.termId = { $exists: false };
+  }
+
+  const otherActiveTimetables = await Timetable.find(otherActiveTimetablesQuery)
+    .populate<{ classId: IClass }>('classId', 'name')
+    .populate<{ periods: { subjectId: ISubject, teacherId: ITenantUser}[] }>([
+        { path: 'periods.subjectId', model: 'Subject', select: 'name' },
+        { path: 'periods.teacherId', model: 'User', select: 'firstName lastName username' }
+    ])
+    .lean();
+
+  for (const currentPeriod of periods) {
+    for (const otherTT of otherActiveTimetables) {
+      for (const otherPeriod of otherTT.periods) {
+        if (currentPeriod.dayOfWeek === otherPeriod.dayOfWeek && timesOverlap(currentPeriod.startTime, currentPeriod.endTime, otherPeriod.startTime, otherPeriod.endTime)) {
+          // Check Teacher Conflict
+          if (currentPeriod.teacherId && otherPeriod.teacherId && currentPeriod.teacherId.toString() === (otherPeriod.teacherId as any)?._id.toString()) {
+            const conflictTeacher = await User.findById(currentPeriod.teacherId).select('firstName lastName').lean();
+            return `Teacher Conflict: ${conflictTeacher?.firstName} ${conflictTeacher?.lastName} is already scheduled for class ${(otherTT.classId as IClass).name} - subject ${(otherPeriod.subjectId as ISubject).name} on ${currentPeriod.dayOfWeek} from ${otherPeriod.startTime} to ${otherPeriod.endTime}.`;
+          }
+          // Check Location Conflict (if location is not empty or null)
+          if (currentPeriod.location && otherPeriod.location && currentPeriod.location.trim() !== '' && currentPeriod.location.trim().toLowerCase() === otherPeriod.location.trim().toLowerCase()) {
+            return `Location Conflict: Location "${currentPeriod.location}" is already booked for class ${(otherTT.classId as IClass).name} - subject ${(otherPeriod.subjectId as ISubject).name} on ${currentPeriod.dayOfWeek} from ${otherPeriod.startTime} to ${otherPeriod.endTime}.`;
+          }
+        }
+      }
+    }
+  }
+  return null; // No conflicts found
+}
+
 
 export async function GET(
   request: Request,
@@ -89,8 +171,7 @@ export async function PUT(
         (termId && !mongoose.Types.ObjectId.isValid(termId))) {
         return NextResponse.json({ error: 'Invalid ID format for academicYearId, classId, or termId' }, { status: 400 });
     }
-    // TODO: Add validation for periods array structure and IDs within periods
-
+    
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
     const Timetable = tenantDb.models.Timetable as mongoose.Model<ITimetable>;
@@ -100,6 +181,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Timetable not found' }, { status: 404 });
     }
 
+    // Uniqueness check for timetable definition
     if (name !== timetableToUpdate.name || 
         academicYearId.toString() !== timetableToUpdate.academicYearId.toString() ||
         classId.toString() !== timetableToUpdate.classId.toString() ||
@@ -113,6 +195,22 @@ export async function PUT(
       }
     }
     
+    // Conflict detection for periods
+    if (periods && periods.length > 0) {
+        const conflictMessage = await checkConflicts(
+            periods as ITimetabledPeriod[], 
+            timetableId, 
+            new mongoose.Types.ObjectId(academicYearId),
+            termId ? new mongoose.Types.ObjectId(termId) : null,
+            new mongoose.Types.ObjectId(classId),
+            tenantDb
+        );
+        if (conflictMessage) {
+            return NextResponse.json({ error: `Conflict detected: ${conflictMessage}` }, { status: 409 });
+        }
+    }
+
+
     if (isActive && !timetableToUpdate.isActive) {
         await Timetable.updateMany(
             { classId: timetableToUpdate.classId, academicYearId: timetableToUpdate.academicYearId, termId: timetableToUpdate.termId || null, isActive: true, _id: { $ne: timetableId } },
@@ -127,7 +225,7 @@ export async function PUT(
     timetableToUpdate.periods = periods || [];
     timetableToUpdate.description = description;
     timetableToUpdate.isActive = isActive !== undefined ? isActive : timetableToUpdate.isActive;
-    timetableToUpdate.version = (timetableToUpdate.version || 0) + 1; // Increment version
+    timetableToUpdate.version = (timetableToUpdate.version || 0) + 1; 
 
     await timetableToUpdate.save();
     const populatedTimetable = await Timetable.findById(timetableToUpdate._id)
@@ -179,3 +277,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete timetable', details: error.message }, { status: 500 });
   }
 }
+
