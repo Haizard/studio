@@ -116,6 +116,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       items.push(
         { key: `${basePortalPath}/teacher/my-profile`, icon: <IdcardOutlined />, label: <Link href={`${basePortalPath}/teacher/my-profile`}>My Profile</Link> },
         { key: `${basePortalPath}/teacher/my-classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/teacher/my-classes`}>My Classes</Link> },
+        { key: `${basePortalPath}/teacher/my-timetable`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/teacher/my-timetable`}>My Timetable</Link> },
         { key: `${basePortalPath}/teacher/attendance`, icon: <CheckSquareOutlined />, label: <Link href={`${basePortalPath}/teacher/attendance`}>Attendance</Link> },
         { key: `${basePortalPath}/teacher/marks-entry`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/teacher/marks-entry`}>Marks Entry</Link> },
         { key: `${basePortalPath}/teacher/resources`, icon: <FolderOpenOutlined />, label: <Link href={`${basePortalPath}/teacher/resources`}>Resources</Link> },

@@ -135,7 +135,6 @@ This document tracks the features implemented and planned for the Unified School
 
 ### School Portal - Teacher Section
 - [ ] **Teacher Timetable View**: Display comprehensive timetable for the teacher.
-{/* Teacher Resources already marked above */}
 
 ### Public School Website
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.
