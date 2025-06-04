@@ -34,7 +34,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Dashboard**: Placeholder page with basic structure.
 - [x] **User Management**:
     - [x] List all tenant users (admins, teachers, students etc.)
-    - [x] Add new tenant users with specific roles (Admin, Teacher, etc.)
+    - [x] Add new tenant users with specific roles (Admin, Teacher, Finance, etc.)
     - [x] Edit tenant user details (profile info, role, status)
     - [x] Password management (set on create, optional update on edit)
 - [x] **Student Management**:
@@ -78,6 +78,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
+    - [x] **Book borrowing and returns** (Core API logic for borrow/return)
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -121,7 +122,8 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Expense tracking
     - [ ] Financial reporting
 - [ ] **Library Management**:
-    - [ ] Book borrowing and returns
+    - [ ] UI for Book borrowing and returns (Circulation Desk)
+    - [ ] List book transactions (borrowing history)
     - [ ] Fine management for overdue books
     - [ ] Library inventory and reporting
 - [ ] **Pharmacy/Health Management**:
