@@ -56,7 +56,7 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const { name, academicYearId, level, description, grades, isDefault } = body;
+    const { name, academicYearId, level, scaleType, description, grades, divisionConfigs, isDefault } = body;
 
     if (!name || !Array.isArray(grades) || grades.length === 0) {
       return NextResponse.json({ error: 'Missing required fields: name, and at least one grade definition.' }, { status: 400 });
@@ -64,6 +64,10 @@ export async function POST(
     if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
         return NextResponse.json({ error: 'Invalid Academic Year ID format.' }, { status: 400 });
     }
+    if (scaleType === 'O-Level Division Points' && (!Array.isArray(divisionConfigs) || divisionConfigs.length === 0)) {
+        return NextResponse.json({ error: 'Division configurations are required for O-Level Division Points scale type.'}, { status: 400 });
+    }
+
 
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
@@ -82,8 +86,10 @@ export async function POST(
       name,
       academicYearId: academicYearId || undefined,
       level,
+      scaleType,
       description,
       grades,
+      divisionConfigs: scaleType === 'O-Level Division Points' ? divisionConfigs : undefined,
       isDefault,
     });
 
@@ -98,7 +104,7 @@ export async function POST(
       return NextResponse.json({ error: 'Grading scale name must be unique.' }, { status: 409 });
     }
     if (error instanceof mongoose.Error.ValidationError) {
-      const messages = Object.values(error.errors).map((e: any) => e.message).join(', ');
+      const messages = Object.values(error.errors).map((e: any) => String(e.message || 'Validation error')).join(', ');
       return NextResponse.json({ error: 'Validation Error', details: messages || 'Please check your input.' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Failed to create grading scale', details: String(error.message || 'Unknown error') }, { status: 500 });

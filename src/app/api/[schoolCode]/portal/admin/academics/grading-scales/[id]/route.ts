@@ -66,7 +66,7 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { name, academicYearId, level, description, grades, isDefault } = body;
+    const { name, academicYearId, level, scaleType, description, grades, divisionConfigs, isDefault } = body;
 
     if (!name || !Array.isArray(grades) || grades.length === 0) {
       return NextResponse.json({ error: 'Missing required fields: name, and at least one grade definition.' }, { status: 400 });
@@ -74,6 +74,10 @@ export async function PUT(
      if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
         return NextResponse.json({ error: 'Invalid Academic Year ID format.' }, { status: 400 });
     }
+    if (scaleType === 'O-Level Division Points' && (!Array.isArray(divisionConfigs) || divisionConfigs.length === 0)) {
+        return NextResponse.json({ error: 'Division configurations are required for O-Level Division Points scale type.'}, { status: 400 });
+    }
+
 
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
@@ -98,8 +102,10 @@ export async function PUT(
     scaleToUpdate.name = name;
     scaleToUpdate.academicYearId = academicYearId || undefined;
     scaleToUpdate.level = level;
+    scaleToUpdate.scaleType = scaleType;
     scaleToUpdate.description = description;
     scaleToUpdate.grades = grades;
+    scaleToUpdate.divisionConfigs = scaleType === 'O-Level Division Points' ? divisionConfigs : undefined;
     scaleToUpdate.isDefault = isDefault !== undefined ? isDefault : scaleToUpdate.isDefault;
 
     await scaleToUpdate.save();
@@ -113,7 +119,7 @@ export async function PUT(
        return NextResponse.json({ error: 'Grading scale name must be unique.' }, { status: 409 });
     }
     if (error instanceof mongoose.Error.ValidationError) {
-      const messages = Object.values(error.errors).map((e: any) => e.message).join(', ');
+      const messages = Object.values(error.errors).map((e: any) => String(e.message || 'Validation error')).join(', ');
       return NextResponse.json({ error: 'Validation Error', details: messages || 'Please check your input.' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Failed to update grading scale', details: String(error.message || 'Unknown error') }, { status: 500 });
