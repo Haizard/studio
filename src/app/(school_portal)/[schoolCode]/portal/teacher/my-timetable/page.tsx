@@ -4,12 +4,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Typography, Spin, Alert, Card, List, Tag, Row, Col, Empty } from 'antd';
 import { CalendarOutlined, ClockCircleOutlined, BookOutlined, TeamOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
-import moment from 'moment'; // Though not directly used for time formatting in this version, good to have for consistency
+import mongoose from 'mongoose'; // For ObjectId type if needed, though data is simplified
 
 const { Title, Text, Paragraph } = Typography;
 
 interface TeacherPeriod {
-  _id: string;
+  _id: mongoose.Types.ObjectId | string; // Assuming _id comes from the period subdocument
   dayOfWeek: string;
   startTime: string;
   endTime: string;
@@ -49,13 +49,29 @@ export default function TeacherTimetablePage() {
         throw new Error(errData.error || 'Failed to fetch timetable');
       }
       const data: TeacherPeriod[] = await res.json();
-      setTeacherSchedule(data);
+      setTeacherSchedule(data); // API already sorts data
       if (data.length > 0) {
-        setActiveAcademicYearName(data[0].academicYearName);
+        // All periods should belong to the same active academic year from the API logic
+        setActiveAcademicYearName(data[0].academicYearName); 
       } else {
-        // Try to get active academic year name if no periods returned (to show context)
-        // This might require another call or the API to return it even if schedule is empty.
-        // For now, if no periods, activeAcademicYearName might remain null if not set from periods.
+        // If no periods, try to get active academic year name to show context.
+        // This might require an additional call or the API to return it.
+        // For now, if the API returns an empty schedule, it means no periods *for the teacher*
+        // in the active year's timetables. We still need the active year's name.
+        // The API for teacher's timetable already ensures an active academic year exists.
+        // If it doesn't, it errors out. So, if we get here with empty data,
+        // it means the active year exists, but teacher has no periods.
+        // We might need a separate call to get the active year name if data is empty.
+        // For now, if data is empty, activeAcademicYearName might remain null if not set from data[0].
+        // A better approach: API returns activeAcademicYearName even if schedule is empty.
+        // Let's assume the API gives an active year name or the first period's year name is sufficient.
+        // If data is empty but no error, we still want to show "for active academic year X".
+        // The API was modified to return this context.
+        const activeYearRes = await fetch(`/api/${schoolCode}/portal/academics/academic-years?active=true`);
+        if(activeYearRes.ok){
+            const activeYears: any[] = await activeYearRes.json();
+            if(activeYears.length > 0) setActiveAcademicYearName(activeYears[0].name);
+        }
       }
 
     } catch (err: any) {
@@ -82,7 +98,11 @@ export default function TeacherTimetablePage() {
       return acc;
     }, {} as Record<string, TeacherPeriod[]>);
 
-    // Periods are already sorted by API
+    // Periods are already sorted by API (day then startTime)
+    // If further client-side sort is needed for any reason:
+    // for (const day in grouped) {
+    //   grouped[day].sort((a, b) => a.startTime.localeCompare(b.startTime));
+    // }
     return grouped;
   }, [teacherSchedule]);
 
@@ -102,7 +122,7 @@ export default function TeacherTimetablePage() {
         <CalendarOutlined className="mr-2" /> My Teaching Timetable
       </Title>
       <Paragraph className="mb-6">
-        Displaying your teaching schedule for the active academic year {activeAcademicYearName ? <Text strong>({activeAcademicYearName})</Text> : ''}.
+        Displaying your teaching schedule for the active academic year{activeAcademicYearName ? <Text strong> ({activeAcademicYearName})</Text> : ''}.
       </Paragraph>
 
       {sortedDaysWithPeriods.length === 0 ? (
@@ -143,6 +163,9 @@ export default function TeacherTimetablePage() {
                                 Term: {period.termName}
                                 </Paragraph>
                             )}
+                             <Paragraph className="text-xs text-gray-500 mt-1">
+                                <Text type="secondary" className="text-xs">From Timetable: {period.timetableName}</Text>
+                            </Paragraph>
                         </Card>
                     </List.Item>
                     )}
@@ -155,4 +178,3 @@ export default function TeacherTimetablePage() {
     </div>
   );
 }
-

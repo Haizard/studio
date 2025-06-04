@@ -55,7 +55,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Subject Management**: CRUD operations for school subjects.
     - [x] **Class Management**: CRUD operations, linking classes to academic years, class teachers (optional), and subjects offered.
     - [x] **A-Level Combination Management**: CRUD operations for A-Level subject combinations, linked to academic years and subjects.
-    - [x] **Timetable Management (Admin Shell)**: CRUD for timetable definitions (name, year, class, term, status). Management of individual periods.
+    - [x] **Timetable Management (Admin Shell & Period Management)**: CRUD for timetable definitions (name, year, class, term, status). Management of individual periods.
 - [x] **Exam Management**:
     - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status).
     - [x] **Assessment Management**: CRUD operations for individual assessments (papers, practicals) under an exam, linking to subjects and classes.
@@ -86,6 +86,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Attendance**:
     - [x] Selection page for class, subject, date.
     - [x] Entry page to mark attendance for students.
+- [x] **Teacher Timetable View**: Display comprehensive timetable for the teacher.
 
 ### V. School Portal - Student Section (`/[schoolCode]/portal/student/...`)
 - [x] **My Profile**: Students can view their own detailed profile information.
@@ -132,9 +133,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Generate report cards/transcripts
 - [ ] **Detailed Admin Reports**: Implementation of various report generation tools (beyond basic attendance view).
 - [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments.
-
-### School Portal - Teacher Section
-- [ ] **Teacher Timetable View**: Display comprehensive timetable for the teacher.
 
 ### Public School Website
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.
