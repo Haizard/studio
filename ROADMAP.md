@@ -73,6 +73,8 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Manage "About Us" page content using Rich Text Editor with HTML sanitization.
 - [x] **Admin Reports**:
     - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
+- [x] **Finance Management**:
+    - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -93,9 +95,9 @@ This document tracks the features implemented and planned for the Unified School
 
 ### V. School Portal - Student Section (`/[schoolCode]/portal/student/...`)
 - [x] **My Profile**: Students can view their own detailed profile information.
-- [x] **My Results**: Students can view their marks for published exams, filtered by academic year and term.
+- [x] **My Results**: Students can view their marks for published exams, filtered by academic year and term. Display grouped by exam and subject.
 - [x] **My Attendance**: Students can view their attendance records.
-- [ ] **Resources**: Access learning materials shared by teachers. (Implemented for Teacher, Student access pending)
+- [x] **Resources**: Access learning materials shared by teachers.
 - [x] **My Timetable**: View personal class timetable based on active class and academic year.
 
 ### VI. Public School Website (`/[schoolCode]/...`)
@@ -111,7 +113,6 @@ This document tracks the features implemented and planned for the Unified School
 
 ### School Portal - Admin Section
 - [ ] **Finance Management**:
-    - [ ] Fee structure setup
     - [ ] Student fee collection and tracking
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
@@ -136,9 +137,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Detailed Admin Reports**: Implementation of various other report generation tools (beyond basic attendance and term report).
 - [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments directly.
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
-
-### School Portal - Student Section
-- [ ] **Resources**: Access learning materials shared by teachers. (Teacher part done, Student access UI pending)
 
 ### Public School Website
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.

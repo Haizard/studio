@@ -30,6 +30,7 @@ import {
   FolderOpenOutlined, 
   ProjectOutlined,
   PercentageOutlined,
+  BarsOutlined, // For Fee Structure
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -97,6 +98,16 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           ],
         },
         {
+          key: 'admin-finance',
+          icon: <DollarCircleOutlined />,
+          label: 'Finance',
+          children: [
+            { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
+            { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
+            // Add more finance links here as developed (e.g., Student Fees, Reports)
+          ]
+        },
+        {
           key: 'website-management',
           icon: <DesktopOutlined />,
           label: 'Website Management',
@@ -107,10 +118,9 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/website-management/gallery`, icon: <PictureOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/gallery`}>Gallery</Link> },
           ]
         },
-        { key: `${basePortalPath}/finance`, icon: <DollarCircleOutlined />, label: <Link href={`${basePortalPath}/finance`}>Finance</Link> },
-        { key: `${basePortalPath}/library`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/library`}>Library</Link> },
-        { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
-        { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> },
+        // { key: `${basePortalPath}/library`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/library`}>Library</Link> },
+        // { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
+        // { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> },
       );
     }
     
@@ -134,6 +144,15 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         { key: `${basePortalPath}/student/my-timetable`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/student/my-timetable`}>My Timetable</Link> },
       );
     }
+    // Adding general modules like Library, Pharmacy, Dormitory if user is admin
+    if (role === 'admin' || role === 'superadmin') {
+      items.push(
+          { key: `${basePortalPath}/library`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/library`}>Library</Link> },
+          { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
+          { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> }
+      );
+    }
+
     return items;
   };
   
@@ -186,17 +205,20 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { 
         selectedKey = `/${schoolCode}/portal/teacher/attendance`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/finance/`)){
+        selectedKey = `/${schoolCode}/portal/admin/finance`;
     }
   }
   openKeys = activeKeysResult.open || [];
 
   // Ensure parent menu groups are open for nested items
   if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
-  if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance')) openKeys.push('admin-management');
+  if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/students')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/teachers')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/settings')) openKeys.push('admin-management'); 
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
+  if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance','admin-management'); // Open finance parent
 
 
   const breadcrumbItemsGen = () => {
