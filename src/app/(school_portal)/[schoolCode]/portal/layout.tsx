@@ -21,7 +21,7 @@ import {
   CalendarOutlined, 
   UnorderedListOutlined, 
   AppstoreAddOutlined,
-  ScheduleOutlined, 
+  ScheduleOutlined as TimetableIcon, // Renamed to avoid conflict
   FileTextOutlined,
   UsergroupAddOutlined, 
   PictureOutlined,
@@ -81,7 +81,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               children: [
                 { key: `${basePortalPath}/admin/academics`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/academics`}>Overview</Link> },
                 { key: `${basePortalPath}/admin/academics/academic-years`, icon: <CalendarOutlined />, label: <Link href={`${basePortalPath}/admin/academics/academic-years`}>Academic Years</Link> },
-                { key: `${basePortalPath}/admin/academics/terms`, icon: <ScheduleOutlined />, label: <Link href={`${basePortalPath}/admin/academics/terms`}>Terms</Link> },
+                { key: `${basePortalPath}/admin/academics/terms`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/admin/academics/terms`}>Terms</Link> },
                 { key: `${basePortalPath}/admin/academics/subjects`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/admin/academics/subjects`}>Subjects</Link> },
                 { key: `${basePortalPath}/admin/academics/classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/academics/classes`}>Classes</Link> },
                 { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreAddOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
@@ -89,7 +89,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               ]
             },
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
-            { key: `${basePortalPath}/admin/attendance`, icon: <ScheduleOutlined />, label: <Link href={`${basePortalPath}/admin/attendance`}>Attendance Records</Link> },
+            { key: `${basePortalPath}/admin/attendance`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/admin/attendance`}>Attendance Records</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
           ],
@@ -128,6 +128,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         { key: `${basePortalPath}/student/my-results`, icon: <SolutionOutlined />, label: <Link href={`${basePortalPath}/student/my-results`}>My Results</Link> },
         { key: `${basePortalPath}/student/my-attendance`, icon: <CheckSquareOutlined />, label: <Link href={`${basePortalPath}/student/my-attendance`}>My Attendance</Link> },
         { key: `${basePortalPath}/student/resources`, icon: <FolderOpenOutlined />, label: <Link href={`${basePortalPath}/student/resources`}>Resources</Link> },
+        { key: `${basePortalPath}/student/my-timetable`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/student/my-timetable`}>My Timetable</Link> },
       );
     }
     return items;
@@ -305,6 +306,3 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 };
 
 export default SchoolPortalLayout;
-
-
-    
