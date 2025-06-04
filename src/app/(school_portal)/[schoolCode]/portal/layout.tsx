@@ -29,6 +29,7 @@ import {
   CheckSquareOutlined,
   FolderOpenOutlined, 
   ProjectOutlined,
+  PercentageOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -86,6 +87,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
                 { key: `${basePortalPath}/admin/academics/classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/academics/classes`}>Classes</Link> },
                 { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreAddOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
                 { key: `${basePortalPath}/admin/academics/timetables`, icon: <ProjectOutlined />, label: <Link href={`${basePortalPath}/admin/academics/timetables`}>Timetables</Link> },
+                { key: `${basePortalPath}/admin/academics/grading-scales`, icon: <PercentageOutlined />, label: <Link href={`${basePortalPath}/admin/academics/grading-scales`}>Grading Scales</Link> },
               ]
             },
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },

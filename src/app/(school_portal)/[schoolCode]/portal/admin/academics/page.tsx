@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { CalendarOutlined, UnorderedListOutlined, TeamOutlined, AppstoreAddOutlined, ScheduleOutlined as ScheduleIcon, CarryOutOutlined } from '@ant-design/icons'; // Changed ScheduleOutlined to ScheduleIcon to avoid conflict
+import { CalendarOutlined, UnorderedListOutlined, TeamOutlined, AppstoreAddOutlined, ScheduleOutlined as ScheduleIcon, CarryOutOutlined, PercentageOutlined } from '@ant-design/icons'; // Changed ScheduleOutlined to ScheduleIcon to avoid conflict
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -22,6 +22,7 @@ export default function AcademicsDashboardPage({ params }: AcademicsDashboardPag
     { title: 'Classes', icon: <TeamOutlined />, link: `${basePortalPath}/classes`, description: 'Manage classes, streams, and class teachers.' },
     { title: 'A-Level Combinations', icon: <AppstoreAddOutlined />, link: `${basePortalPath}/alevel-combinations`, description: 'Manage A-Level subject combinations.' },
     { title: 'Timetable Management', icon: <ScheduleIcon />, link: `${basePortalPath}/timetables`, description: 'Create and manage class timetables.' },
+    { title: 'Grading Scales', icon: <PercentageOutlined />, link: `${basePortalPath}/grading-scales`, description: 'Define and manage grading scales.' },
   ];
 
   return (

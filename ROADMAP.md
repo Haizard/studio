@@ -128,7 +128,7 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Student room allocation
     - [ ] Check-in/Check-out
 - [ ] **Grading & Promotion**:
-    - [ ] Define grading scales
+    - [ ] Define grading scales (In Progress)
     - [ ] Process student promotions/repetitions based on results
     - [ ] Generate report cards/transcripts
 - [ ] **Detailed Admin Reports**: Implementation of various report generation tools (beyond basic attendance view).
@@ -156,4 +156,3 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
-
