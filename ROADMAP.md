@@ -14,7 +14,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Tenant-specific DB connections (`mongoose`)
 - [x] Authentication (NextAuth.js):
     - [x] Credentials-based login
-    - [x] Role-based access control (SuperAdmin, Admin, Teacher, Student)
+    - [x] Role-based access control (SuperAdmin, Admin, Teacher, Student, Finance, Librarian)
     - [x] Session management (JWT)
 - [x] Basic Layouts:
     - [x] SuperAdmin Portal Layout (Sider, Header, Content)
@@ -56,7 +56,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Class Management**: CRUD operations, linking classes to academic years, class teachers (optional), and subjects offered.
     - [x] **A-Level Combination Management**: CRUD operations for A-Level subject combinations, linked to academic years and subjects.
     - [x] **Timetable Management (Admin Shell & Period Management)**: CRUD for timetable definitions (name, year, class, term, status). Management of individual periods. Includes conflict detection for periods and copy timetable functionality.
-    - [x] **Grading Scale Management**: CRUD for grading scales, including specific types for O-Level divisions, A-Level points, and grade definitions with points/GPA.
+    - [x] **Grading Scale Management**: CRUD for grading scales, including specific types for O-Level divisions, A-Level points, and grade definitions with points/GPA. Enhanced model to support Tanzanian point systems.
 - [x] **Exam Management**:
     - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status, weight).
     - [x] **Assessment Management**: CRUD operations for individual assessments (papers, practicals) under an exam, linking to subjects and classes.
@@ -75,6 +75,8 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
+- [x] **Library Management**:
+    - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -118,7 +120,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Expense tracking
     - [ ] Financial reporting
 - [ ] **Library Management**:
-    - [ ] Book cataloging (ISBN, author, publisher, etc.)
     - [ ] Member management (students, teachers)
     - [ ] Book borrowing and returns
     - [ ] Fine management for overdue books

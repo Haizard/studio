@@ -31,6 +31,7 @@ import {
   ProjectOutlined,
   PercentageOutlined,
   BarsOutlined,
+  BookFilled, // Added for Library child items
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -117,7 +118,16 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/website-management/gallery`, icon: <PictureOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/gallery`}>Gallery</Link> },
           ]
         },
-        { key: `${basePortalPath}/library`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/library`}>Library</Link> },
+        { 
+          key: 'library-management', // Changed key to indicate group
+          icon: <ReadOutlined />, 
+          label: 'Library',
+          children: [
+            { key: `${basePortalPath}/library`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/library`}>Library Overview</Link> },
+            { key: `${basePortalPath}/library/books`, icon: <BookFilled />, label: <Link href={`${basePortalPath}/library/books`}>Book Catalog</Link> },
+            // Add more library sub-items here, e.g., Members, Borrowing
+          ]
+        },
         { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
         { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> }
       );
@@ -137,6 +147,21 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         }
       );
     }
+    
+    if (role === 'librarian') { // Adding specific role for librarian
+      items.push(
+         { 
+          key: 'library-management', // Changed key to indicate group
+          icon: <ReadOutlined />, 
+          label: 'Library Management',
+          children: [
+            { key: `${basePortalPath}/library`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/library`}>Library Overview</Link> },
+            { key: `${basePortalPath}/library/books`, icon: <BookFilled />, label: <Link href={`${basePortalPath}/library/books`}>Book Catalog</Link> },
+          ]
+        }
+      );
+    }
+
 
     if (role === 'teacher') {
       items.push(
@@ -213,6 +238,9 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/teacher/attendance`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/finance/`)){
         selectedKey = `/${schoolCode}/portal/admin/finance`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/library/`)){
+        selectedKey = `/${schoolCode}/portal/library`; // For overview
+        if (pathname.includes('/books')) selectedKey = `/${schoolCode}/portal/library/books`;
     }
   }
   openKeys = activeKeysResult.open || [];
@@ -220,7 +248,9 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
   if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports') || selectedKey.includes('/admin/settings') || selectedKey.includes('/admin/users') || selectedKey.includes('/admin/students') || selectedKey.includes('/admin/teachers')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
-  if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance'); // Open finance parent if its child is selected
+  if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
+  if(selectedKey.includes('/library')) openKeys.push('library-management'); // Open Library parent if its child is selected
+
 
   const breadcrumbItemsGen = () => {
     const pathSnippets = pathname.split('/').filter(i => i);

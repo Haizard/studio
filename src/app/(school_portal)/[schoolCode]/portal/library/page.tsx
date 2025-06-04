@@ -1,8 +1,9 @@
 
 'use client';
 import React from 'react';
-import { Typography, Empty } from 'antd';
-import { ReadOutlined } from '@ant-design/icons'; // Using ReadOutlined as BookOutlined might be for subjects
+import { Typography, Card, Row, Col } from 'antd';
+import { ReadOutlined, BookOutlined, UsergroupAddOutlined, ContainerOutlined, IssuesCloseOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
 
@@ -10,18 +11,60 @@ interface LibraryPageProps {
   params: { schoolCode: string };
 }
 
-export default function LibraryPage({ params }: LibraryPageProps) {
+export default function LibraryDashboardPage({ params }: LibraryPageProps) {
   const { schoolCode } = params;
+  const basePortalPath = `/${schoolCode}/portal/library`;
+
+  const librarySections = [
+    { 
+      title: 'Book Catalog', 
+      icon: <BookOutlined />, 
+      link: `${basePortalPath}/books`, 
+      description: 'Manage the collection of books, including adding, editing, and removing titles.' 
+    },
+    { 
+      title: 'Member Management', 
+      icon: <UsergroupAddOutlined />, 
+      link: `${basePortalPath}/members`, // Placeholder
+      description: 'Manage library members (students and staff) and their borrowing privileges.' 
+    },
+     { 
+      title: 'Borrowing & Returns', 
+      icon: <ContainerOutlined />, 
+      link: `${basePortalPath}/transactions`, // Placeholder
+      description: 'Handle book check-outs, check-ins, and renewals.' 
+    },
+    { 
+      title: 'Fine Management', 
+      icon: <IssuesCloseOutlined />, 
+      link: `${basePortalPath}/fines`, // Placeholder
+      description: 'Track and manage fines for overdue or damaged books.' 
+    },
+  ];
 
   return (
     <div>
-      <Title level={2} className="mb-6">
-        <ReadOutlined className="mr-2" /> Library Management
+      <Title level={2} className="mb-8">
+        <ReadOutlined className="mr-2" /> Library Management Dashboard
       </Title>
-      <Paragraph>
-        This section will manage the library catalog, book borrowing, returns, and member management for {schoolCode.toUpperCase()}.
+      <Paragraph className="mb-8">
+        Oversee all library operations for {schoolCode.toUpperCase()}, from cataloging books to managing member activities.
       </Paragraph>
-      <Empty description="Library module coming soon!" />
+      <Row gutter={[16, 24]}>
+        {librarySections.map(section => (
+          <Col xs={24} sm={12} lg={8} key={section.title}>
+            <Link href={section.link}>
+              <Card hoverable className="h-full">
+                <div className="flex flex-col items-center text-center">
+                  <div className="text-4xl mb-4 text-primary">{section.icon}</div>
+                  <Title level={4}>{section.title}</Title>
+                  <Paragraph type="secondary">{section.description}</Paragraph>
+                </div>
+              </Card>
+            </Link>
+          </Col>
+        ))}
+      </Row>
     </div>
   );
 }
