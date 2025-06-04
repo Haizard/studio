@@ -65,12 +65,10 @@ interface TermReportData {
   gradingScaleUsed?: string;
 }
 
-
 function applyGradingScale(percentage: number | undefined | null, gradingScale: IGradingScale | null): { grade: string; remarks: string; points?: number } {
   if (percentage === undefined || percentage === null || isNaN(percentage) || !gradingScale || !gradingScale.grades || gradingScale.grades.length === 0) {
     return { grade: 'N/A', remarks: 'N/A - Grading scale not applied or score missing' };
   }
-
   for (const gradeDef of gradingScale.grades) {
     if (percentage >= gradeDef.minScore && percentage <= gradeDef.maxScore) {
       return {
@@ -83,17 +81,28 @@ function applyGradingScale(percentage: number | undefined | null, gradingScale: 
   return { grade: 'N/A', remarks: 'N/A - Score out of defined grade ranges' };
 }
 
-// Placeholder - specific division logic needs to be implemented based on exact rules
-function determineOverallDivision(totalPoints: number, gradingScale: IGradingScale | null): { division: string, description?: string } {
-    if (!gradingScale || gradingScale.scaleType !== 'O-Level Division Points' || !gradingScale.divisionConfigs || totalPoints === undefined || isNaN(totalPoints)) {
-        return { division: 'N/A' };
-    }
-    for (const config of gradingScale.divisionConfigs) {
-        if (totalPoints >= config.minPoints && totalPoints <= config.maxPoints) {
-            return { division: config.division, description: config.description };
-        }
-    }
-    return { division: 'N/A', description: 'Points out of division range' };
+async function findGradingScale(tenantDb: mongoose.Connection, academicYearId: mongoose.Types.ObjectId, studentClassLevel: string | null | undefined): Promise<IGradingScale | null> {
+  const GradingScale = tenantDb.models.GradingScale as mongoose.Model<IGradingScale>;
+  const queries: any[] = [];
+
+  if (studentClassLevel) {
+    queries.push({ academicYearId, level: studentClassLevel, isDefault: true });
+    queries.push({ academicYearId, level: studentClassLevel });
+  }
+  queries.push({ academicYearId, level: { $in: [null, ''] }, isDefault: true });
+  queries.push({ academicYearId, level: { $in: [null, ''] } });
+  if (studentClassLevel) {
+    queries.push({ academicYearId: { $in: [null, undefined] }, level: studentClassLevel, isDefault: true });
+    queries.push({ academicYearId: { $in: [null, undefined] }, level: studentClassLevel });
+  }
+  queries.push({ isDefault: true, academicYearId: { $in: [null, undefined] }, level: { $in: [null, ''] } });
+  queries.push({ academicYearId: { $in: [null, undefined] }, level: { $in: [null, ''] } });
+
+  for (const query of queries) {
+    const scale = await GradingScale.findOne(query).sort({ createdAt: -1 }).lean<IGradingScale>();
+    if (scale) return scale;
+  }
+  return null;
 }
 
 
@@ -101,7 +110,7 @@ export async function GET(
   request: Request,
   { params: routeParams }: { params: { schoolCode: string; studentProfileId: string } }
 ) {
-  const { schoolCode, studentProfileId } = routeParams;
+  const { schoolCode, studentProfileId: studentProfileIdParam } = routeParams;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
@@ -114,13 +123,13 @@ export async function GET(
   const academicYearIdParam = searchParams.get('academicYearId');
   const termIdParam = searchParams.get('termId');
 
-  if (!mongoose.Types.ObjectId.isValid(studentProfileId) || !academicYearIdParam || !mongoose.Types.ObjectId.isValid(academicYearIdParam) || !termIdParam || !mongoose.Types.ObjectId.isValid(termIdParam)) {
+  if (!mongoose.Types.ObjectId.isValid(studentProfileIdParam) || !academicYearIdParam || !mongoose.Types.ObjectId.isValid(academicYearIdParam) || !termIdParam || !mongoose.Types.ObjectId.isValid(termIdParam)) {
     return NextResponse.json({ error: 'Invalid or missing Student ID, Academic Year ID, or Term ID.' }, { status: 400 });
   }
 
-  const academicYearId = new mongoose.Types.ObjectId(academicYearIdParam);
-  const termId = new mongoose.Types.ObjectId(termIdParam);
-
+  const academicYearObjectId = new mongoose.Types.ObjectId(academicYearIdParam);
+  const termObjectId = new mongoose.Types.ObjectId(termIdParam);
+  const studentProfileObjectId = new mongoose.Types.ObjectId(studentProfileIdParam);
 
   try {
     const tenantDb = await getTenantConnection(schoolCode);
@@ -130,83 +139,124 @@ export async function GET(
     const AcademicYear = tenantDb.models.AcademicYear as mongoose.Model<IAcademicYear>;
     const Term = tenantDb.models.Term as mongoose.Model<ITerm>;
     const Exam = tenantDb.models.Exam as mongoose.Model<IExam>;
-    const Assessment = tenantDb.models.Assessment as mongoose.Model<IAssessment>;
-    const Mark = tenantDb.models.Mark as mongoose.Model<IMark>;
-    const GradingScale = tenantDb.models.GradingScale as mongoose.Model<IGradingScale>;
 
     const [studentProfile, academicYear, term] = await Promise.all([
-      Student.findById(studentProfileId).populate<{ userId: ITenantUser }>('userId', 'firstName lastName').populate<{ currentClassId?: IClass }>('currentClassId', 'name level').lean(),
-      AcademicYear.findById(academicYearId).lean(),
-      Term.findById(termId).lean(),
+      Student.findById(studentProfileObjectId).populate<{ userId: ITenantUser }>('userId', 'firstName lastName _id').populate<{ currentClassId?: IClass }>('currentClassId', 'name level').lean(),
+      AcademicYear.findById(academicYearObjectId).lean(),
+      Term.findById(termObjectId).lean(),
     ]);
 
-    if (!studentProfile || !studentProfile.userId) return NextResponse.json({ error: 'Student profile not found.' }, { status: 404 });
+    if (!studentProfile || !studentProfile.userId) return NextResponse.json({ error: 'Student profile or linked user not found.' }, { status: 404 });
     if (!academicYear) return NextResponse.json({ error: 'Academic year not found.' }, { status: 404 });
     if (!term) return NextResponse.json({ error: 'Term not found.' }, { status: 404 });
 
-    const studentExams = await Exam.find({ academicYearId, termId, status: 'Published' }).lean();
-    const examIds = studentExams.map(e => e._id);
+    const studentUserId = studentProfile.userId._id;
+    const studentClassLevel = studentProfile.currentClassId?.level || null;
+    const gradingScale = await findGradingScale(tenantDb, academicYearObjectId, studentClassLevel);
 
-    const studentAssessments = await Assessment.find({ examId: { $in: examIds } })
-      .populate<{ subjectId: ISubject }>('subjectId', 'name code').lean();
-    const assessmentIds = studentAssessments.map(a => a._id);
-
-    const studentMarks = await Mark.find({
-      studentId: studentProfile.userId._id,
-      assessmentId: { $in: assessmentIds },
-    }).lean();
-
-    const marksMap = new Map(studentMarks.map(mark => [mark.assessmentId.toString(), mark]));
-    
-    // Refined Grading Scale Selection Logic
-    const studentClassLevel = (studentProfile.currentClassId as IClass)?.level || null;
-    let gradingScale: IGradingScale | null = null;
-    const gradingScaleQueries: any[] = [];
-
-    if (studentClassLevel) {
-        gradingScaleQueries.push({ academicYearId, level: studentClassLevel, isDefault: true }); // Prio 1
-        gradingScaleQueries.push({ academicYearId, level: studentClassLevel }); // Prio 2
-    }
-    gradingScaleQueries.push({ academicYearId, level: { $in: [null, ''] }, isDefault: true }); // Prio 3
-    gradingScaleQueries.push({ academicYearId, level: { $in: [null, ''] } }); // Prio 4
-    if (studentClassLevel) {
-        gradingScaleQueries.push({ academicYearId: { $in: [null, undefined] }, level: studentClassLevel, isDefault: true }); // Prio 5
-        gradingScaleQueries.push({ academicYearId: { $in: [null, undefined] }, level: studentClassLevel }); // Prio 6
-    }
-    gradingScaleQueries.push({ isDefault: true, academicYearId: { $in: [null, undefined] }, level: { $in: [null, ''] } }); // Prio 7
-    gradingScaleQueries.push({ academicYearId: { $in: [null, undefined] }, level: { $in: [null, ''] } }); // Prio 8
-
-
-    for (const query of gradingScaleQueries) {
-      gradingScale = await GradingScale.findOne(query).sort({ createdAt: -1 }).lean();
-      if (gradingScale) break;
-    }
-
+    const aggregatedExamData = await Exam.aggregate([
+      {
+        $match: {
+          academicYearId: academicYearObjectId,
+          termId: termObjectId,
+          status: 'Published',
+        },
+      },
+      {
+        $lookup: {
+          from: 'assessments', // Mongoose default collection name for Assessment model
+          localField: '_id',
+          foreignField: 'examId',
+          as: 'assessmentsArr',
+        },
+      },
+      { $unwind: '$assessmentsArr' },
+      {
+        $lookup: {
+          from: 'subjects', // Mongoose default collection name for Subject model
+          localField: 'assessmentsArr.subjectId',
+          foreignField: '_id',
+          as: 'assessmentsArr.subjectDetails',
+        },
+      },
+      { $unwind: { path: '$assessmentsArr.subjectDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'marks', // Mongoose default collection name for Mark model
+          let: { assessment_id: '$assessmentsArr._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$assessmentId', '$$assessment_id'] },
+                    { $eq: ['$studentId', studentUserId] },
+                  ],
+                },
+              },
+            },
+            { $project: { marksObtained: 1, comments: 1, _id: 0 } },
+          ],
+          as: 'assessmentsArr.markEntry',
+        },
+      },
+      { $unwind: { path: '$assessmentsArr.markEntry', preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: '$_id',
+          examName: { $first: '$name' },
+          examWeight: { $first: '$weight' },
+          assessments: {
+            $push: {
+              _id: '$assessmentsArr._id',
+              assessmentName: '$assessmentsArr.assessmentName',
+              assessmentType: '$assessmentsArr.assessmentType',
+              maxMarks: '$assessmentsArr.maxMarks',
+              subjectId: '$assessmentsArr.subjectId',
+              subjectName: '$assessmentsArr.subjectDetails.name',
+              subjectCode: '$assessmentsArr.subjectDetails.code',
+              marksObtained: '$assessmentsArr.markEntry.marksObtained',
+              comments: '$assessmentsArr.markEntry.comments',
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          examId: '$_id',
+          examName: 1,
+          examWeight: 1,
+          assessments: 1,
+          _id: 0,
+        },
+      },
+    ]);
 
     let totalTermWeightedScore = 0;
     let totalPossibleTermWeight = 0;
     const examResults: ReportExamResult[] = [];
     const chartData: { name: string; percentage?: number }[] = [];
 
-    for (const exam of studentExams) {
+    for (const exam of aggregatedExamData) {
       let examTotalMarksObtained = 0;
       let examTotalMaxMarks = 0;
       const assessmentsForThisExam: ReportExamResult['assessments'] = [];
 
-      const assessmentsInExam = studentAssessments.filter(a => a.examId.toString() === exam._id.toString());
-      for (const assessment of assessmentsInExam) {
-        const mark = marksMap.get(assessment._id.toString());
-        const marksObtained = mark?.marksObtained;
+      for (const assessment of exam.assessments) {
+        const marksObtained = assessment.marksObtained;
         
-        if (marksObtained !== undefined && marksObtained !== null && !isNaN(marksObtained)) examTotalMarksObtained += marksObtained;
-        if (assessment.maxMarks && !isNaN(assessment.maxMarks)) examTotalMaxMarks += assessment.maxMarks;
+        if (marksObtained !== undefined && marksObtained !== null && !isNaN(marksObtained)) {
+          examTotalMarksObtained += marksObtained;
+        }
+        if (assessment.maxMarks && !isNaN(assessment.maxMarks)) {
+          examTotalMaxMarks += assessment.maxMarks;
+        }
         
-        const subject = assessment.subjectId as ISubject | undefined;
         assessmentsForThisExam.push({
           assessmentName: assessment.assessmentName,
           assessmentType: assessment.assessmentType,
-          subjectName: subject?.name || 'N/A',
-          marksObtained: marksObtained === null ? undefined : marksObtained,
+          subjectName: assessment.subjectName || 'N/A',
+          marksObtained: (marksObtained === null || marksObtained === undefined) ? undefined : marksObtained,
           maxMarks: assessment.maxMarks || 0,
           percentage: (marksObtained !== undefined && marksObtained !== null && assessment.maxMarks && assessment.maxMarks > 0) ? (marksObtained / assessment.maxMarks) * 100 : undefined,
         });
@@ -214,27 +264,27 @@ export async function GET(
 
       const examPercentage = examTotalMaxMarks > 0 ? (examTotalMarksObtained / examTotalMaxMarks) * 100 : undefined;
       let weightedContribution: number | undefined = undefined;
-      if (exam.weight !== undefined && exam.weight !== null && examPercentage !== undefined) {
-        weightedContribution = (examPercentage * exam.weight) / 100;
+      if (exam.examWeight !== undefined && exam.examWeight !== null && examPercentage !== undefined) {
+        weightedContribution = (examPercentage * exam.examWeight) / 100;
         totalTermWeightedScore += weightedContribution;
-        totalPossibleTermWeight += exam.weight;
+        totalPossibleTermWeight += exam.examWeight;
       }
 
       examResults.push({
-        examName: exam.name,
-        examId: exam._id.toString(),
-        examWeight: exam.weight,
+        examName: exam.examName,
+        examId: exam.examId.toString(),
+        examWeight: exam.examWeight,
         assessments: assessmentsForThisExam,
         examTotalMarksObtained,
         examTotalMaxMarks,
         examPercentage,
         weightedContribution,
       });
-      chartData.push({ name: exam.name, percentage: examPercentage });
+      chartData.push({ name: exam.examName, percentage: examPercentage });
     }
 
     let termOverallPercentage: number | undefined;
-    if (totalPossibleTermWeight > 0 && totalTermWeightedScore > 0) { // ensure totalPossibleTermWeight is not zero
+    if (totalPossibleTermWeight > 0) {
         termOverallPercentage = (totalTermWeightedScore / totalPossibleTermWeight) * 100;
     } else if (examResults.length > 0) {
         const validExamPercentages = examResults.map(er => er.examPercentage).filter(p => p !== undefined && !isNaN(p)) as number[];
@@ -268,8 +318,7 @@ export async function GET(
     return NextResponse.json(reportData);
 
   } catch (error: any) {
-    console.error(`Error generating term report for student ${studentProfileId}, school ${schoolCode}:`, error);
+    console.error(`Error generating term report for student ${studentProfileIdParam}, school ${schoolCode}:`, error);
     return NextResponse.json({ error: 'Failed to generate student term report', details: String(error.message || 'Unknown server error') }, { status: 500 });
   }
 }
-
