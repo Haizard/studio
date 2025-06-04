@@ -89,12 +89,13 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Selection page for class, subject, date.
     - [x] Entry page to mark attendance for students.
 - [x] **Teacher Timetable View**: Display comprehensive timetable for the teacher for the active academic year.
+- [x] **My Profile**: Teachers can view their own detailed profile information.
 
 ### V. School Portal - Student Section (`/[schoolCode]/portal/student/...`)
 - [x] **My Profile**: Students can view their own detailed profile information.
 - [x] **My Results**: Students can view their marks for published exams, filtered by academic year and term.
 - [x] **My Attendance**: Students can view their attendance records.
-- [x] **Resources**: Access learning materials shared by teachers.
+- [ ] **Resources**: Access learning materials shared by teachers. (Implemented for Teacher, Student access pending)
 - [x] **My Timetable**: View personal class timetable based on active class and academic year.
 
 ### VI. Public School Website (`/[schoolCode]/...`)
@@ -135,6 +136,9 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Detailed Admin Reports**: Implementation of various other report generation tools (beyond basic attendance and term report).
 - [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments directly.
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
+
+### School Portal - Student Section
+- [ ] **Resources**: Access learning materials shared by teachers. (Teacher part done, Student access UI pending)
 
 ### Public School Website
 - [ ] **Admissions Page**: Information on admission process, forms, deadlines.
