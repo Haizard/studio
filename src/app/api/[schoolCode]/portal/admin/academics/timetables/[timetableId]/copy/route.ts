@@ -1,12 +1,12 @@
 
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
-import TimetableModel, { ITimetable, ITimetabledPeriod } from '@/models/Tenant/Timetable';
+import TimetableModel, { ITimetable } from '@/models/Tenant/Timetable';
 import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import ClassModel, { IClass } from '@/models/Tenant/Class';
 import TermModel, { ITerm } from '@/models/Tenant/Term';
-import SubjectModel, { ISubject } from '@/models/Tenant/Subject'; // For populating periods in response
-import TenantUserModel, { ITenantUser } from '@/models/Tenant/User'; // For populating periods in response
+import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
+import TenantUserModel, { ITenantUser } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 
@@ -21,9 +21,9 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
 
 export async function POST(
   request: Request,
-  { params: routeParams }: { params: { schoolCode: string; timetableId: string } }
+  { params }: { params: { schoolCode: string; timetableId: string } } // Ensures param matches folder name '[timetableId]'
 ) {
-  const { schoolCode, timetableId: sourceTimetableId } = routeParams; // Renamed here for clarity within the function
+  const { schoolCode, timetableId: sourceTimetableIdParam } = params; // Use 'timetableId' from params, alias internally for clarity
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
@@ -32,7 +32,7 @@ export async function POST(
     }
   }
 
-  if (!mongoose.Types.ObjectId.isValid(sourceTimetableId)) {
+  if (!mongoose.Types.ObjectId.isValid(sourceTimetableIdParam)) {
     return NextResponse.json({ error: 'Invalid Source Timetable ID' }, { status: 400 });
   }
 
@@ -53,7 +53,7 @@ export async function POST(
     await ensureTenantModelsRegistered(tenantDb);
     const Timetable = tenantDb.models.Timetable as mongoose.Model<ITimetable>;
 
-    const sourceTimetable = await Timetable.findById(sourceTimetableId).lean();
+    const sourceTimetable = await Timetable.findById(sourceTimetableIdParam).lean();
     if (!sourceTimetable) {
       return NextResponse.json({ error: 'Source timetable not found' }, { status: 404 });
     }
@@ -104,7 +104,7 @@ export async function POST(
     return NextResponse.json(populatedTimetable, { status: 201 });
 
   } catch (error: any) {
-    console.error(`Error copying timetable ${sourceTimetableId} for ${schoolCode}:`, error);
+    console.error(`Error copying timetable ${sourceTimetableIdParam} for ${schoolCode}:`, error);
     if (error.code === 11000) {
       return NextResponse.json({ error: 'Timetable name, class, academic year, and term combination must be unique.' }, { status: 409 });
     }
