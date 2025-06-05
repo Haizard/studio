@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { ReadOutlined, BookOutlined, UsergroupAddOutlined, ContainerOutlined, IssuesCloseOutlined, TeamOutlined as MembersIcon } from '@ant-design/icons';
+import { ReadOutlined, BookOutlined, UsergroupAddOutlined, ContainerOutlined, IssuesCloseOutlined, TeamOutlined as MembersIcon, HistoryOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -33,6 +33,12 @@ export default function LibraryDashboardPage({ params }: LibraryPageProps) {
       icon: <ContainerOutlined />, 
       link: `${basePortalPath}/circulation`, 
       description: 'Handle book check-outs, check-ins, and renewals.' 
+    },
+    {
+      title: 'Transaction History',
+      icon: <HistoryOutlined />,
+      link: `${basePortalPath}/transactions`,
+      description: 'View all book borrowing and return records.'
     },
     { 
       title: 'Fine Management', 
@@ -68,3 +74,6 @@ export default function LibraryDashboardPage({ params }: LibraryPageProps) {
     </div>
   );
 }
+
+    
+    
