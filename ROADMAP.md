@@ -122,7 +122,7 @@ This document tracks the features implemented and planned for the Unified School
 
 ### School Portal - Admin Section
 - [ ] **Finance Management**:
-    - [ ] Student fee collection and tracking
+    - [ ] Student fee collection and tracking (In Progress: Model Created)
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
     - [ ] Financial reporting
@@ -162,3 +162,4 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
+
