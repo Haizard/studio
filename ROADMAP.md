@@ -78,9 +78,11 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
-    - [x] **Book borrowing and returns** (Core API logic for borrow/return)
+    - [x] **Book borrowing and returns (Core API logic for borrow/return)**
     - [x] **UI for Book borrowing and returns (Circulation Desk)**
     - [x] **List book transactions (borrowing history)**
+    - [x] **Fine management for overdue books (Model & API Update)**
+    - [x] **UI for Fine Management on Transaction History page**
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -124,7 +126,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Expense tracking
     - [ ] Financial reporting
 - [ ] **Library Management**:
-    - [ ] Fine management for overdue books
     - [ ] Library inventory and reporting
 - [ ] **Pharmacy/Health Management**:
     - [ ] Student health records
@@ -162,6 +163,3 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
-
-    
-    
