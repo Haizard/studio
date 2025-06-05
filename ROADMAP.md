@@ -75,7 +75,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
-    - [🚧] **Student fee collection and tracking** (Model & API Created)
+    - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
@@ -94,13 +94,13 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **My Classes**:
     - [x] View classes assigned for the active academic year.
     - [x] Link to student roster for each class.
+- [x] **My Timetable**: Display comprehensive timetable for the teacher for the active academic year.
 - [x] **Resources**:
     - [x] Upload and manage teaching resources.
     - [x] Share resources with specific classes/students (via `isPublic` and `classLevel` targeting).
 - [x] **Attendance**:
     - [x] Selection page for class, subject, date.
     - [x] Entry page to mark attendance for students.
-- [x] **Teacher Timetable View**: Display comprehensive timetable for the teacher for the active academic year.
 - [x] **My Profile**: Teachers can view their own detailed profile information.
 
 ### V. School Portal - Student Section (`/[schoolCode]/portal/student/...`)
@@ -125,7 +125,7 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Finance Management**:
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
-    - [ ] Financial reporting
+    - [ ] Financial reporting (Advanced: Beyond simple payment lists)
 - [ ] **Pharmacy/Health Management**:
     - [ ] Student health records
     - [ ] Medication dispensing log
@@ -162,4 +162,3 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
-

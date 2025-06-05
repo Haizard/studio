@@ -25,13 +25,13 @@ export default function FinanceDashboardPage({ params }: FinanceDashboardPagePro
     { 
       title: 'Student Fee Collection', 
       icon: <CreditCardOutlined />, 
-      link: `${basePortalPath}/student-fees`, // Placeholder for future page
+      link: `${basePortalPath}/student-fees`, 
       description: 'Track student payments, generate invoices, and manage fee balances.' 
     },
      { 
       title: 'Financial Reports', 
       icon: <AreaChartOutlined />, 
-      link: `${basePortalPath}/reports`, // Placeholder for future page
+      link: `${basePortalPath}/reports`, // Placeholder for future report page, or specific finance reports
       description: 'View financial summaries, revenue reports, and outstanding balances.' 
     },
     // Add more finance modules like "Expense Tracking", "Budgeting" etc.
@@ -63,3 +63,4 @@ export default function FinanceDashboardPage({ params }: FinanceDashboardPagePro
     </div>
   );
 }
+

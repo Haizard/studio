@@ -35,7 +35,8 @@ import {
   TeamOutlined as MembersIcon,
   ContainerOutlined,
   HistoryOutlined,
-  PieChartOutlined, // Added for Inventory/Reports
+  PieChartOutlined, 
+  CreditCardOutlined, // Added for Fee Collection
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -109,6 +110,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           children: [
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
+            { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Student Fees</Link> },
           ]
         },
         {
@@ -149,6 +151,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           children: [
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
+            { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Student Fees</Link> },
           ]
         }
       );
@@ -246,7 +249,9 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { 
         selectedKey = `/${schoolCode}/portal/teacher/attendance`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/finance/`)){
-        selectedKey = `/${schoolCode}/portal/admin/finance`;
+        selectedKey = `/${schoolCode}/portal/admin/finance`; 
+         if (pathname.includes('/fee-structure')) selectedKey = `/${schoolCode}/portal/admin/finance/fee-structure`;
+         if (pathname.includes('/student-fees')) selectedKey = `/${schoolCode}/portal/admin/finance/student-fees`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/library/`)){
         selectedKey = `/${schoolCode}/portal/library`; 
         if (pathname.includes('/books')) selectedKey = `/${schoolCode}/portal/library/books`;
@@ -300,6 +305,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         }
       } else if (snippet === 'entry' && relevantSnippets[index-1] === 'attendance') {
         title = "Record Attendance";
+      } else if (snippet === 'student-fees' && relevantSnippets[index-1] === 'finance') {
+        title = "Student Fee Collection";
       }
 
 
