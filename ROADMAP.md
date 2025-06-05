@@ -75,6 +75,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
+    - [🚧] **Student fee collection and tracking** (Model & API Created)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
@@ -122,7 +123,6 @@ This document tracks the features implemented and planned for the Unified School
 
 ### School Portal - Admin Section
 - [ ] **Finance Management**:
-    - [ ] Student fee collection and tracking (In Progress: Model Created)
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
     - [ ] Financial reporting
