@@ -57,6 +57,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **A-Level Combination Management**: CRUD operations for A-Level subject combinations, linked to academic years and subjects.
     - [x] **Timetable Management (Admin Shell & Period Management)**: CRUD for timetable definitions (name, year, class, term, status). Management of individual periods. Includes conflict detection for periods and copy timetable functionality.
     - [x] **Grading Scale Management**: CRUD for grading scales, including specific types for O-Level divisions, A-Level points, and grade definitions with points/GPA. Enhanced model to support Tanzanian point systems.
+    - [x] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments.
 - [x] **Exam Management**:
     - [x] **Exam Definition**: CRUD operations for exams (name, academic year, term, dates, status, weight).
     - [x] **Assessment Management**: CRUD operations for individual assessments (papers, practicals) under an exam, linking to subjects and classes.
@@ -138,7 +139,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
 - [ ] **Detailed Admin Reports**: Implementation of various other report generation tools (beyond basic attendance and term report).
-- [ ] **Teacher Assignment UI**: More granular UI for managing teacher class/subject assignments directly.
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
 ### Public School Website
@@ -162,3 +162,5 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
+
+    

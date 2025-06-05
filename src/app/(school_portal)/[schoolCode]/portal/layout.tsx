@@ -36,7 +36,8 @@ import {
   ContainerOutlined,
   HistoryOutlined,
   PieChartOutlined, 
-  CreditCardOutlined, // Added for Fee Collection
+  CreditCardOutlined, 
+  SlidersOutlined, // Added for Teacher Assignments
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -95,6 +96,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
                 { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreAddOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
                 { key: `${basePortalPath}/admin/academics/timetables`, icon: <ProjectOutlined />, label: <Link href={`${basePortalPath}/admin/academics/timetables`}>Timetables</Link> },
                 { key: `${basePortalPath}/admin/academics/grading-scales`, icon: <PercentageOutlined />, label: <Link href={`${basePortalPath}/admin/academics/grading-scales`}>Grading Scales</Link> },
+                { key: `${basePortalPath}/admin/academics/teacher-assignments`, icon: <SlidersOutlined />, label: <Link href={`${basePortalPath}/admin/academics/teacher-assignments`}>Teacher Assignments</Link> },
               ]
             },
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
@@ -383,4 +385,6 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 export default SchoolPortalLayout;
 
     
+    
+
     
