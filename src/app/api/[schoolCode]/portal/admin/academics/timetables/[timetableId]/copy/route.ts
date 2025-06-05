@@ -21,9 +21,9 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
 
 export async function POST(
   request: Request,
-  { params }: { params: { schoolCode: string; timetableId: string } } // Ensures param matches folder name '[timetableId]'
+  { params }: { params: { schoolCode: string; timetableId: string } } // Parameter name must be 'timetableId'
 ) {
-  const { schoolCode, timetableId: sourceTimetableIdParam } = params; // Use 'timetableId' from params, alias internally for clarity
+  const { schoolCode, timetableId: sourceTimetableIdParam } = params; // Internal alias for clarity
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
