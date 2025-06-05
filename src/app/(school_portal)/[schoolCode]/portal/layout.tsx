@@ -34,7 +34,8 @@ import {
   BookFilled, 
   TeamOutlined as MembersIcon,
   ContainerOutlined,
-  HistoryOutlined, // Added for Transaction History
+  HistoryOutlined,
+  PieChartOutlined, // Added for Inventory/Reports
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -131,6 +132,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/library/members`, icon: <MembersIcon />, label: <Link href={`${basePortalPath}/library/members`}>Member Management</Link> },
             { key: `${basePortalPath}/library/circulation`, icon: <ContainerOutlined />, label: <Link href={`${basePortalPath}/library/circulation`}>Circulation Desk</Link> },
             { key: `${basePortalPath}/library/transactions`, icon: <HistoryOutlined />, label: <Link href={`${basePortalPath}/library/transactions`}>Transactions</Link> },
+            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory &amp; Reports</Link> },
           ]
         },
         { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
@@ -164,6 +166,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/library/members`, icon: <MembersIcon />, label: <Link href={`${basePortalPath}/library/members`}>Member Management</Link> },
             { key: `${basePortalPath}/library/circulation`, icon: <ContainerOutlined />, label: <Link href={`${basePortalPath}/library/circulation`}>Circulation Desk</Link> },
             { key: `${basePortalPath}/library/transactions`, icon: <HistoryOutlined />, label: <Link href={`${basePortalPath}/library/transactions`}>Transactions</Link> },
+            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory &amp; Reports</Link> },
           ]
         }
       );
@@ -250,6 +253,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         if (pathname.includes('/members')) selectedKey = `/${schoolCode}/portal/library/members`;
         if (pathname.includes('/circulation')) selectedKey = `/${schoolCode}/portal/library/circulation`;
         if (pathname.includes('/transactions')) selectedKey = `/${schoolCode}/portal/library/transactions`;
+        if (pathname.includes('/inventory')) selectedKey = `/${schoolCode}/portal/library/inventory`;
     }
   }
   openKeys = activeKeysResult.open || [];

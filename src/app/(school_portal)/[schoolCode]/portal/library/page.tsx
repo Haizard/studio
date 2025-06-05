@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { ReadOutlined, BookOutlined, UsergroupAddOutlined, ContainerOutlined, IssuesCloseOutlined, TeamOutlined as MembersIcon, HistoryOutlined } from '@ant-design/icons';
+import { ReadOutlined, BookOutlined, UsergroupAddOutlined, ContainerOutlined, IssuesCloseOutlined, TeamOutlined as MembersIcon, HistoryOutlined, PieChartOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -40,11 +40,17 @@ export default function LibraryDashboardPage({ params }: LibraryPageProps) {
       link: `${basePortalPath}/transactions`,
       description: 'View all book borrowing and return records.'
     },
+     { 
+      title: 'Inventory &amp; Reports', 
+      icon: <PieChartOutlined />, 
+      link: `${basePortalPath}/inventory`, 
+      description: 'View library statistics, inventory summaries, and generate reports.' 
+    },
     { 
       title: 'Fine Management', 
       icon: <IssuesCloseOutlined />, 
-      link: `${basePortalPath}/fines`, // Placeholder
-      description: 'Track and manage fines for overdue or damaged books.' 
+      link: `${basePortalPath}/transactions`, // Fines are managed via transactions page now
+      description: 'Track and manage fines for overdue or damaged books via transaction history.' 
     },
   ];
 

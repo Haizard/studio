@@ -83,6 +83,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **List book transactions (borrowing history)**
     - [x] **Fine management for overdue books (Model & API Update)**
     - [x] **UI for Fine Management on Transaction History page**
+    - [x] **Library inventory and reporting** (Initial statistics page)
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -125,8 +126,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
     - [ ] Financial reporting
-- [ ] **Library Management**:
-    - [ ] Library inventory and reporting
 - [ ] **Pharmacy/Health Management**:
     - [ ] Student health records
     - [ ] Medication dispensing log
