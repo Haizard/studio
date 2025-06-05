@@ -287,3 +287,5 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete timetable', details: String(error.message || 'Unknown error') }, { status: 500 });
   }
 }
+
+    

@@ -115,3 +115,5 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to copy timetable', details: String(error.message || 'Unknown error') }, { status: 500 });
   }
 }
+
+    
