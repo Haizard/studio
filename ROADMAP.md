@@ -119,6 +119,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Events Listing Page**: Displays active upcoming and past events.
 - [x] **Gallery Page**: Displays active gallery items, with album filtering.
 - [x] **About Us Page**: Displays content managed from School Settings (sanitized HTML).
+- [x] **Admissions Page**: Information on admission process, forms, deadlines.
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -142,7 +143,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
 ### Public School Website
-- [ ] **Admissions Page**: Information on admission process, forms, deadlines.
 - [ ] **Contact Page**: Contact form, map, detailed contact information.
 - [ ] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
 - [ ] **Staff Directory**: Public listing of teaching staff (optional).
