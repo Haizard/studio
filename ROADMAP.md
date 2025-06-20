@@ -81,6 +81,7 @@ This document tracks the features implemented and planned for the Unified School
         - [x] Basic Page and Navigation Created
         - [x] API for Fee Collection Summary Report
         - [x] UI for Fee Collection Summary Report (with filters and charts)
+        - [ ] API for Outstanding Balances Report (In Progress)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
@@ -172,4 +173,5 @@ Let me know what you'd like to tackle next from the "Planned/Pending Features" s
     
 
     
+
 
