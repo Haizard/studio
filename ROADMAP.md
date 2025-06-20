@@ -77,7 +77,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
     - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments)
-    - [ ] **Financial reporting (Advanced: Beyond simple payment lists)** (In Progress - Basic Page and Navigation Created)
+    - [x] **Financial reporting (Advanced: Beyond simple payment lists)** (In Progress - Basic Page and Navigation Created)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
@@ -121,6 +121,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Gallery Page**: Displays active gallery items, with album filtering.
 - [x] **About Us Page**: Displays content managed from School Settings (sanitized HTML).
 - [x] **Admissions Page**: Information on admission process, forms, deadlines.
+- [x] **Contact Page**: Contact form, map, detailed contact information.
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -128,7 +129,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Finance Management**:
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
-    - [x] **Financial reporting (Advanced: Beyond simple payment lists)** (In Progress - Basic Page and Navigation Created)
 - [ ] **Pharmacy/Health Management**:
     - [ ] Student health records
     - [ ] Medication dispensing log
@@ -144,7 +144,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
 ### Public School Website
-- [ ] **Contact Page**: Contact form, map, detailed contact information.
 - [ ] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
 - [ ] **Staff Directory**: Public listing of teaching staff (optional).
 - [ ] **Blog/Articles**: More generic content beyond news.
