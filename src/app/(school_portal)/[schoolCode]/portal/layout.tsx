@@ -37,7 +37,8 @@ import {
   HistoryOutlined,
   PieChartOutlined, 
   CreditCardOutlined, 
-  SlidersOutlined, // Added for Teacher Assignments
+  SlidersOutlined, 
+  AreaChartOutlined, // Added for Financial Reports
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -113,6 +114,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
             { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Student Fees</Link> },
+            { key: `${basePortalPath}/admin/finance/reports`, icon: <AreaChartOutlined />, label: <Link href={`${basePortalPath}/admin/finance/reports`}>Financial Reports</Link> },
           ]
         },
         {
@@ -154,6 +156,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
             { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Student Fees</Link> },
+            { key: `${basePortalPath}/admin/finance/reports`, icon: <AreaChartOutlined />, label: <Link href={`${basePortalPath}/admin/finance/reports`}>Financial Reports</Link> },
           ]
         }
       );
@@ -254,6 +257,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/admin/finance`; 
          if (pathname.includes('/fee-structure')) selectedKey = `/${schoolCode}/portal/admin/finance/fee-structure`;
          if (pathname.includes('/student-fees')) selectedKey = `/${schoolCode}/portal/admin/finance/student-fees`;
+         if (pathname.includes('/reports')) selectedKey = `/${schoolCode}/portal/admin/finance/reports`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/library/`)){
         selectedKey = `/${schoolCode}/portal/library`; 
         if (pathname.includes('/books')) selectedKey = `/${schoolCode}/portal/library/books`;
@@ -385,6 +389,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 export default SchoolPortalLayout;
 
     
+    
+
     
 
     

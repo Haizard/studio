@@ -47,7 +47,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Add new teachers (creates TenantUser with 'teacher' role & Teacher profile).
     - [x] Edit teacher details (user info, profile info, qualifications, specialization).
     - [x] Activate/Deactivate teacher accounts.
-    - [x] API support for `assignedClassesAndSubjects` (UI for direct assignment management in modal is basic).
+    - [x] API support for `assignedClassesAndSubjects` (UI for direct assignment management modal exists).
 - [x] **Academics Management**:
     - [x] **Academics Overview Page**: Dashboard for academic modules.
     - [x] **Academic Year Management**: CRUD operations, including setting the active year.
@@ -77,6 +77,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
     - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments)
+    - [ ] **Financial reporting (Advanced: Beyond simple payment lists)** (In Progress - Basic Page and Navigation Created)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
@@ -127,7 +128,7 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Finance Management**:
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
-    - [ ] Financial reporting (Advanced: Beyond simple payment lists)
+    - [x] **Financial reporting (Advanced: Beyond simple payment lists)** (In Progress - Basic Page and Navigation Created)
 - [ ] **Pharmacy/Health Management**:
     - [ ] Student health records
     - [ ] Medication dispensing log
@@ -162,5 +163,7 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
+
+    
 
     
