@@ -77,7 +77,10 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
     - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments)
-    - [x] **Financial reporting (Advanced: Beyond simple payment lists)** (In Progress - Basic Page and Navigation Created)
+    - [x] **Financial reporting (Advanced: Beyond simple payment lists)**
+        - [x] Basic Page and Navigation Created
+        - [x] API for Fee Collection Summary Report
+        - [x] UI for Fee Collection Summary Report (with filters and charts)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
@@ -129,6 +132,9 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Finance Management**:
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
+    - [ ] Outstanding Balances Report (UI)
+    - [ ] Income Statement Report (UI)
+    - [ ] Expense Report (UI)
 - [ ] **Pharmacy/Health Management**:
     - [ ] Student health records
     - [ ] Medication dispensing log
@@ -166,3 +172,4 @@ Let me know what you'd like to tackle next from the "Planned/Pending Features" s
     
 
     
+

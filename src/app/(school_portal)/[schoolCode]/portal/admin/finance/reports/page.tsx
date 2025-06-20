@@ -1,7 +1,7 @@
 
 'use client';
 import React from 'react';
-import { Typography, Empty, Card, Row, Col, List } from 'antd';
+import { Typography, Empty, Card, Row, Col, List, Button, Space as AntSpace } from 'antd';
 import { AreaChartOutlined, FileTextOutlined, DollarOutlined, LineChartOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
@@ -12,14 +12,15 @@ interface AdminFinancialReportsPageProps {
 }
 
 const potentialReports = [
-  { title: 'Fee Collection Summary', description: 'Summary of fees collected over a period.', icon: <DollarOutlined />, link: '#' },
-  { title: 'Outstanding Balances', description: 'Report on students with pending fee payments.', icon: <FileTextOutlined />, link: '#' },
-  { title: 'Income Statement', description: 'Detailed statement of income (revenue).', icon: <LineChartOutlined />, link: '#' },
-  { title: 'Expense Report', description: 'Detailed report on school expenditures (Future).', icon: <AreaChartOutlined />, link: '#' },
+  { title: 'Fee Collection Summary', description: 'Summary of fees collected over a period.', icon: <DollarOutlined />, linkKey: 'fee-collection-summary' },
+  { title: 'Outstanding Balances Report', description: 'Report on students with pending fee payments.', icon: <FileTextOutlined />, linkKey: 'outstanding-balances', comingSoon: true },
+  { title: 'Income Statement', description: 'Detailed statement of income (revenue).', icon: <LineChartOutlined />, linkKey: 'income-statement', comingSoon: true },
+  { title: 'Expense Report', description: 'Detailed report on school expenditures.', icon: <AreaChartOutlined />, linkKey: 'expense-report', comingSoon: true },
 ];
 
 export default function AdminFinancialReportsPage({ params }: AdminFinancialReportsPageProps) {
   const { schoolCode } = params;
+  const baseReportPath = `/${schoolCode}/portal/admin/finance/reports`;
 
   return (
     <div>
@@ -35,20 +36,20 @@ export default function AdminFinancialReportsPage({ params }: AdminFinancialRepo
             {potentialReports.map(report => (
             <Col xs={24} sm={12} md={8} lg={6} key={report.title}>
                 <Card 
-                    hoverable={report.link !== '#'} 
+                    hoverable={!report.comingSoon} 
                     className="h-full"
                     title={
-                        <Space>
+                        <AntSpace>
                             {React.cloneElement(report.icon, {style: {color: 'var(--ant-primary-color)'}})}
                             {report.title}
-                        </Space>
+                        </AntSpace>
                     }
                 >
                     <Paragraph type="secondary" className="mb-4">{report.description}</Paragraph>
-                    {report.link === '#' ? (
+                    {report.comingSoon ? (
                         <Button type="primary" disabled>Coming Soon</Button>
                     ) : (
-                        <Link href={report.link}>
+                        <Link href={`${baseReportPath}/${report.linkKey}`}>
                             <Button type="primary">View Report</Button>
                         </Link>
                     )}
@@ -62,9 +63,3 @@ export default function AdminFinancialReportsPage({ params }: AdminFinancialRepo
     </div>
   );
 }
-
-// Minimalist Space component if needed, or use AntD's Space
-const Space: React.FC<{children: React.ReactNode}> = ({ children }) => <div className="flex items-center gap-2">{children}</div>;
-
-
-    
