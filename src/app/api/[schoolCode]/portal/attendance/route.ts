@@ -54,7 +54,7 @@ export async function POST(
     if (!mongoose.Types.ObjectId.isValid(academicYearId) || !mongoose.Types.ObjectId.isValid(classId) || (subjectId && !mongoose.Types.ObjectId.isValid(subjectId))) {
         return NextResponse.json({ error: 'Invalid ID format for academic year, class, or subject.' }, { status: 400 });
     }
-    const attendanceDate = new Date(date); // Ensure date is parsed correctly, store as YYYY-MM-DD UTC midnight.
+    const attendanceDate = new Date(date); 
     attendanceDate.setUTCHours(0,0,0,0);
 
 
@@ -63,7 +63,6 @@ export async function POST(
     const Attendance = tenantDb.models.Attendance as mongoose.Model<IAttendance>;
     const Teacher = tenantDb.models.Teacher as mongoose.Model<ITeacher>;
 
-    // Authorization: Check if teacher is assigned to this class/subject for this academic year
     const teacherProfile = await Teacher.findOne({ userId: token.uid }).lean();
     if (!teacherProfile) {
       return NextResponse.json({ error: "Teacher profile not found." }, { status: 403 });
@@ -71,7 +70,7 @@ export async function POST(
     const isAuthorized = (teacherProfile.assignedClassesAndSubjects || []).some(
         (assignment: any) =>
             assignment.classId.toString() === classId &&
-            (!subjectId || assignment.subjectId.toString() === subjectId) && // subjectId is optional
+            (!subjectId || assignment.subjectId.toString() === subjectId) && 
             assignment.academicYearId.toString() === academicYearId
     );
     if (!isAuthorized) {
@@ -82,13 +81,13 @@ export async function POST(
     const operations = records.map(record => {
       if (!mongoose.Types.ObjectId.isValid(record.studentId)) {
         console.warn(`Skipping invalid studentId: ${record.studentId}`);
-        return null; // Skip invalid studentId
+        return null; 
       }
       const updateQuery: any = {
         studentId: record.studentId,
         classId,
         academicYearId,
-        date: attendanceDate, // Use the normalized date
+        date: attendanceDate, 
       };
       if (subjectId) {
         updateQuery.subjectId = subjectId;
@@ -151,7 +150,6 @@ export async function GET(
     const Attendance = tenantDb.models.Attendance as mongoose.Model<IAttendance>;
     const Teacher = tenantDb.models.Teacher as mongoose.Model<ITeacher>;
 
-    // Authorization for teachers: ensure they are assigned to this class/subject
     if (token.role === 'teacher') {
         const teacherProfile = await Teacher.findOne({ userId: token.uid }).lean();
         if (!teacherProfile) {

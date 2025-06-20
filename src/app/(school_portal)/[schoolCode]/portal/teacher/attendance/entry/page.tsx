@@ -51,7 +51,7 @@ function AttendanceEntryCore() {
   const CLASS_DETAILS_API = `/api/${schoolCode}/portal/academics/classes/${classId}`;
   const SUBJECT_DETAILS_API_BASE = `/api/${schoolCode}/portal/academics/subjects/`;
   const ACADEMIC_YEAR_DETAILS_API_BASE = `/api/${schoolCode}/portal/academics/academic-years/`;
-  const STUDENTS_IN_CLASS_API = `/api/${schoolCode}/portal/students/class/${classId}?academicYearId=${academicYearId}`; // Ensure API filters by AY
+  const STUDENTS_IN_CLASS_API = `/api/${schoolCode}/portal/students/class/${classId}?academicYearId=${academicYearId}`; 
   const ATTENDANCE_API = `/api/${schoolCode}/portal/attendance`;
 
 
@@ -83,7 +83,6 @@ function AttendanceEntryCore() {
       if (subjectId && subjectDataOptional) setSubjectDetails(subjectDataOptional);
 
 
-      // Fetch students and existing attendance records
       let attendanceQuery = `academicYearId=${academicYearId}&classId=${classId}&date=${date}`;
       if (subjectId) attendanceQuery += `&subjectId=${subjectId}`;
 
@@ -259,7 +258,7 @@ function AttendanceEntryCore() {
               format="YYYY-MM-DD"
               disabledDate={current => current && current > moment().endOf('day')}
             />
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.push(`/${schoolCode}/portal/teacher/attendance?academicYearId=${academicYearId}&classId=${classId}${subjectId ? `&subjectId=${subjectId}`: ''}&date=${date}`)}>
+            <Button icon={<ArrowLeftOutlined />} onClick={() => router.push(`/${schoolCode}/portal/teacher/attendance?academicYearId=${academicYearId || ''}&classId=${classId || ''}${subjectId ? `&subjectId=${subjectId}`: ''}&date=${date || ''}`)}>
                 Back to Selection
             </Button>
             <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveAttendance} loading={saving}>
