@@ -38,7 +38,7 @@ import {
   PieChartOutlined, 
   CreditCardOutlined, 
   SlidersOutlined, 
-  AreaChartOutlined, // Added for Financial Reports
+  AreaChartOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -273,7 +273,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports') || selectedKey.includes('/admin/settings') || selectedKey.includes('/admin/users') || selectedKey.includes('/admin/students') || selectedKey.includes('/admin/teachers')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
   if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
-  if(selectedKey.includes('/library')) openKeys.push('library-management'); 
+  if(selectedKey.includes('/library')) openKeys.push('library-management');
+  if(selectedKey.includes('/pharmacy')) openKeys.push('pharmacy');
 
 
   const breadcrumbItemsGen = () => {
@@ -387,10 +388,3 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 };
 
 export default SchoolPortalLayout;
-
-    
-    
-
-    
-
-    
