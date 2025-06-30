@@ -1,5 +1,4 @@
 
-
 # Unified School Management System - Roadmap
 
 This document tracks the features implemented and planned for the Unified School Management System.
@@ -70,10 +69,10 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **News Article Management**: CRUD operations for news articles (title, slug, content, images, etc.). Includes AI summary & content generation.
     - [x] **Event Management**: CRUD operations for school events (details, dates, images, etc.).
     - [x] **Gallery Management**: CRUD operations for gallery images (upload, title, album, tags).
-    - [x] **Blog/Articles Management**: CRUD operations for blog posts.
 - [x] **School Settings**:
     - [x] Manage basic website settings (School Name, Logo, Tagline, Contact Info, Footer, Colors).
     - [x] Manage "About Us" page content using Rich Text Editor with HTML sanitization.
+    - [x] Manage public website navigation links.
 - [x] **Admin Reports**:
     - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
 - [x] **Finance Management**:
@@ -85,30 +84,21 @@ This document tracks the features implemented and planned for the Unified School
         - [x] UI for Fee Collection Summary Report (with filters and charts)
         - [x] API for Outstanding Balances Report
         - [x] UI for Outstanding Balances Report
-        - [x] Expense Report (API and UI)
-        - [x] Income Statement Report (UI)
-    - [x] Invoicing and receipts (API and UI)
-    - [x] Expense tracking (API and UI)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
-    - [x] **Member management**: View list of students and teachers as library members.
-    - [x] **Book borrowing and returns**: Handle circulation desk operations.
-    - [x] **Fine management for overdue books**: Integrated into the circulation workflow.
-    - [x] **Transaction History**: View all borrowing and return transactions with filters.
-    - [x] **Library inventory and reporting**: Dashboard with key library statistics.
+    - [ ] Member management (students, teachers)
+    - [ ] Book borrowing and returns
+    - [ ] Fine management for overdue books
+    - [ ] Library inventory and reporting
 - [x] **Dormitory Management**:
-    - [x] **Dormitory/Room setup**: Models, APIs, and UI for Dormitory & Room Management.
-    - [x] **Student room allocation**: Backend APIs and UI for student assignment to rooms.
-- [x] **Grading & Promotion**:
-    - [x] **Process Promotions (Analysis)**: UI to view class performance and suggested promotion actions.
-    - [x] **Process Promotions (Execution)**: UI and API to confirm and finalize student promotions.
-- [x] **Pharmacy/Health Management**:
-    - [x] Placeholder Dashboard & Navigation Created
-    - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
-    - [x] **Inventory of medical supplies (CRUD UI)**
-    - [x] **Student health records (View/Edit UI)**
-    - [x] **Check-in/Check-out workflow**
-    - [x] Medication dispensing log
+    - [x] Placeholder Page and Navigation Created
+    - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)
+    - [x] Student room allocation (Backend APIs and UI for allocation created)
+- [ ] **Grading & Promotion**:
+    - [x] Placeholder Page and Navigation Created
+- [ ] **Pharmacy/Health Management**:
+    - [x] Placeholder Page and Navigation Created
+    - [ ] Check-in/Check-out
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -139,7 +129,6 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Homepage**: Basic placeholder structure.
 - [x] **News Listing Page**: Displays active news articles.
 - [x] **Single News Article Page**: Displays full content of a news article by slug.
-- [x] **Blog/Articles Page**: Displays active blog posts and single post pages.
 - [x] **Events Listing Page**: Displays active upcoming and past events.
 - [x] **Gallery Page**: Displays active gallery items, with album filtering.
 - [x] **About Us Page**: Displays content managed from School Settings (sanitized HTML).
@@ -148,22 +137,33 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
 - [x] **Staff Directory**: Public listing of teaching staff (optional).
 
-### VII. Cross-Cutting Concerns
-- [x] **Enhanced Security (Audit Trails)**: Backend service and logging for key actions (logins, user management).
-
 ## 🚧 Planned/Pending Features (High-Level)
 
 ### School Portal - Admin Section
+- [ ] **Finance Management**:
+    - [ ] Invoicing and receipts
+    - [ ] Expense tracking
+    - [ ] Income Statement Report (UI)
+    - [ ] Expense Report (UI)
+- [ ] **Pharmacy/Health Management**:
+    - [ ] Student health records
+    - [ ] Medication dispensing log
+    - [ ] Inventory of medical supplies
 - [ ] **Grading & Promotion**:
+    - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
-- [ ] **Detailed Admin Reports**: Implementation of various other report generation tools.
+- [ ] **Detailed Admin Reports**: Implementation of various other report generation tools (beyond basic attendance and term report).
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
+
+### Public School Website
+- [ ] **Blog/Articles**: More generic content beyond news.
 
 ### Cross-Cutting Concerns
 - [ ] **Notifications System**: In-app and email notifications for important events.
 - [ ] **Advanced Search & Filtering**: Across all major modules.
 - [ ] **Data Import/Export**: For key data like students, teachers, marks.
-- [ ] **Enhanced Security (Other)**: Password policies, session timeouts.
+- [ ] **Enhanced Security**: Password policies, session timeouts, audit trails.
+- [ ] **Performance Optimization**: For large datasets and high traffic.
 - [ ] **Accessibility (A11Y) improvements**.
 - [ ] **Mobile Responsiveness**: Thorough testing and refinement.
 - [ ] **Theming Customization**: Allow admins more control over portal and public site appearance beyond basic colors.

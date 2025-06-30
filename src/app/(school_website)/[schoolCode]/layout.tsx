@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HomeOutlined, InfoCircleOutlined, ReadOutlined, ContactsOutlined, CalendarOutlined, PictureOutlined, BookOutlined, SolutionOutlined, UsergroupAddOutlined, EditOutlined } from '@ant-design/icons';
+import { HomeOutlined, InfoCircleOutlined, ReadOutlined, ContactsOutlined, CalendarOutlined, PictureOutlined, BookOutlined, SolutionOutlined, UsergroupAddOutlined, EditOutlined, TeamOutlined, DollarCircleOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import { getTenantConnection } from '@/lib/db';
 import WebsiteSettingsModel, { IWebsiteSettings } from '@/models/Tenant/WebsiteSettings';
 import mongoose from 'mongoose';
@@ -17,6 +17,28 @@ async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   }
 }
 
+// Map string names to actual Ant Design icon components
+const iconMap: { [key: string]: React.ReactNode } = {
+  HomeOutlined: <HomeOutlined />,
+  InfoCircleOutlined: <InfoCircleOutlined />,
+  ReadOutlined: <ReadOutlined />,
+  ContactsOutlined: <ContactsOutlined />,
+  CalendarOutlined: <CalendarOutlined />,
+  PictureOutlined: <PictureOutlined />,
+  BookOutlined: <BookOutlined />,
+  SolutionOutlined: <SolutionOutlined />,
+  UsergroupAddOutlined: <UsergroupAddOutlined />,
+  EditOutlined: <EditOutlined />,
+  TeamOutlined: <TeamOutlined />,
+  DollarCircleOutlined: <DollarCircleOutlined />,
+  MedicineBoxOutlined: <MedicineBoxOutlined />,
+};
+
+const getIcon = (iconName?: string) => {
+  if (!iconName || !iconMap[iconName]) return null;
+  return iconMap[iconName];
+};
+
 const getWebsiteSettingsData = async (schoolCode: string): Promise<Partial<IWebsiteSettings>> => {
   try {
     const tenantDb = await getTenantConnection(schoolCode);
@@ -31,6 +53,7 @@ const getWebsiteSettingsData = async (schoolCode: string): Promise<Partial<IWebs
         logoUrl: `https://placehold.co/150x50.png?text=${schoolCode.toUpperCase()}`,
         footerText: `© ${new Date().getFullYear()} ${schoolCode.toUpperCase()} School. All Rights Reserved.`,
         primaryColor: '#1677ff', // Default AntD primary
+        navLinks: [], // Default to empty navLinks
       };
     }
     return settings;
@@ -42,6 +65,7 @@ const getWebsiteSettingsData = async (schoolCode: string): Promise<Partial<IWebs
       logoUrl: `https://placehold.co/150x50.png?text=${schoolCode.toUpperCase()}`,
       footerText: `© ${new Date().getFullYear()} ${schoolCode.toUpperCase()} School. All Rights Reserved.`,
       primaryColor: '#1677ff',
+      navLinks: [],
     };
   }
 };
@@ -50,20 +74,18 @@ export default async function PublicWebsiteLayout({ children, params }: PublicWe
   const { schoolCode } = params;
   const settings = await getWebsiteSettingsData(schoolCode);
 
+  const defaultNavLinks = [
+    { label: 'Home', slug: '', icon: 'HomeOutlined', order: 0 },
+    { label: 'About Us', slug: '/about', icon: 'InfoCircleOutlined', order: 1 },
+    { label: 'Academics', slug: '/academics', icon: 'BookOutlined', order: 2 },
+    { label: 'Admissions', slug: '/admissions', icon: 'SolutionOutlined', order: 3 },
+    { label: 'News', slug: '/news', icon: 'ReadOutlined', order: 4 },
+    { label: 'Contact', slug: '/contact', icon: 'ContactsOutlined', order: 9 },
+  ];
+  
   const navLinks = settings.navLinks && settings.navLinks.length > 0 
     ? settings.navLinks.sort((a,b) => a.order - b.order)
-    : [
-        { label: 'Home', slug: '', icon: <HomeOutlined />, order: 0 },
-        { label: 'About Us', slug: '/about', icon: <InfoCircleOutlined />, order: 1 },
-        { label: 'Academics', slug: '/academics', icon: <BookOutlined />, order: 2 },
-        { label: 'Admissions', slug: '/admissions', icon: <SolutionOutlined />, order: 3 },
-        { label: 'News', slug: '/news', icon: <ReadOutlined />, order: 4 },
-        { label: 'Blog', slug: '/blog', icon: <EditOutlined />, order: 5 },
-        { label: 'Events', slug: '/events', icon: <CalendarOutlined />, order: 6 },
-        { label: 'Gallery', slug: '/gallery', icon: <PictureOutlined />, order: 7 },
-        { label: 'Staff', slug: '/staff', icon: <UsergroupAddOutlined />, order: 8 },
-        { label: 'Contact', slug: '/contact', icon: <ContactsOutlined />, order: 9 },
-      ];
+    : defaultNavLinks;
 
   const pageTitle = settings.schoolName || `${schoolCode.toUpperCase()} High School`;
   const primaryColor = settings.primaryColor || '#1677ff';
@@ -104,7 +126,7 @@ export default async function PublicWebsiteLayout({ children, params }: PublicWe
                     href={`/${schoolCode}${link.slug}`} 
                     className="text-gray-600 hover:text-[var(--website-primary-color)] px-2 py-1 rounded-md text-sm sm:text-base flex items-center gap-1 transition-colors duration-200"
                   >
-                    {link.icon}
+                    {getIcon(link.icon)}
                     {link.label}
                   </Link>
                 </li>

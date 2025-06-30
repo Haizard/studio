@@ -5,7 +5,7 @@ interface NavLink {
   label: string;
   slug: string; // e.g., /about, /admissions
   order: number;
-  icon?: any; // Storing ReactNode directly in schema is not ideal, consider string names for icons
+  icon?: string; // Storing icon name as a string
 }
 
 export interface IWebsiteSettings extends Document {
@@ -32,6 +32,14 @@ export interface IWebsiteSettings extends Document {
   updatedAt: Date;
 }
 
+const NavLinkSchema: Schema = new Schema({
+    label: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, trim: true },
+    order: { type: Number, default: 0 },
+    icon: { type: String, trim: true },
+}, { _id: true });
+
+
 const WebsiteSettingsSchema: Schema = new Schema(
   {
     schoolName: { type: String, required: true, trim: true },
@@ -49,16 +57,7 @@ const WebsiteSettingsSchema: Schema = new Schema(
       instagram: { type: String, trim: true },
       linkedin: { type: String, trim: true },
     },
-    navLinks: [
-      {
-        label: { type: String, required: true, trim: true },
-        slug: { type: String, required: true, trim: true },
-        order: { type: Number, default: 0 },
-        // Icon field is tricky for schema; storing string names might be better if icons are dynamic
-        // icon: { type: Schema.Types.Mixed }, 
-        _id: false,
-      },
-    ],
+    navLinks: [NavLinkSchema],
     footerText: { type: String, trim: true },
     aboutUsContent: { type: String, trim: true }, // New field
   },

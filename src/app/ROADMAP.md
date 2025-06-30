@@ -74,6 +74,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **School Settings**:
     - [x] Manage basic website settings (School Name, Logo, Tagline, Contact Info, Footer, Colors).
     - [x] Manage "About Us" page content using Rich Text Editor with HTML sanitization.
+    - [x] Manage public website navigation links.
 - [x] **Admin Reports**:
     - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
 - [x] **Finance Management**:
