@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { DollarCircleOutlined, BarsOutlined, CreditCardOutlined, AreaChartOutlined } from '@ant-design/icons';
+import { DollarCircleOutlined, BarsOutlined, CreditCardOutlined, AreaChartOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -28,13 +28,19 @@ export default function FinanceDashboardPage({ params }: FinanceDashboardPagePro
       link: `${basePortalPath}/student-fees`, 
       description: 'Track student payments, generate invoices, and manage fee balances.' 
     },
+    { 
+      title: 'Expense Tracking', 
+      icon: <FolderOpenOutlined />, 
+      link: `${basePortalPath}/expenses`, 
+      description: 'Record and manage all school expenditures and operational costs.' 
+    },
      { 
       title: 'Financial Reports', 
       icon: <AreaChartOutlined />, 
       link: `${basePortalPath}/reports`, 
       description: 'View financial summaries, revenue reports, and outstanding balances.' 
     },
-    // Add more finance modules like "Expense Tracking", "Budgeting" etc.
+    // Add more finance modules like "Budgeting" etc.
   ];
 
   return (
