@@ -104,6 +104,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Grading & Promotion**:
     - [x] **Process Promotions (Analysis)**: UI to view class performance and suggested promotion actions.
     - [x] **Process Promotions (Execution)**: UI and API to confirm and finalize student promotions.
+    - [x] **Generate final report cards/transcripts**: Detailed student term report generation.
 - [x] **Pharmacy/Health Management**:
     - [x] Placeholder Dashboard & Navigation Created
     - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
@@ -156,9 +157,6 @@ This document tracks the features implemented and planned for the Unified School
 ## 🚧 Planned/Pending Features (High-Level)
 
 ### School Portal - Admin Section
-- [ ] **Grading & Promotion**:
-    - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
-- [ ] **Detailed Admin Reports**: Implementation of various other report generation tools.
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
 ### Cross-Cutting Concerns

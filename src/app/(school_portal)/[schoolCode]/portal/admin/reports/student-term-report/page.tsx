@@ -128,7 +128,7 @@ function StudentTermReportPageCore() {
         const data: ITerm[] = await res.json();
         setTerms(data.sort((a,b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()));
         setSelectedTerm(undefined); 
-      } catch (err: any) { message.error(err.message || 'Could not load terms.'); setTerms([]); }
+      } catch (err: any) { message.error(err.message || 'Could not load terms for the selected year.'); setTerms([]); }
       finally { setLoadingTerms(false); }
     };
     fetchTerms();
