@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Empty, Card, Row, Col } from 'antd';
-import { BarChartOutlined, SolutionOutlined } from '@ant-design/icons';
+import { BarChartOutlined, SolutionOutlined, TeamOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -22,7 +22,12 @@ export default function AdminReportsPage({ params }: AdminReportsPageProps) {
       link: `${basePortalPath}/student-term-report`, 
       description: 'Generate and view individual student performance reports for a specific term.' 
     },
-    // Add more report types here as they are developed
+    { 
+      title: 'Class Performance Report', 
+      icon: <TeamOutlined />,
+      link: `${basePortalPath}/class-term-report`, 
+      description: 'View the performance summary for all students in a selected class for a term.' 
+    },
   ];
 
   return (

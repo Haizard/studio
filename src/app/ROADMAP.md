@@ -77,6 +77,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Manage public website navigation links.
 - [x] **Admin Reports**:
     - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
+    - [x] **Class Performance Report**: View page for admins to see performance summary of all students in a class.
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
     - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments)

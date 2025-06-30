@@ -72,9 +72,9 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **School Settings**:
     - [x] Manage basic website settings (School Name, Logo, Tagline, Contact Info, Footer, Colors).
     - [x] Manage "About Us" page content using Rich Text Editor with HTML sanitization.
-    - [x] Manage public website navigation links.
 - [x] **Admin Reports**:
     - [x] **Student Term Report**: View page for admins to select student, academic year, term and generate a term performance report using weighted exam scores and grading scales. Includes chart.
+    - [x] **Class Performance Report**: View page for admins to see performance summary of all students in a class.
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
     - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments)
@@ -84,6 +84,10 @@ This document tracks the features implemented and planned for the Unified School
         - [x] UI for Fee Collection Summary Report (with filters and charts)
         - [x] API for Outstanding Balances Report
         - [x] UI for Outstanding Balances Report
+        - [x] Expense Report (API and UI)
+        - [x] Income Statement Report (UI)
+    - [x] Invoicing and receipts (API and UI)
+    - [x] Expense tracking (API and UI)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [ ] Member management (students, teachers)
