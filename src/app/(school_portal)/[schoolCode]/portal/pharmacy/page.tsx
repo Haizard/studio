@@ -19,7 +19,7 @@ export default function PharmacyDashboardPage({ params }: PharmacyDashboardPageP
       icon: <UserOutlined />, 
       link: `${basePortalPath}/records`, 
       description: "View and manage student allergies, conditions, and emergency contacts.",
-      comingSoon: true
+      comingSoon: false
     },
     { 
       title: 'Visit Log & Check-in', 

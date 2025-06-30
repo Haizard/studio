@@ -144,7 +144,16 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory & Reports</Link> },
           ]
         },
-        { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
+        { 
+          key: `${basePortalPath}/pharmacy`, 
+          icon: <MedicineBoxOutlined />, 
+          label: 'Pharmacy',
+          children: [
+            { key: `${basePortalPath}/pharmacy`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Overview</Link> },
+            { key: `${basePortalPath}/pharmacy/records`, icon: <IdcardOutlined />, label: <Link href={`${basePortalPath}/pharmacy/records`}>Health Records</Link> },
+            { key: `${basePortalPath}/pharmacy/inventory`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/pharmacy/inventory`}>Inventory</Link> },
+          ]
+        },
         { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> }
       );
     }
@@ -197,6 +206,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             label: 'Pharmacy',
             children: [
                 { key: `${basePortalPath}/pharmacy`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy Overview</Link> },
+                { key: `${basePortalPath}/pharmacy/records`, icon: <IdcardOutlined />, label: <Link href={`${basePortalPath}/pharmacy/records`}>Health Records</Link> },
                 { key: `${basePortalPath}/pharmacy/inventory`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/pharmacy/inventory`}>Inventory</Link> },
             ]
         }
@@ -291,6 +301,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/dormitory`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/inventory`)) {
         selectedKey = `/${schoolCode}/portal/pharmacy/inventory`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/records`)) {
+        selectedKey = `/${schoolCode}/portal/pharmacy/records`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy`)) {
         selectedKey = `/${schoolCode}/portal/pharmacy`;
     }
