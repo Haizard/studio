@@ -134,6 +134,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Admissions Page**: Information on admission process, forms, deadlines.
 - [x] **Contact Page**: Contact form, map, detailed contact information.
 - [x] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
+- [x] **Staff Directory**: Public listing of teaching staff (optional).
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -158,7 +159,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
 ### Public School Website
-- [ ] **Staff Directory**: Public listing of teaching staff (optional).
 - [ ] **Blog/Articles**: More generic content beyond news.
 
 ### Cross-Cutting Concerns

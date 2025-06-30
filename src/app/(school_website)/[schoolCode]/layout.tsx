@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HomeOutlined, InfoCircleOutlined, ReadOutlined, ContactsOutlined, CalendarOutlined, PictureOutlined, BookOutlined, SolutionOutlined } from '@ant-design/icons';
+import { HomeOutlined, InfoCircleOutlined, ReadOutlined, ContactsOutlined, CalendarOutlined, PictureOutlined, BookOutlined, SolutionOutlined, UsergroupAddOutlined } from '@ant-design/icons';
 import { getTenantConnection } from '@/lib/db';
 import WebsiteSettingsModel, { IWebsiteSettings } from '@/models/Tenant/WebsiteSettings';
 import mongoose from 'mongoose';
@@ -25,7 +25,7 @@ const getWebsiteSettingsData = async (schoolCode: string): Promise<Partial<IWebs
     
     let settings = await Settings.findOne().lean<IWebsiteSettings | null>();
     if (!settings) {
-      // Return minimal defaults if no settings are found, to prevent crashes
+      // Return minimal defaults if no settings are found
       return {
         schoolName: `${schoolCode.toUpperCase()} School (Setup Pending)`,
         logoUrl: `https://placehold.co/150x50.png?text=${schoolCode.toUpperCase()}`,
@@ -60,7 +60,8 @@ export default async function PublicWebsiteLayout({ children, params }: PublicWe
         { label: 'News', slug: '/news', icon: <ReadOutlined />, order: 4 },
         { label: 'Events', slug: '/events', icon: <CalendarOutlined />, order: 5 },
         { label: 'Gallery', slug: '/gallery', icon: <PictureOutlined />, order: 6 },
-        { label: 'Contact', slug: '/contact', icon: <ContactsOutlined />, order: 7 },
+        { label: 'Staff', slug: '/staff', icon: <UsergroupAddOutlined />, order: 7 },
+        { label: 'Contact', slug: '/contact', icon: <ContactsOutlined />, order: 8 },
       ];
 
   const pageTitle = settings.schoolName || `${schoolCode.toUpperCase()} High School`;
