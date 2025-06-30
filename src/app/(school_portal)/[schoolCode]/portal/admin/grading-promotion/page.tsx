@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Typography, Empty, Card, Row, Col } from 'antd';
+import { Typography, Empty, Card, Row, Col, Button } from 'antd';
 import { RocketOutlined, FileDoneOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
@@ -20,7 +20,7 @@ export default function GradingPromotionPage({ params }: GradingPromotionPagePro
       icon: <RocketOutlined />, 
       link: `${basePortalPath}/process`, 
       description: 'Run the promotion/repetition process for students based on their end-of-year results.',
-      comingSoon: true
+      comingSoon: false
     },
     { 
       title: 'Generate Transcripts', 
@@ -34,7 +34,7 @@ export default function GradingPromotionPage({ params }: GradingPromotionPagePro
   return (
     <div>
       <Title level={2} className="mb-6">
-        <RocketOutlined className="mr-2" /> Grading &amp; Promotion
+        <RocketOutlined className="mr-2" /> Grading & Promotion
       </Title>
       <Paragraph className="mb-8">
         Manage end-of-year student promotions, repetitions, and generate final academic transcripts.
@@ -51,10 +51,10 @@ export default function GradingPromotionPage({ params }: GradingPromotionPagePro
                     <Title level={4}>{section.title}</Title>
                     <Paragraph type="secondary">{section.description}</Paragraph>
                     {section.comingSoon ? (
-                        <div className="text-orange-500 font-semibold">Coming Soon</div>
+                        <Button type="primary" disabled>Coming Soon</Button>
                     ) : (
                          <Link href={section.link}>
-                            <button className="text-primary hover:underline">Proceed</button>
+                            <Button type="primary">Proceed</Button>
                         </Link>
                     )}
                     </div>
@@ -62,7 +62,7 @@ export default function GradingPromotionPage({ params }: GradingPromotionPagePro
             </Col>
             ))}
         </Row>
-      <Empty description="Grading & Promotion module coming soon!" className="mt-8" />
+      <Empty description="Grading & Promotion module under development. Final promotion logic is pending." className="mt-8" />
     </div>
   );
 }
