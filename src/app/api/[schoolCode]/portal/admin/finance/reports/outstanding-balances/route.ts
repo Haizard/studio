@@ -68,18 +68,8 @@ export async function GET(
     }
     if (studentIdParam && mongoose.Types.ObjectId.isValid(studentIdParam)) {
       // If a specific studentId is provided, override other student filters
-      // Assuming studentIdParam is the User ID, fetch the student profile.
-      const studentProfile = await Student.findOne({ userId: new mongoose.Types.ObjectId(studentIdParam), isActive: true })
-        .populate<{ currentClassId?: IClass }>('currentClassId', 'name level')
-        .populate<{ userId: ITenantUser }>('userId', 'firstName lastName')
-        .lean();
-      if (!studentProfile) {
-        return NextResponse.json({ error: 'Specified student not found or not active.' }, { status: 404 });
-      }
-      // @ts-ignore
-      studentQuery._id = studentProfile._id; // Query by student profile ID directly
-      delete studentQuery.currentAcademicYearId; // Not needed if querying by specific student profile
-      delete studentQuery.currentClassId;
+      // This assumes studentIdParam is the User ID.
+      studentQuery.userId = new mongoose.Types.ObjectId(studentIdParam);
     }
 
     const students = await Student.find(studentQuery)
@@ -123,7 +113,7 @@ export async function GET(
       const outstandingBalance = totalFeesDue - totalFeesPaid;
 
       studentBalances.push({
-        studentId: student.userId._id.toString(), // Use User ID for consistency if payments are by User ID
+        studentId: student.userId._id.toString(), // Use User ID for consistency
         studentName: `${student.userId.firstName} ${student.userId.lastName}`,
         studentIdNumber: student.studentIdNumber,
         className: student.currentClassId?.name,

@@ -94,7 +94,7 @@ function OutstandingBalancesReportCore() {
             const studentsData: (IStudent & { userId: ITenantUser })[] = await studentsRes.json();
             
             setClasses(classesData.sort((a,b) => a.name.localeCompare(b.name)));
-            setStudents(studentsData.sort((a,b) => a.userId.lastName.localeCompare(b.userId.lastName)));
+            setStudents(studentsData.sort((a,b) => (a.userId?.lastName || '').localeCompare(b.userId?.lastName || '')));
 
         } catch (err: any) { message.error(err.message || 'Could not load classes or students.'); }
         finally {
@@ -134,7 +134,7 @@ function OutstandingBalancesReportCore() {
   const columns = [
     { title: 'Student Name', dataIndex: 'studentName', key: 'studentName', sorter: (a: StudentBalanceClient, b: StudentBalanceClient) => a.studentName.localeCompare(b.studentName) },
     { title: 'Student ID', dataIndex: 'studentIdNumber', key: 'studentIdNumber', sorter: (a: StudentBalanceClient, b: StudentBalanceClient) => (a.studentIdNumber || '').localeCompare(b.studentIdNumber || '') },
-    { title: 'Class', dataIndex: 'className', key: 'className', render: (text: string, record: StudentBalanceClient) => record.className ? `${record.className} (${record.classLevel})` : 'N/A' },
+    { title: 'Class', dataIndex: 'className', key: 'className', render: (text: string, record: StudentBalanceClient) => record.className ? `${record.className} ${record.classLevel ? `(${record.classLevel})` : ''}` : 'N/A' },
     { title: 'Total Fees Due', dataIndex: 'totalFeesDue', key: 'totalFeesDue', render: (val: number) => `TZS ${val.toLocaleString()}`, sorter: (a: StudentBalanceClient, b: StudentBalanceClient) => a.totalFeesDue - b.totalFeesDue },
     { title: 'Total Fees Paid', dataIndex: 'totalFeesPaid', key: 'totalFeesPaid', render: (val: number) => `TZS ${val.toLocaleString()}`, sorter: (a: StudentBalanceClient, b: StudentBalanceClient) => a.totalFeesPaid - b.totalFeesPaid },
     { 
