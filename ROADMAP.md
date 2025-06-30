@@ -81,7 +81,8 @@ This document tracks the features implemented and planned for the Unified School
         - [x] Basic Page and Navigation Created
         - [x] API for Fee Collection Summary Report
         - [x] UI for Fee Collection Summary Report (with filters and charts)
-        - [ ] API for Outstanding Balances Report (In Progress)
+        - [x] API for Outstanding Balances Report
+        - [x] UI for Outstanding Balances Report
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management (students, teachers)**: View list of potential members.
@@ -133,7 +134,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Finance Management**:
     - [ ] Invoicing and receipts
     - [ ] Expense tracking
-    - [ ] Outstanding Balances Report (UI)
     - [ ] Income Statement Report (UI)
     - [ ] Expense Report (UI)
 - [ ] **Pharmacy/Health Management**:
@@ -173,5 +173,6 @@ Let me know what you'd like to tackle next from the "Planned/Pending Features" s
     
 
     
+
 
 
