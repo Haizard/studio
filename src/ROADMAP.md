@@ -89,14 +89,13 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Book borrowing and returns**: Handle circulation desk operations.
     - [x] **Fine management for overdue books**: Integrated into the circulation workflow.
     - [x] **Transaction History**: View all borrowing and return transactions with filters.
-    - [x] Library inventory and reporting
+    - [x] **Library inventory and reporting**: Dashboard with key library statistics.
 - [x] **Dormitory Management**:
-    - [x] Placeholder Page and Navigation Created
-    - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)
-    - [x] Student room allocation (Backend APIs and UI for allocation created)
+    - [x] **Dormitory/Room setup**: Models, APIs, and UI for Dormitory & Room Management.
+    - [x] **Student room allocation**: Backend APIs and UI for student assignment to rooms.
 - [x] **Grading & Promotion**:
     - [x] Placeholder Page and Navigation Created
-- [ ] **Pharmacy/Health Management**:
+- [x] **Pharmacy/Health Management**:
     - [x] Placeholder Page and Navigation Created
     - [ ] Check-in/Check-out
 
@@ -141,7 +140,7 @@ This document tracks the features implemented and planned for the Unified School
 
 ### School Portal - Admin Section
 - [ ] **Finance Management**:
-    - [ ] Invoicing and receipts
+    - [ ] Invoicing and receipts (Data models created)
     - [ ] Expense tracking
     - [ ] Income Statement Report (UI)
     - [ ] Expense Report (UI)

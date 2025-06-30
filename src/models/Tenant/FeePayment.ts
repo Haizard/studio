@@ -5,7 +5,8 @@ export type PaymentMethod = 'Cash' | 'Bank Transfer' | 'Mobile Money' | 'Cheque'
 
 export interface IFeePayment extends Document {
   studentId: Types.ObjectId; // Ref to User (Student)
-  feeItemId: Types.ObjectId; // Ref to FeeItem
+  feeItemId: Types.ObjectId; // Ref to FeeItem. Can be a general payment not tied to one item but linked for reporting.
+  invoiceId?: Types.ObjectId; // Optional: Ref to the invoice this payment is for.
   academicYearId: Types.ObjectId; // Ref to AcademicYear (context of the fee item)
   termId?: Types.ObjectId; // Ref to Term (optional, context of the fee item)
   
@@ -24,6 +25,7 @@ const FeePaymentSchema: Schema = new Schema(
   {
     studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     feeItemId: { type: Schema.Types.ObjectId, ref: 'FeeItem', required: true },
+    invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice' }, // Added invoice reference
     academicYearId: { type: Schema.Types.ObjectId, ref: 'AcademicYear', required: true },
     termId: { type: Schema.Types.ObjectId, ref: 'Term' },
     
@@ -45,5 +47,6 @@ const FeePaymentSchema: Schema = new Schema(
 FeePaymentSchema.index({ studentId: 1, academicYearId: 1, termId: 1 });
 FeePaymentSchema.index({ feeItemId: 1, paymentDate: -1 });
 FeePaymentSchema.index({ paymentDate: -1 });
+FeePaymentSchema.index({ invoiceId: 1 }); // Added index for invoiceId
 
 export default mongoose.models.FeePayment || mongoose.model<IFeePayment>('FeePayment', FeePaymentSchema);
