@@ -53,7 +53,7 @@ export default function BookCatalogPage({ params }: BookCatalogPageProps) {
         addedByName: book.addedById && typeof book.addedById === 'object' ? (book.addedById as ITenantUser).username : 'N/A'
       })));
 
-      // Extract unique genres for filter if not already filtering by genre
+      // Extract unique genres for filter dropdown if not already filtering by genre
       if (!filterGenre) {
         const uniqueGenres = Array.from(new Set(data.flatMap(book => book.genre || []))).sort();
         setAllGenres(uniqueGenres);
@@ -209,7 +209,7 @@ export default function BookCatalogPage({ params }: BookCatalogPageProps) {
             </Select>
         </Col>
          <Col xs={24} sm={12} md={4}>
-            <Button onClick={() => { setSearchTerm(''); setFilterGenre(undefined); fetchBooks();}}>Clear Filters</Button>
+            <Button onClick={() => { setSearchTerm(''); setFilterGenre(undefined);}}>Clear Filters</Button>
         </Col>
       </Row>
 
