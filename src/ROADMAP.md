@@ -70,6 +70,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **News Article Management**: CRUD operations for news articles (title, slug, content, images, etc.). Includes AI summary & content generation.
     - [x] **Event Management**: CRUD operations for school events (details, dates, images, etc.).
     - [x] **Gallery Management**: CRUD operations for gallery images (upload, title, album, tags).
+    - [x] **Blog/Articles Management**: CRUD operations for blog posts.
 - [x] **School Settings**:
     - [x] Manage basic website settings (School Name, Logo, Tagline, Contact Info, Footer, Colors).
     - [x] Manage "About Us" page content using Rich Text Editor with HTML sanitization.
@@ -138,6 +139,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Homepage**: Basic placeholder structure.
 - [x] **News Listing Page**: Displays active news articles.
 - [x] **Single News Article Page**: Displays full content of a news article by slug.
+- [x] **Blog/Articles Page**: Displays active blog posts and single post pages.
 - [x] **Events Listing Page**: Displays active upcoming and past events.
 - [x] **Gallery Page**: Displays active gallery items, with album filtering.
 - [x] **About Us Page**: Displays content managed from School Settings (sanitized HTML).
@@ -145,6 +147,9 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Contact Page**: Contact form, map, detailed contact information.
 - [x] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
 - [x] **Staff Directory**: Public listing of teaching staff (optional).
+
+### VII. Cross-Cutting Concerns
+- [x] **Enhanced Security (Audit Trails)**: Backend service and logging for key actions (logins, user management).
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -154,14 +159,11 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Detailed Admin Reports**: Implementation of various other report generation tools.
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
-### Public School Website
-- [ ] **Blog/Articles**: More generic content beyond news.
-
 ### Cross-Cutting Concerns
 - [ ] **Notifications System**: In-app and email notifications for important events.
 - [ ] **Advanced Search & Filtering**: Across all major modules.
 - [ ] **Data Import/Export**: For key data like students, teachers, marks.
-- [ ] **Enhanced Security**: Password policies, session timeouts, audit trails.
+- [ ] **Enhanced Security (Other)**: Password policies, session timeouts.
 - [ ] **Accessibility (A11Y) improvements**.
 - [ ] **Mobile Responsiveness**: Thorough testing and refinement.
 - [ ] **Theming Customization**: Allow admins more control over portal and public site appearance beyond basic colors.

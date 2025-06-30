@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { ReadOutlined, CalendarOutlined, PictureOutlined, SettingOutlined } from '@ant-design/icons';
+import { ReadOutlined, CalendarOutlined, PictureOutlined, SettingOutlined, EditOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -17,6 +17,7 @@ export default function WebsiteManagementDashboardPage({ params }: WebsiteManage
 
   const managementSections = [
     { title: 'Manage News Articles', icon: <ReadOutlined />, link: `${basePortalPath}/news`, description: 'Create, edit, and publish school news.' },
+    { title: 'Manage Blog', icon: <EditOutlined />, link: `${basePortalPath}/blog`, description: 'Write and manage blog posts and articles.' },
     { title: 'Manage Events', icon: <CalendarOutlined />, link: `${basePortalPath}/events`, description: 'Add and update school events calendar.' },
     { title: 'Manage Gallery', icon: <PictureOutlined />, link: `${basePortalPath}/gallery`, description: 'Upload and organize photos for the public gallery.' },
     { title: 'Website Settings', icon: <SettingOutlined />, link: `/${schoolCode}/portal/admin/settings`, description: 'Configure general website appearance and information.' },

@@ -129,6 +129,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           children: [
             { key: `${basePortalPath}/admin/website-management`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/website-management`}>Overview</Link> },
             { key: `${basePortalPath}/admin/website-management/news`, icon: <ReadOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/news`}>News</Link> },
+            { key: `${basePortalPath}/admin/website-management/blog`, icon: <EditOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/blog`}>Blog</Link> },
             { key: `${basePortalPath}/admin/website-management/events`, icon: <CalendarOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/events`}>Events</Link> },
             { key: `${basePortalPath}/admin/website-management/gallery`, icon: <PictureOutlined />, label: <Link href={`${basePortalPath}/admin/website-management/gallery`}>Gallery</Link> },
           ]
