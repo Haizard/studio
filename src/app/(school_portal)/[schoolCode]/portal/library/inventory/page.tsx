@@ -34,24 +34,22 @@ export default function LibraryInventoryPage({ params }: LibraryInventoryPagePro
     try {
       const [booksRes, transactionsRes] = await Promise.all([
         fetch(BOOKS_API),
-        fetch(TRANSACTIONS_API),
+        fetch(`${TRANSACTIONS_API}?isReturned=false`),
       ]);
 
       if (!booksRes.ok) throw new Error((await booksRes.json()).error || 'Failed to fetch books data');
       if (!transactionsRes.ok) throw new Error((await transactionsRes.json()).error || 'Failed to fetch transactions data');
       
       const booksData: IBook[] = await booksRes.json();
-      const transactionsData: IBookTransaction[] = await transactionsRes.json();
+      const activeTransactions: IBookTransaction[] = await transactionsRes.json();
 
       // Calculate stats
       const totalCopies = booksData.reduce((sum, book) => sum + (book.totalCopies || 0), 0);
       setTotalBooksCount(totalCopies);
       setUniqueTitlesCount(booksData.length);
+      setBorrowedBooksCount(activeTransactions.length);
 
-      const activeBorrows = transactionsData.filter(t => !t.isReturned);
-      setBorrowedBooksCount(activeBorrows.length);
-
-      const overdue = activeBorrows.filter(t => moment(t.dueDate).isBefore(moment(), 'day')).length;
+      const overdue = activeTransactions.filter(t => moment(t.dueDate).isBefore(moment(), 'day')).length;
       setOverdueBooksCount(overdue);
 
     } catch (err: any) {
@@ -125,7 +123,6 @@ export default function LibraryInventoryPage({ params }: LibraryInventoryPagePro
       <div className="mt-10">
         <Title level={4} className="mb-4">Further Reporting</Title>
         <Empty description="More detailed reports (e.g., by genre, most popular books, member borrowing patterns) will be available in future updates." />
-        {/* Placeholder for future charts or detailed tables */}
       </div>
     </div>
   );

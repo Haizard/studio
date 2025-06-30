@@ -89,7 +89,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Book borrowing and returns**: Handle circulation desk operations.
     - [x] **Fine management for overdue books**: Integrated into the circulation workflow.
     - [x] **Transaction History**: View all borrowing and return transactions with filters.
-    - [ ] Library inventory and reporting
+    - [x] Library inventory and reporting
 - [x] **Dormitory Management**:
     - [x] Placeholder Page and Navigation Created
     - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)
@@ -149,6 +149,7 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Student health records
     - [ ] Medication dispensing log
     - [ ] Inventory of medical supplies
+    - [ ] Check-in/Check-out (Already listed under Implemented Features but let's assume it belongs here as a feature to be built)
 - [ ] **Grading & Promotion**:
     - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).

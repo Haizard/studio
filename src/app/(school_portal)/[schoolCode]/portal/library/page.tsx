@@ -1,7 +1,8 @@
+
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { ReadOutlined, BookOutlined, UsergroupAddOutlined, ContainerOutlined, IssuesCloseOutlined, TeamOutlined as MembersIcon, HistoryOutlined, PieChartOutlined } from '@ant-design/icons';
+import { ReadOutlined, BookOutlined, TeamOutlined as MembersIcon, ContainerOutlined, HistoryOutlined, PieChartOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
