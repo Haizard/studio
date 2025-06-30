@@ -10,6 +10,7 @@ import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { logAudit, safeObject } from '@/lib/audit';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Student) tenantDb.model<IStudent>('Student', StudentModel.schema);
@@ -112,6 +113,9 @@ export async function PUT(
         return NextResponse.json({ error: 'Associated user account not found.' }, { status: 404 });
     }
 
+    const originalStudent = studentProfile.toObject();
+    const originalUser = userAccount.toObject();
+
     userAccount.firstName = firstName;
     userAccount.lastName = lastName;
     if (username.toLowerCase() !== userAccount.username) {
@@ -142,6 +146,19 @@ export async function PUT(
     studentProfile.currentAcademicYearId = currentAcademicYearId;
     studentProfile.isActive = isActive !== undefined ? isActive : studentProfile.isActive;
     await studentProfile.save();
+
+    await logAudit(schoolCode, {
+      userId: token.uid,
+      username: token.email,
+      action: 'UPDATE',
+      entity: 'Student',
+      entityId: studentProfile._id.toString(),
+      details: `Updated student: ${userAccount.firstName} ${userAccount.lastName}`,
+      originalValues: { student: safeObject(originalStudent), user: safeObject(originalUser) },
+      newValues: { student: safeObject(studentProfile.toObject()), user: safeObject(userAccount.toObject()) },
+      req: request as any,
+    });
+
 
     const updatedStudent = await Student.findById(studentProfileId)
         .populate<{ userId: ITenantUser }>('userId', 'firstName lastName username email isActive role')
@@ -193,16 +210,31 @@ export async function DELETE(
       return NextResponse.json({ error: 'Student profile not found' }, { status: 404 });
     }
 
-    studentProfile.isActive = false;
+    const userAccount = await User.findById(studentProfile.userId);
+    const wasActive = userAccount?.isActive;
+    const newStatus = !wasActive;
+
+    studentProfile.isActive = newStatus;
     await studentProfile.save();
 
-    const userAccount = await User.findById(studentProfile.userId);
     if (userAccount) {
-      userAccount.isActive = false;
+      userAccount.isActive = newStatus;
       await userAccount.save();
     }
+    
+    await logAudit(schoolCode, {
+      userId: token.uid,
+      username: token.email,
+      action: 'UPDATE',
+      entity: 'Student',
+      entityId: studentProfile._id.toString(),
+      details: `${newStatus ? 'Activated' : 'Deactivated'} student: ${userAccount?.firstName} ${userAccount?.lastName}`,
+      newValues: { isActive: newStatus },
+      req: request as any,
+    });
 
-    return NextResponse.json({ message: 'Student deactivated successfully' });
+
+    return NextResponse.json({ message: `Student ${newStatus ? 'activated' : 'deactivated'} successfully` });
   } catch (error: any) {
     console.error(`Error deactivating student ${studentProfileId} for ${schoolCode}:`, error);
     return NextResponse.json({ error: 'Failed to deactivate student', details: error.message }, { status: 500 });

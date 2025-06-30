@@ -5,6 +5,7 @@ import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import { logAudit } from '@/lib/audit';
 
 // Helper to ensure models are registered on the tenant connection
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
@@ -106,6 +107,18 @@ export async function POST(
     const userResponse = newUser.toObject();
     // @ts-ignore
     delete userResponse.passwordHash; // Don't send hash back
+    
+    await logAudit(schoolCode, {
+      userId: token.uid,
+      username: token.email,
+      action: 'CREATE',
+      entity: 'User',
+      entityId: newUser._id.toString(),
+      details: `Created new user: ${newUser.username} with role ${newUser.role}`,
+      newValues: userResponse,
+      req: request as any,
+    });
+
 
     return NextResponse.json(userResponse, { status: 201 });
   } catch (error: any) {

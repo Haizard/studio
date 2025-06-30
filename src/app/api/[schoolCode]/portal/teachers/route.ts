@@ -9,6 +9,7 @@ import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import { getToken } from 'next-auth/jwt';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import { logAudit, safeObject } from '@/lib/audit';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Teacher) tenantDb.model<ITeacher>('Teacher', TeacherModel.schema);
@@ -128,6 +129,17 @@ export async function POST(
     if (populatedTeacher && populatedTeacher.userId && (populatedTeacher.userId as any).passwordHash) {
       delete (populatedTeacher.userId as any).passwordHash;
     }
+
+    await logAudit(schoolCode, {
+      userId: token.uid,
+      username: token.email,
+      action: 'CREATE',
+      entity: 'Teacher',
+      entityId: newTeacher._id.toString(),
+      details: `Created new teacher: ${newUser.firstName} ${newUser.lastName} (${newUser.username})`,
+      newValues: safeObject(populatedTeacher),
+      req: request as any,
+    });
 
     return NextResponse.json(populatedTeacher, { status: 201 });
 

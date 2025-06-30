@@ -9,6 +9,7 @@ import AcademicYearModel, { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { logAudit, safeObject } from '@/lib/audit';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.Teacher) tenantDb.model<ITeacher>('Teacher', TeacherModel.schema);
@@ -23,26 +24,21 @@ export async function GET(
   { params }: { params: { schoolCode: string; teacherProfileId: string } }
 ) {
   const { schoolCode, teacherProfileId } = params;
-  console.log(`[API GET /teachers/${teacherProfileId}] School: ${schoolCode}, ID: ${teacherProfileId}`);
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token || (token.role !== 'admin' && token.role !== 'superadmin') || (token.role === 'admin' && token.schoolCode !== schoolCode)) {
     if (!(token?.role === 'superadmin' && schoolCode)) {
-      console.warn(`[API GET /teachers/${teacherProfileId}] Unauthorized access. Token role: ${token?.role}, school: ${token?.schoolCode}`);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
   }
 
   if (!mongoose.Types.ObjectId.isValid(teacherProfileId)) {
-    console.error(`[API GET /teachers/${teacherProfileId}] Invalid Teacher Profile ID: ${teacherProfileId}`);
     return NextResponse.json({ error: 'Invalid Teacher Profile ID' }, { status: 400 });
   }
 
   try {
-    console.log(`[API GET /teachers/${teacherProfileId}] Attempting tenant DB connection for ${schoolCode}`);
     const tenantDb = await getTenantConnection(schoolCode);
     await ensureTenantModelsRegistered(tenantDb);
-    console.log(`[API GET /teachers/${teacherProfileId}] Models registered. Querying for teacher...`);
     const Teacher = tenantDb.models.Teacher as mongoose.Model<ITeacher>;
 
     const teacher = await Teacher.findById(teacherProfileId)
@@ -65,7 +61,6 @@ export async function GET(
       })
       .lean();
       
-    console.log(`[API GET /teachers/${teacherProfileId}] Query result: ${teacher ? 'Teacher found' : 'Teacher NOT found'}`);
     if (!teacher) {
       return NextResponse.json({ error: 'Teacher not found' }, { status: 404 });
     }
@@ -126,6 +121,9 @@ export async function PUT(
     if (!userAccount) {
         return NextResponse.json({ error: 'Associated user account not found.' }, { status: 404 });
     }
+    
+    const originalTeacher = teacherProfile.toObject();
+    const originalUser = userAccount.toObject();
 
     userAccount.firstName = firstName;
     userAccount.lastName = lastName;
@@ -160,6 +158,18 @@ export async function PUT(
     teacherProfile.isClassTeacherOf = isClassTeacherOf || undefined;
     teacherProfile.isActive = isActive !== undefined ? isActive : teacherProfile.isActive;
     await teacherProfile.save();
+
+    await logAudit(schoolCode, {
+      userId: token.uid,
+      username: token.email,
+      action: 'UPDATE',
+      entity: 'Teacher',
+      entityId: teacherProfile._id.toString(),
+      details: `Updated teacher: ${userAccount.firstName} ${userAccount.lastName}`,
+      originalValues: { teacher: safeObject(originalTeacher), user: safeObject(originalUser) },
+      newValues: { teacher: safeObject(teacherProfile.toObject()), user: safeObject(userAccount.toObject()) },
+      req: request as any,
+    });
 
     const updatedTeacher = await Teacher.findById(teacherProfileId)
         .populate<{ userId: ITenantUser }>('userId', 'firstName lastName username email isActive role')
@@ -211,16 +221,30 @@ export async function DELETE(
     if (!teacherProfile) {
       return NextResponse.json({ error: 'Teacher profile not found' }, { status: 404 });
     }
+    const userAccount = await User.findById(teacherProfile.userId);
+    const wasActive = userAccount?.isActive;
+    const newStatus = !wasActive;
 
-    teacherProfile.isActive = false;
+    teacherProfile.isActive = newStatus;
     await teacherProfile.save();
 
-    const userAccount = await User.findById(teacherProfile.userId);
     if (userAccount) {
-      userAccount.isActive = false;
+      userAccount.isActive = newStatus;
       await userAccount.save();
     }
-    return NextResponse.json({ message: 'Teacher deactivated successfully' });
+    
+    await logAudit(schoolCode, {
+      userId: token.uid,
+      username: token.email,
+      action: 'UPDATE',
+      entity: 'Teacher',
+      entityId: teacherProfile._id.toString(),
+      details: `${newStatus ? 'Activated' : 'Deactivated'} teacher: ${userAccount?.firstName} ${userAccount?.lastName}`,
+      newValues: { isActive: newStatus },
+      req: request as any,
+    });
+
+    return NextResponse.json({ message: `Teacher ${newStatus ? 'activated' : 'deactivated'} successfully` });
   } catch (error: any) {
     console.error(`Error deactivating teacher ${teacherProfileId} for ${schoolCode}:`, error);
     return NextResponse.json({ error: 'Failed to deactivate teacher', details: error.message, stack: error.stack }, { status: 500 });

@@ -6,6 +6,9 @@ import SuperAdminUserModel, { ISuperAdminUser } from '@/models/SuperAdmin/SuperA
 // Import the schema definition directly
 import { TenantUserSchemaDefinition, ITenantUser } from '@/models/Tenant/User';
 import bcrypt from 'bcryptjs';
+import { logAudit } from './audit';
+import type { NextRequest } from 'next/server';
+
 
 // Extend NextAuthUser to include role and potentially schoolCode
 interface CustomUser extends NextAuthUser {
@@ -28,37 +31,53 @@ export const authOptions: NextAuthOptions = {
         if (!credentials) return null;
 
         const { email, password, schoolCode } = credentials;
+        const reqObject = req as NextRequest;
 
         try {
           if (schoolCode && schoolCode.trim() !== '') {
-            // Attempt Tenant Login
-            const tenantDb = await getTenantConnection(schoolCode.trim().toLowerCase());
-            // Ensure model is registered on this specific connection
+            const tenantSchoolCode = schoolCode.trim().toLowerCase();
+            const tenantDb = await getTenantConnection(tenantSchoolCode);
             const TenantUserOnDB = tenantDb.models.User || tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
             const user = await TenantUserOnDB.findOne({ email: email.toLowerCase() }).lean();
 
             if (user && user.passwordHash) {
               const passwordMatch = await bcrypt.compare(password, user.passwordHash);
               if (passwordMatch) {
+                await logAudit(tenantSchoolCode, {
+                  userId: user._id,
+                  username: user.username,
+                  action: 'LOGIN_SUCCESS',
+                  entity: 'User',
+                  details: 'User successfully logged in.',
+                  req: reqObject,
+                });
                 return {
                   id: user._id.toString(),
                   email: user.email,
                   name: `${user.firstName} ${user.lastName}`,
                   role: user.role,
-                  schoolCode: schoolCode.trim().toLowerCase(),
+                  schoolCode: tenantSchoolCode,
                 } as CustomUser;
+              } else {
+                 await logAudit(tenantSchoolCode, {
+                    username: email.toLowerCase(),
+                    action: 'LOGIN_FAIL',
+                    entity: 'User',
+                    details: 'Failed login attempt (invalid password).',
+                    req: reqObject,
+                });
               }
             }
           } else {
             // Attempt SuperAdmin Login
             const superAdminDbInstance = await connectToSuperAdminDB();
-            // Ensure model is registered on this specific connection
             const SuperAdminUserOnDB = superAdminDbInstance.models.SuperAdminUser || superAdminDbInstance.model<ISuperAdminUser>('SuperAdminUser', SuperAdminUserModel.schema);
             const user = await SuperAdminUserOnDB.findOne({ email: email.toLowerCase() }).lean();
 
             if (user && user.passwordHash) {
               const passwordMatch = await bcrypt.compare(password, user.passwordHash);
               if (passwordMatch) {
+                // SuperAdmin login success logging could be implemented here if a central audit log is desired
                 return {
                   id: user._id.toString(),
                   email: user.email,
@@ -70,53 +89,17 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (error: any) {
           console.error("Authorization database error:", error.message);
-          // Fall through to hardcoded credentials if DB operations fail (e.g., URI not set, school not found)
         }
-
-        // Fallback to placeholder logic if DB auth fails or no user found
-        // IMPORTANT: For production, remove these or secure them properly.
-        // These are for development without needing a fully seeded DB initially.
-        // Ensure placeholder passwords would be hashed in a real scenario or only use DB.
-        const placeholderPassword = "password"; // Standard placeholder password
-
-        if (email === 'admin@example.com' && password === placeholderPassword && (!schoolCode || schoolCode.trim() === '')) {
-          console.warn("Using SuperAdmin placeholder login for admin@example.com");
-          return {
-            id: 'superadmin-placeholder-1',
-            email: 'admin@example.com',
-            name: 'Super Admin (Placeholder)',
-            role: 'superadmin',
-          } as CustomUser;
-        }
-        if (email === 'teacher@schoola.com' && password === placeholderPassword && schoolCode?.toLowerCase() === 'scha') {
-          console.warn("Using Tenant placeholder login for teacher@schoola.com (SCHA)");
-          return {
-            id: 'teacher-placeholder-1-scha',
-            email: 'teacher@schoola.com',
-            name: 'SchoolA Teacher (Placeholder)',
-            role: 'teacher',
-            schoolCode: 'scha',
-          } as CustomUser;
-        }
-         if (email === 'admin@schoola.com' && password === placeholderPassword && schoolCode?.toLowerCase() === 'scha') {
-          console.warn("Using Tenant Admin placeholder login for admin@schoola.com (SCHA)");
-          return {
-            id: 'admin-scha-placeholder-1',
-            email: 'admin@schoola.com',
-            name: 'SchoolA Admin (Placeholder)',
-            role: 'admin',
-            schoolCode: 'scha',
-          } as CustomUser;
-        }
-        if (email === 'student@schoolb.com' && password === placeholderPassword && schoolCode?.toLowerCase() === 'schb') {
-          console.warn("Using Tenant placeholder login for student@schoolb.com (SCHB)");
-          return {
-            id: 'student-placeholder-1-schb',
-            email: 'student@schoolb.com',
-            name: 'SchoolB Student (Placeholder)',
-            role: 'student',
-            schoolCode: 'schb',
-          } as CustomUser;
+        
+        // Log final failed attempt if user was not found for a specific tenant
+        if (schoolCode) {
+            await logAudit(schoolCode.trim().toLowerCase(), {
+                username: email.toLowerCase(),
+                action: 'LOGIN_FAIL',
+                entity: 'User',
+                details: 'Failed login attempt (user not found or other error).',
+                req: reqObject,
+            });
         }
         
         return null; // Authentication failed
@@ -132,8 +115,8 @@ export const authOptions: NextAuthOptions = {
         const customUser = user as CustomUser;
         token.uid = customUser.id;
         token.role = customUser.role;
-        token.schoolCode = customUser.schoolCode; // This could be undefined for superadmin
-        token.email = customUser.email; // Ensure email and name are passed too
+        token.schoolCode = customUser.schoolCode; 
+        token.email = customUser.email;
         token.name = customUser.name;
       }
       return token;
@@ -152,8 +135,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/login',
-    // error: '/auth/error', // Custom error handling page for NextAuth errors
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development', // Enable debug logs in development
+  debug: process.env.NODE_ENV === 'development',
 };
