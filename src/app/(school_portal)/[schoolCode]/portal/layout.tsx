@@ -19,7 +19,7 @@ import {
   DesktopOutlined, 
   CalendarOutlined, 
   UnorderedListOutlined, 
-  AppstoreAddOutlined,
+  AppstoreOutlined,
   ScheduleOutlined as TimetableIcon,
   FileTextOutlined,
   UsergroupAddOutlined, 
@@ -94,7 +94,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
                 { key: `${basePortalPath}/admin/academics/terms`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/admin/academics/terms`}>Terms</Link> },
                 { key: `${basePortalPath}/admin/academics/subjects`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/admin/academics/subjects`}>Subjects</Link> },
                 { key: `${basePortalPath}/admin/academics/classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/academics/classes`}>Classes</Link> },
-                { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreAddOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
+                { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
                 { key: `${basePortalPath}/admin/academics/timetables`, icon: <ProjectOutlined />, label: <Link href={`${basePortalPath}/admin/academics/timetables`}>Timetables</Link> },
                 { key: `${basePortalPath}/admin/academics/grading-scales`, icon: <PercentageOutlined />, label: <Link href={`${basePortalPath}/admin/academics/grading-scales`}>Grading Scales</Link> },
                 { key: `${basePortalPath}/admin/academics/teacher-assignments`, icon: <SlidersOutlined />, label: <Link href={`${basePortalPath}/admin/academics/teacher-assignments`}>Teacher Assignments</Link> },
@@ -272,6 +272,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         if (pathname.includes('/circulation')) selectedKey = `/${schoolCode}/portal/library/circulation`;
         if (pathname.includes('/transactions')) selectedKey = `/${schoolCode}/portal/library/transactions`;
         if (pathname.includes('/inventory')) selectedKey = `/${schoolCode}/portal/library/inventory`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/dormitory/`)){
+        selectedKey = `/${schoolCode}/portal/dormitory`;
     }
   }
   openKeys = activeKeysResult.open || [];
@@ -314,6 +316,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
              title = `Class Roster`; 
         } else if (prevSegment === 'timetables' && nextSegment === 'periods') {
              title = 'Manage Periods';
+        } else if (prevSegment === 'dormitory' && nextSegment === 'rooms') {
+            title = 'Manage Rooms';
         }
         else {
             title = "Details"; 

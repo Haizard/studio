@@ -1,11 +1,10 @@
-
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Table, Modal, Form, Input, Select, message, Tag, Space, Spin, Popconfirm, InputNumber, Row, Col } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, HomeOutlined, ManOutlined, WomanOutlined, AppstoreOutlined } from '@ant-design/icons';
 import type { IDormitory } from '@/models/Tenant/Dormitory';
 import type { ITenantUser } from '@/models/Tenant/User';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -139,10 +138,9 @@ export default function DormitoryPage({ params }: DormitoryPageProps) {
       key: 'actions',
       render: (_: any, record: DormitoryDataType) => (
         <Space>
-           {/* Future link to a page for managing rooms in this dormitory */}
-          {/* <Link href={`/${schoolCode}/portal/dormitory/${record._id}/rooms`}>
+          <Link href={`/${schoolCode}/portal/dormitory/${record._id}/rooms`}>
              <Button icon={<AppstoreOutlined />}>Manage Rooms</Button>
-          </Link> */}
+          </Link>
           <Button icon={<EditOutlined />} onClick={() => handleEditDormitory(record)}>Edit</Button>
           <Popconfirm
             title="Delete this dormitory?"
