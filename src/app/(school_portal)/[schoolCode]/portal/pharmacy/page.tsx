@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
@@ -26,7 +25,7 @@ export default function PharmacyDashboardPage({ params }: PharmacyDashboardPageP
       icon: <HistoryOutlined />, 
       link: `${basePortalPath}/visits`,
       description: 'Log new student visits to the pharmacy and view past visit history.',
-      comingSoon: true
+      comingSoon: false
     },
     { 
       title: 'Medication Inventory', 

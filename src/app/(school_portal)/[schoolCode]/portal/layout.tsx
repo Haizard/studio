@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -151,6 +150,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           children: [
             { key: `${basePortalPath}/pharmacy`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Overview</Link> },
             { key: `${basePortalPath}/pharmacy/records`, icon: <IdcardOutlined />, label: <Link href={`${basePortalPath}/pharmacy/records`}>Health Records</Link> },
+            { key: `${basePortalPath}/pharmacy/visits`, icon: <HistoryOutlined />, label: <Link href={`${basePortalPath}/pharmacy/visits`}>Visit Log</Link> },
             { key: `${basePortalPath}/pharmacy/inventory`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/pharmacy/inventory`}>Inventory</Link> },
           ]
         },
@@ -207,6 +207,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             children: [
                 { key: `${basePortalPath}/pharmacy`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy Overview</Link> },
                 { key: `${basePortalPath}/pharmacy/records`, icon: <IdcardOutlined />, label: <Link href={`${basePortalPath}/pharmacy/records`}>Health Records</Link> },
+                { key: `${basePortalPath}/pharmacy/visits`, icon: <HistoryOutlined />, label: <Link href={`${basePortalPath}/pharmacy/visits`}>Visit Log</Link> },
                 { key: `${basePortalPath}/pharmacy/inventory`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/pharmacy/inventory`}>Inventory</Link> },
             ]
         }
@@ -303,6 +304,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/pharmacy/inventory`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/records`)) {
         selectedKey = `/${schoolCode}/portal/pharmacy/records`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/visits`)) {
+        selectedKey = `/${schoolCode}/portal/pharmacy/visits`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy`)) {
         selectedKey = `/${schoolCode}/portal/pharmacy`;
     }
@@ -348,6 +351,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
              title = 'Manage Periods';
         } else if (prevSegment === 'dormitory' && nextSegment === 'rooms') {
             title = 'Manage Rooms';
+        } else if (prevSegment === 'visits' && mongoose.Types.ObjectId.isValid(snippet)) {
+            title = 'Manage Visit';
         }
         else {
             title = "Details"; 

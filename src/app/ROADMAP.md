@@ -105,7 +105,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
     - [x] **Inventory of medical supplies (CRUD UI)**
     - [x] **Student health records (View/Edit UI)**
-
+    - [x] **Check-in/Check-out workflow**
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -148,8 +148,7 @@ This document tracks the features implemented and planned for the Unified School
 
 ### School Portal - Admin Section
 - [ ] **Pharmacy/Health Management**:
-    - [ ] Medication dispensing log (View/Search UI)
-    - [ ] Check-in/Check-out workflow
+    - [ ] Medication dispensing log
 - [ ] **Grading & Promotion**:
     - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
