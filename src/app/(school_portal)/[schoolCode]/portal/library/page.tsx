@@ -41,16 +41,10 @@ export default function LibraryDashboardPage({ params }: LibraryPageProps) {
       description: 'View all book borrowing and return records.'
     },
      { 
-      title: 'Inventory &amp; Reports', 
+      title: 'Inventory & Reports', 
       icon: <PieChartOutlined />, 
       link: `${basePortalPath}/inventory`, 
       description: 'View library statistics, inventory summaries, and generate reports.' 
-    },
-    { 
-      title: 'Fine Management', 
-      icon: <IssuesCloseOutlined />, 
-      link: `${basePortalPath}/transactions`, // Fines are managed via transactions page now
-      description: 'Track and manage fines for overdue or damaged books via transaction history.' 
     },
   ];
 
@@ -80,6 +74,3 @@ export default function LibraryDashboardPage({ params }: LibraryPageProps) {
     </div>
   );
 }
-
-    
-    

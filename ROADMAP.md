@@ -92,12 +92,15 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Fine management for overdue books (Model & API Update)**
     - [x] **UI for Fine Management on Transaction History page**
     - [x] **Library inventory and reporting** (Initial statistics page)
-- [x] **Grading & Promotion**:
+- [ ] **Grading & Promotion**:
     - [x] Placeholder Page and Navigation Created
-- [x] **Pharmacy/Health Management**:
+- [ ] **Pharmacy/Health Management**:
     - [x] Placeholder Page and Navigation Created
-- [x] **Dormitory Management**:
+- [ ] **Dormitory Management**:
     - [x] Placeholder Page and Navigation Created
+    - [x] Dormitory/Room setup (In Progress: Models and Dormitory API created)
+    - [ ] Student room allocation
+    - [ ] Check-in/Check-out
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -148,10 +151,6 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Student health records
     - [ ] Medication dispensing log
     - [ ] Inventory of medical supplies
-- [ ] **Dormitory Management**:
-    - [ ] Dormitory/Room setup
-    - [ ] Student room allocation
-    - [ ] Check-in/Check-out
 - [ ] **Grading & Promotion**:
     - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
@@ -175,4 +174,3 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
-

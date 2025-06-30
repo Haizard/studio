@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import BookModel, { IBook } from '@/models/Tenant/Book';
-import BookTransactionModel, { IBookTransaction } from '@/models/Tenant/BookTransaction';
+import BookTransactionModel, { IBookTransaction, FineStatus } from '@/models/Tenant/BookTransaction';
 import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
@@ -27,7 +27,17 @@ interface ReturnRequestBody {
   notes?: string;
 }
 
-type RequestBody = BorrowRequestBody | ReturnRequestBody;
+interface UpdateFineRequestBody {
+    action: 'update_fine_status';
+    bookTransactionId: string;
+    fineAmount?: number;
+    fineStatus?: FineStatus;
+    finePaidDate?: string;
+    fineNotes?: string;
+}
+
+
+type RequestBody = BorrowRequestBody | ReturnRequestBody | UpdateFineRequestBody;
 
 export async function POST(
   request: Request,
@@ -108,6 +118,19 @@ export async function POST(
       transaction.isReturned = true;
       transaction.returnDate = new Date();
       if (notes) transaction.notes = `${transaction.notes || ''}\nReturn Note: ${notes}`.trim();
+      
+      // Fine calculation logic
+      const dueDate = new Date(transaction.dueDate);
+      const returnDate = new Date(transaction.returnDate);
+      if (returnDate > dueDate) {
+        // Example: Simple fine logic, 100 units per day overdue.
+        // This should be configurable in a real application.
+        const diffTime = Math.abs(returnDate.getTime() - dueDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        transaction.fineAmount = diffDays * 100; // Placeholder fine amount
+        transaction.fineStatus = 'Pending';
+      }
+
       await transaction.save();
 
       book.availableCopies += 1;
@@ -119,8 +142,24 @@ export async function POST(
         .lean();
       return NextResponse.json(populatedTransaction);
 
-    } else {
-      return NextResponse.json({ error: 'Invalid action specified in request body', details: "The 'action' field must be either 'borrow' or 'return'." }, { status: 400 });
+    } else if (body.action === 'update_fine_status') {
+      const { bookTransactionId, fineAmount, fineStatus, finePaidDate, fineNotes } = body;
+      if (!mongoose.Types.ObjectId.isValid(bookTransactionId)) {
+        return NextResponse.json({ error: 'Invalid Book Transaction ID' }, { status: 400 });
+      }
+      const transaction = await BookTransaction.findById(bookTransactionId);
+      if (!transaction) return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+
+      if(fineAmount !== undefined) transaction.fineAmount = fineAmount;
+      if(fineStatus) transaction.fineStatus = fineStatus;
+      if(finePaidDate) transaction.finePaidDate = new Date(finePaidDate); else if (fineStatus === 'Paid') transaction.finePaidDate = new Date(); // Default to now if paid
+      if(fineNotes) transaction.fineNotes = fineNotes;
+
+      await transaction.save();
+      return NextResponse.json({ message: 'Fine status updated successfully.', transaction });
+    }
+     else {
+      return NextResponse.json({ error: 'Invalid action specified in request body', details: "The 'action' field must be 'borrow', 'return', or 'update_fine_status'." }, { status: 400 });
     }
 
   } catch (error: any) {
