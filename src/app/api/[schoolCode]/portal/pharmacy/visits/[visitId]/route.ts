@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import VisitModel, { IVisit } from '@/models/Tenant/Visit';
@@ -50,6 +51,7 @@ export async function GET(
     const dispensations = await Dispensation.find({ visitId: visit._id })
         .populate<{ medicationId: IMedication }>('medicationId', 'name brand unit')
         .populate<{ dispensedById: ITenantUser }>('dispensedById', 'username')
+        .sort({ dispensationDate: -1 })
         .lean();
 
     return NextResponse.json({ ...visit, dispensations });
@@ -87,6 +89,10 @@ export async function PUT(
     const visitToUpdate = await Visit.findById(visitId);
     if (!visitToUpdate) {
       return NextResponse.json({ error: 'Visit not found' }, { status: 404 });
+    }
+    
+    if (visitToUpdate.checkOutTime) {
+      return NextResponse.json({ error: 'Cannot update a visit that has already been checked out.' }, { status: 400 });
     }
 
     if (diagnosis !== undefined) visitToUpdate.diagnosis = diagnosis;
