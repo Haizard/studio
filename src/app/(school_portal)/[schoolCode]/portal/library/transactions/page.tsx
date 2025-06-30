@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Select, Card, Table, message, Spin, Empty, Tag, Input, DatePicker, Row, Col, Space as AntSpace, Modal, Form, InputNumber, Popconfirm } from 'antd';
@@ -125,7 +126,10 @@ export default function LibraryTransactionsPage() {
       const queryParams = new URLSearchParams();
       if (filterMemberId) queryParams.append('memberId', filterMemberId);
       if (filterBookId) queryParams.append('bookId', filterBookId);
-      if (filterStatus) queryParams.append('status', filterStatus);
+      
+      if (filterStatus) {
+        queryParams.append('status', filterStatus);
+      }
       
       if (filterDateRange) {
         queryParams.append('startDate', filterDateRange[0].format('YYYY-MM-DD'));
@@ -133,9 +137,9 @@ export default function LibraryTransactionsPage() {
       }
       
       const response = await fetch(`${API_BASE_URL}/transactions?${queryParams.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch transactions');
+      if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch transactions');
       let data: PopulatedBookTransaction[] = (await response.json()).map((t: any) => ({ ...t, key: t._id }));
-
+      
       setTransactions(data);
     } catch (error: any) {
       message.error(error.message || 'Could not load transactions.');

@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import BookModel, { IBook } from '@/models/Tenant/Book';
@@ -219,30 +220,12 @@ export async function GET(
       query.borrowDate = { $gte: startDate, $lte: endDate };
     }
 
-    switch(status) {
-        case 'borrowed':
-            query.isReturned = false;
-            break;
-        case 'returned':
-            query.isReturned = true;
-            break;
-        case 'overdue':
-            query.isReturned = false;
-            query.dueDate = { $lt: new Date() };
-            break;
-        case 'fine_pending':
-            query.fineStatus = 'Pending';
-            query.fineAmount = { $gt: 0 };
-            break;
-        case 'fine_paid':
-            query.fineStatus = { $in: ['Paid', 'Waived'] };
-            break;
-        case 'all':
-        default:
-            // No additional status filter
-            break;
+    // Server-side status filtering based on isReturned
+    if (status === 'borrowed' || status === 'overdue' || status === 'fine_pending') {
+      query.isReturned = false;
+    } else if (status === 'returned' || status === 'fine_paid') {
+      query.isReturned = true;
     }
-
 
     const transactions = await BookTransaction.find(query)
       .populate('bookId', 'title isbn')

@@ -108,7 +108,7 @@ export default function CirculationDeskPage() {
     }
     setLoadingBorrowedBooks(true);
     try {
-      const res = await fetch(`${TRANSACTIONS_API}?memberId=${memberId}&isReturned=false`);
+      const res = await fetch(`${TRANSACTIONS_API}?memberId=${memberId}&status=borrowed`);
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch borrowed books');
       const data: IBookTransaction[] = (await res.json()).map((t: any) => ({...t, key: t._id}));
       setMemberBorrowedBooks(data);
