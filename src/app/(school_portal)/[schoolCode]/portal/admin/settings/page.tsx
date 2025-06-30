@@ -1,7 +1,8 @@
 
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Typography, Form, Input, message, Spin, Card, Row, Col, Space, Select, InputNumber } from 'antd';
+import { Button, Typography, Form, Input, message, Spin, Card, Row, Col, Space, Select, InputNumber, ColorPicker } from 'antd';
+import type { Color } from 'antd/es/color-picker';
 import { SaveOutlined, SettingOutlined, PlusOutlined, MinusCircleOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import type { IWebsiteSettings } from '@/models/Tenant/WebsiteSettings'; 
 import RichTextEditor from '@/components/RichTextEditor';
@@ -56,7 +57,11 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
   const onFinish = async (values: any) => {
     setSaving(true);
     try {
-      const payload = { ...values };
+      const payload = { 
+          ...values,
+          primaryColor: values.primaryColor && typeof values.primaryColor.toHexString === 'function' ? values.primaryColor.toHexString() : values.primaryColor,
+          secondaryColor: values.secondaryColor && typeof values.secondaryColor.toHexString === 'function' ? values.secondaryColor.toHexString() : values.secondaryColor,
+      };
       if (settingsId) {
         payload._id = settingsId; 
       }
@@ -137,13 +142,13 @@ export default function SchoolSettingsPage({ params }: SchoolSettingsPageProps) 
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                  <Form.Item name="primaryColor" label="Website Primary Color (Hex, Optional)" help="Default is Ant Design blue.">
-                    <Input placeholder="#1677ff" />
+                  <Form.Item name="primaryColor" label="Website Primary Color" help="Click to select a color.">
+                    <ColorPicker showText />
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                  <Form.Item name="secondaryColor" label="Website Secondary Color (Hex, Optional)" help="Used for accents.">
-                    <Input placeholder="#5A5A5A" />
+                  <Form.Item name="secondaryColor" label="Website Secondary Color" help="Used for accents.">
+                     <ColorPicker showText />
                   </Form.Item>
                 </Col>
                 <Col xs={24}>

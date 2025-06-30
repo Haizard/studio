@@ -153,6 +153,7 @@ This document tracks the features implemented and planned for the Unified School
 
 ### VII. Cross-Cutting Concerns
 - [x] **Enhanced Security (Audit Trails)**: Backend service and logging for key actions (logins, user management).
+- [x] **Theming Customization**: Allow admins more control over portal and public site appearance beyond basic colors.
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -166,7 +167,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Enhanced Security (Other)**: Password policies, session timeouts.
 - [ ] **Accessibility (A11Y) improvements**.
 - [ ] **Mobile Responsiveness**: Thorough testing and refinement.
-- [ ] **Theming Customization**: Allow admins more control over portal and public site appearance beyond basic colors.
 - [ ] **AI Features (Genkit)**: Specific integrations (e.g., support chatbot, data analysis, beyond news summary/generation).
 - [ ] **Backup & Restore**: Strategies for tenant data.
 
