@@ -85,13 +85,10 @@ This document tracks the features implemented and planned for the Unified School
         - [x] UI for Outstanding Balances Report
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
-    - [x] **Member management (students, teachers)**: View list of potential members.
-    - [x] **Book borrowing and returns (Core API logic for borrow/return)**
-    - [x] **UI for Book borrowing and returns (Circulation Desk)**
-    - [x] **List book transactions (borrowing history)**
-    - [x] **Fine management for overdue books (Model & API Update)**
-    - [x] **UI for Fine Management on Transaction History page**
-    - [x] **Library inventory and reporting** (Initial statistics page)
+    - [ ] Member management (students, teachers)
+    - [ ] Book borrowing and returns
+    - [ ] Fine management for overdue books
+    - [ ] Library inventory and reporting
 - [x] **Dormitory Management**:
     - [x] Placeholder Page and Navigation Created
     - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)

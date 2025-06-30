@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -139,7 +140,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/library/members`, icon: <MembersIcon />, label: <Link href={`${basePortalPath}/library/members`}>Member Management</Link> },
             { key: `${basePortalPath}/library/circulation`, icon: <ContainerOutlined />, label: <Link href={`${basePortalPath}/library/circulation`}>Circulation Desk</Link> },
             { key: `${basePortalPath}/library/transactions`, icon: <HistoryOutlined />, label: <Link href={`${basePortalPath}/library/transactions`}>Transactions</Link> },
-            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory &amp; Reports</Link> },
+            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory & Reports</Link> },
           ]
         },
         { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy</Link> },
@@ -175,7 +176,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/library/members`, icon: <MembersIcon />, label: <Link href={`${basePortalPath}/library/members`}>Member Management</Link> },
             { key: `${basePortalPath}/library/circulation`, icon: <ContainerOutlined />, label: <Link href={`${basePortalPath}/library/circulation`}>Circulation Desk</Link> },
             { key: `${basePortalPath}/library/transactions`, icon: <HistoryOutlined />, label: <Link href={`${basePortalPath}/library/transactions`}>Transactions</Link> },
-            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory &amp; Reports</Link> },
+            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory & Reports</Link> },
           ]
         }
       );
