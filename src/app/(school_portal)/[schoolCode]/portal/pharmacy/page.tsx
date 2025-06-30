@@ -1,10 +1,9 @@
+
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
 import { MedicineBoxOutlined, UserOutlined, UnorderedListOutlined, HistoryOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-
-const { Title, Paragraph } = Typography;
 
 interface PharmacyDashboardPageProps {
   params: { schoolCode: string };
@@ -34,7 +33,7 @@ export default function PharmacyDashboardPage({ params }: PharmacyDashboardPageP
       icon: <UnorderedListOutlined />, 
       link: `${basePortalPath}/inventory`, 
       description: 'Manage the stock of available medications and supplies.',
-      comingSoon: true
+      comingSoon: false
     },
     {
       title: 'Dispense Medication',

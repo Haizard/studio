@@ -95,7 +95,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
                 { key: `${basePortalPath}/admin/academics/terms`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/admin/academics/terms`}>Terms</Link> },
                 { key: `${basePortalPath}/admin/academics/subjects`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/admin/academics/subjects`}>Subjects</Link> },
                 { key: `${basePortalPath}/admin/academics/classes`, icon: <TeamOutlined />, label: <Link href={`${basePortalPath}/admin/academics/classes`}>Classes</Link> },
-                { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreAddOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
+                { key: `${basePortalPath}/admin/academics/alevel-combinations`, icon: <AppstoreOutlined />, label: <Link href={`${basePortalPath}/admin/academics/alevel-combinations`}>A-Level Combinations</Link> },
                 { key: `${basePortalPath}/admin/academics/timetables`, icon: <ProjectOutlined />, label: <Link href={`${basePortalPath}/admin/academics/timetables`}>Timetables</Link> },
                 { key: `${basePortalPath}/admin/academics/grading-scales`, icon: <PercentageOutlined />, label: <Link href={`${basePortalPath}/admin/academics/grading-scales`}>Grading Scales</Link> },
                 { key: `${basePortalPath}/admin/academics/teacher-assignments`, icon: <SlidersOutlined />, label: <Link href={`${basePortalPath}/admin/academics/teacher-assignments`}>Teacher Assignments</Link> },
@@ -191,7 +191,15 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     
     if (role === 'pharmacy') {
       items.push(
-        { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy Management</Link> }
+        { 
+            key: `${basePortalPath}/pharmacy`, 
+            icon: <MedicineBoxOutlined />, 
+            label: 'Pharmacy',
+            children: [
+                { key: `${basePortalPath}/pharmacy`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy Overview</Link> },
+                { key: `${basePortalPath}/pharmacy/inventory`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/pharmacy/inventory`}>Inventory</Link> },
+            ]
+        }
       );
     }
 
@@ -281,6 +289,10 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         if (pathname.includes('/inventory')) selectedKey = `/${schoolCode}/portal/library/inventory`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/dormitory/`)){
         selectedKey = `/${schoolCode}/portal/dormitory`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/inventory`)) {
+        selectedKey = `/${schoolCode}/portal/pharmacy/inventory`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy`)) {
+        selectedKey = `/${schoolCode}/portal/pharmacy`;
     }
   }
   openKeys = activeKeysResult.open || [];
@@ -290,8 +302,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
   if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
   if(selectedKey.includes('/library')) openKeys.push('library-management');
-  if(selectedKey.includes('/pharmacy')) openKeys.push('pharmacy');
-  if(selectedKey.includes('/dormitory')) openKeys.push('dormitory');
+  if(selectedKey.includes('/pharmacy')) openKeys.push(`${schoolCode}/portal/pharmacy`);
 
 
   const breadcrumbItemsGen = () => {
