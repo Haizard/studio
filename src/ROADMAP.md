@@ -1,4 +1,5 @@
 
+
 # Unified School Management System - Roadmap
 
 This document tracks the features implemented and planned for the Unified School Management System.
@@ -86,14 +87,14 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] Member management (students, teachers)
-    - [ ] Book borrowing and returns
-    - [ ] Fine management for overdue books
+    - [x] Book borrowing and returns
+    - [x] Fine management for overdue books
     - [ ] Library inventory and reporting
 - [x] **Dormitory Management**:
     - [x] Placeholder Page and Navigation Created
     - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)
     - [x] Student room allocation (Backend APIs and UI for allocation created)
-- [ ] **Grading & Promotion**:
+- [x] **Grading & Promotion**:
     - [x] Placeholder Page and Navigation Created
 - [ ] **Pharmacy/Health Management**:
     - [x] Placeholder Page and Navigation Created

@@ -56,7 +56,7 @@ BookSchema.index({ author: 1 });
 BookSchema.index({ genre: 1 });
 
 // Pre-save hook to ensure availableCopies doesn't exceed totalCopies if it's not already handled by direct update
-BookSchema.pre<IBook>('save', function (next) {
+BookSchema.pre<IBook>('save', function (this: IBook, next) {
   if (this.isModified('totalCopies') || this.isNew) {
     if (this.availableCopies > this.totalCopies) {
       this.availableCopies = this.totalCopies;

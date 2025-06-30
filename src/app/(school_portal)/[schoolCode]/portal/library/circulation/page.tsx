@@ -1,12 +1,12 @@
 
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Typography, Select, Card, Form, Input, DatePicker, message, Spin, Tabs, Table, Empty, Descriptions, Modal, Row, Col, Space as AntSpace, Popconfirm } from 'antd';
-import { SwapOutlined, SearchOutlined, BookOutlined, UserOutlined, ArrowRightOutlined, ArrowLeftOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Button, Typography, Select, Card, Form, Input, DatePicker, message, Spin, Tabs, Table, Empty, Descriptions, Modal, Row, Col, Space as AntSpace, Popconfirm, InputNumber } from 'antd';
+import { SwapOutlined, SearchOutlined, BookOutlined, UserOutlined, ArrowRightOutlined, ArrowLeftOutlined, InfoCircleOutlined, DollarCircleOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation';
 import type { IBook } from '@/models/Tenant/Book';
 import type { ITenantUser } from '@/models/Tenant/User';
-import type { IBookTransaction } from '@/models/Tenant/BookTransaction';
+import type { IBookTransaction, FineStatus } from '@/models/Tenant/BookTransaction';
 import moment from 'moment';
 
 const { Title, Text, Paragraph } = Typography;
@@ -27,6 +27,9 @@ interface BookOption {
   totalCopies: number;
 }
 
+const fineStatusOptions: FineStatus[] = ['Pending', 'Paid', 'Waived'];
+
+
 export default function CirculationDeskPage() {
   const params = useParams();
   const router = useRouter();
@@ -34,17 +37,23 @@ export default function CirculationDeskPage() {
 
   const [borrowForm] = Form.useForm();
   const [returnForm] = Form.useForm();
+  const [fineForm] = Form.useForm();
 
   const [members, setMembers] = useState<MemberOption[]>([]);
   const [books, setBooks] = useState<BookOption[]>([]);
   const [selectedMemberForReturn, setSelectedMemberForReturn] = useState<string | undefined>();
   const [memberBorrowedBooks, setMemberBorrowedBooks] = useState<IBookTransaction[]>([]);
+  
+  const [isFineModalVisible, setIsFineModalVisible] = useState(false);
+  const [editingTransactionForFine, setEditingTransactionForFine] = useState<IBookTransaction | null>(null);
 
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingBooks, setLoadingBooks] = useState(false);
   const [loadingBorrowedBooks, setLoadingBorrowedBooks] = useState(false);
   const [borrowing, setBorrowing] = useState(false);
   const [returning, setReturning] = useState(false);
+  const [savingFine, setSavingFine] = useState(false);
+
 
   const STUDENTS_API = `/api/${schoolCode}/portal/students`;
   const TEACHERS_API = `/api/${schoolCode}/portal/teachers`;
@@ -92,6 +101,25 @@ export default function CirculationDeskPage() {
     }
   }, [schoolCode, BOOKS_API]);
 
+  const fetchBorrowedBooks = useCallback(async (memberId: string) => {
+     if (!memberId) {
+      setMemberBorrowedBooks([]);
+      return;
+    }
+    setLoadingBorrowedBooks(true);
+    try {
+      const res = await fetch(`${TRANSACTIONS_API}?memberId=${memberId}&isReturned=false`);
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch borrowed books');
+      const data: IBookTransaction[] = (await res.json()).map((t: any) => ({...t, key: t._id}));
+      setMemberBorrowedBooks(data);
+    } catch (err: any) {
+      message.error(err.message || 'Could not load borrowed books.');
+    } finally {
+      setLoadingBorrowedBooks(false);
+    }
+  }, [TRANSACTIONS_API]);
+
+
   useEffect(() => {
     fetchMembers();
     fetchBooks(); // Initial fetch for books
@@ -99,25 +127,12 @@ export default function CirculationDeskPage() {
 
   // Fetch Borrowed Books for Selected Member
   useEffect(() => {
-    if (!selectedMemberForReturn) {
-      setMemberBorrowedBooks([]);
-      return;
+    if (selectedMemberForReturn) {
+      fetchBorrowedBooks(selectedMemberForReturn);
+    } else {
+        setMemberBorrowedBooks([]);
     }
-    const fetchBorrowed = async () => {
-      setLoadingBorrowedBooks(true);
-      try {
-        const res = await fetch(`${TRANSACTIONS_API}?memberId=${selectedMemberForReturn}&isReturned=false`);
-        if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch borrowed books');
-        const data: IBookTransaction[] = (await res.json()).map((t: any) => ({...t, key: t._id}));
-        setMemberBorrowedBooks(data);
-      } catch (err: any) {
-        message.error(err.message || 'Could not load borrowed books.');
-      } finally {
-        setLoadingBorrowedBooks(false);
-      }
-    };
-    fetchBorrowed();
-  }, [selectedMemberForReturn, TRANSACTIONS_API]);
+  }, [selectedMemberForReturn, fetchBorrowedBooks]);
 
   const handleBorrowSubmit = async (values: any) => {
     setBorrowing(true);
@@ -159,25 +174,14 @@ export default function CirculationDeskPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to return book');
+      const returnedData = await res.json();
       message.success('Book returned successfully!');
-      // Re-fetch borrowed books for the member and all books for availability
+      if (returnedData.fineStatus === 'Pending') {
+        message.warning(`Fine of ${returnedData.fineAmount} TZS has been applied for overdue return.`);
+      }
+      
       if (selectedMemberForReturn) {
-        const event = new Event('fetchBorrowedBooks'); // Custom event for useEffect
-        (event as any).detail = selectedMemberForReturn;
-        document.dispatchEvent(event); // This might not be the best way to trigger useEffect reload, direct call to fetchBorrowed is better
-         const fetchBorrowed = async () => {
-            setLoadingBorrowedBooks(true);
-            try {
-                const resBorrowed = await fetch(`${TRANSACTIONS_API}?memberId=${selectedMemberForReturn}&isReturned=false`);
-                if (!resBorrowed.ok) throw new Error((await resBorrowed.json()).error || 'Failed to fetch borrowed books');
-                setMemberBorrowedBooks((await resBorrowed.json()).map((t:any) => ({...t, key:t._id})));
-            } catch (err: any) {
-                message.error(err.message || 'Could not load borrowed books.');
-            } finally {
-                setLoadingBorrowedBooks(false);
-            }
-        };
-        fetchBorrowed();
+        fetchBorrowedBooks(selectedMemberForReturn);
       }
       fetchBooks();
       returnForm.resetFields(['notes']);
@@ -188,21 +192,69 @@ export default function CirculationDeskPage() {
     }
   };
   
+    const handleOpenFineModal = (record: IBookTransaction) => {
+        setEditingTransactionForFine(record);
+        fineForm.setFieldsValue({
+            fineAmount: record.fineAmount || 0,
+            fineStatus: record.fineStatus || 'Pending',
+            finePaidDate: record.finePaidDate ? moment(record.finePaidDate) : null,
+            fineNotes: record.fineNotes || '',
+        });
+        setIsFineModalVisible(true);
+    };
+
+    const handleFineModalOk = async () => {
+        setSavingFine(true);
+        try {
+            const values = await fineForm.validateFields();
+            if (!editingTransactionForFine) {
+                message.error("No transaction selected for fine update.");
+                return;
+            }
+            const payload = {
+                action: 'update_fine_status',
+                bookTransactionId: editingTransactionForFine._id,
+                fineAmount: values.fineAmount,
+                fineStatus: values.fineStatus,
+                finePaidDate: values.finePaidDate ? values.finePaidDate.toISOString() : undefined,
+                fineNotes: values.fineNotes,
+            };
+
+            const response = await fetch(`${TRANSACTIONS_API}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) throw new Error((await response.json()).error || 'Failed to update fine details.');
+            
+            message.success('Fine details updated successfully!');
+            setIsFineModalVisible(false);
+            if (selectedMemberForReturn) {
+              fetchBorrowedBooks(selectedMemberForReturn);
+            }
+        } catch (error:any) {
+            message.error(error.message || "Could not update fine details.");
+        } finally {
+            setSavingFine(false);
+        }
+    };
+
+
   const borrowedBooksColumns = [
     { title: 'Book Title', dataIndex: ['bookId', 'title'], key: 'bookTitle' },
     { title: 'Borrow Date', dataIndex: 'borrowDate', key: 'borrowDate', render: (date:string) => moment(date).format('LL') },
     { title: 'Due Date', dataIndex: 'dueDate', key: 'dueDate', render: (date:string) => moment(date).format('LL') },
     { title: 'Notes (Optional)', dataIndex: 'returnNotes', key: 'returnNotes', render: (_:any, record: IBookTransaction) => <Form.Item name={`notes_${record._id}`} noStyle><Input.TextArea rows={1} placeholder="Return notes..." /></Form.Item>},
     { title: 'Action', key: 'action', render: (_:any, record: IBookTransaction) => (
-        <Popconfirm
-          title="Confirm book return?"
-          onConfirm={() => handleReturnSubmit(record._id)}
-          okText="Yes, Return"
-          cancelText="No"
-          disabled={returning}
-        >
-          <Button type="primary" loading={returning} icon={<ArrowLeftOutlined />}>Return Book</Button>
-        </Popconfirm>
+        <AntSpace>
+            <Button type="primary" loading={returning} icon={<ArrowLeftOutlined />} onClick={() => handleReturnSubmit(record._id)}>Return Book</Button>
+            {record.fineAmount && record.fineAmount > 0 && (
+                <Button icon={<DollarCircleOutlined />} onClick={() => handleOpenFineModal(record)} danger={record.fineStatus === 'Pending'}>
+                    Manage Fine
+                </Button>
+            )}
+        </AntSpace>
       )
     },
   ];
@@ -243,13 +295,13 @@ export default function CirculationDeskPage() {
               </Row>
               <Row gutter={16}>
                 <Col xs={24} md={12}>
-                    <Form.Item name="dueDate" label="Due Date" rules={[{ required: true }]}>
+                    <Form.Item name="dueDate" label="Due Date" rules={[{ required: true }]} initialValue={moment().add(14, 'days')}>
                         <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" disabledDate={(current) => current && current < moment().endOf('day')} />
                     </Form.Item>
                 </Col>
                  <Col xs={24} md={12}>
                     <Form.Item name="notes" label="Notes (Optional)">
-                        <Input.TextArea rows={2} placeholder="Any notes regarding this borrowing..." />
+                        <Input.TextArea rows={1} placeholder="Any notes regarding this borrowing..." />
                     </Form.Item>
                 </Col>
               </Row>
@@ -290,7 +342,49 @@ export default function CirculationDeskPage() {
           </Card>
         </TabPane>
       </Tabs>
+
+      {editingTransactionForFine && (
+        <Modal
+            title="Manage Fine"
+            open={isFineModalVisible}
+            onOk={handleFineModalOk}
+            onCancel={() => setIsFineModalVisible(false)}
+            confirmLoading={savingFine}
+            destroyOnClose
+        >
+            <Form form={fineForm} layout="vertical" className="mt-4">
+                <Descriptions bordered size="small" column={1} className="mb-4">
+                    <Descriptions.Item label="Book Title">{(editingTransactionForFine.bookId as IBook).title}</Descriptions.Item>
+                    <Descriptions.Item label="Member">{`${(editingTransactionForFine.memberId as ITenantUser).firstName} ${(editingTransactionForFine.memberId as ITenantUser).lastName}`}</Descriptions.Item>
+                    <Descriptions.Item label="Due Date">{moment(editingTransactionForFine.dueDate).format('LL')}</Descriptions.Item>
+                </Descriptions>
+                <Form.Item name="fineAmount" label="Fine Amount" rules={[{ type: 'number', min: 0, message: "Fine amount must be a non-negative number." }]}>
+                    <InputNumber style={{width: '100%'}} placeholder="Enter fine amount" />
+                </Form.Item>
+                <Form.Item name="fineStatus" label="Fine Status" rules={[{ required: true }]}>
+                    <Select placeholder="Select fine status">
+                        {fineStatusOptions.map(status => <Option key={status} value={status}>{status}</Option>)}
+                    </Select>
+                </Form.Item>
+                 <Form.Item
+                    noStyle
+                    shouldUpdate={(prevValues, currentValues) => prevValues.fineStatus !== currentValues.fineStatus}
+                >
+                    {({ getFieldValue }) =>
+                        getFieldValue('fineStatus') === 'Paid' ? (
+                            <Form.Item name="finePaidDate" label="Fine Paid Date" rules={[{ required: true, message: "Paid date is required if status is Paid."}]}>
+                                <DatePicker style={{width: '100%'}} format="YYYY-MM-DD" />
+                            </Form.Item>
+                        ) : null
+                    }
+                </Form.Item>
+                <Form.Item name="fineNotes" label="Fine Notes (Optional)">
+                    <Input.TextArea rows={3} placeholder="Reason for fine, payment details, etc." />
+                </Form.Item>
+            </Form>
+        </Modal>
+      )}
+
     </div>
   );
 }
-
