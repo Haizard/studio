@@ -99,8 +99,8 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Dormitory/Room setup**: Models, APIs, and UI for Dormitory & Room Management.
     - [x] **Student room allocation**: Backend APIs and UI for student assignment to rooms.
 - [x] **Grading & Promotion**:
-    - [x] Placeholder Page and Navigation Created
     - [x] **Process Promotions (Analysis)**: UI to view class performance and suggested promotion actions.
+    - [x] **Process Promotions (Execution)**: UI and API to confirm and finalize student promotions.
 - [x] **Pharmacy/Health Management**:
     - [x] Placeholder Dashboard & Navigation Created
     - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
@@ -152,7 +152,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Finance Management**:
     - [ ] Invoicing and receipts (UI and generation logic)
 - [ ] **Grading & Promotion**:
-    - [ ] Process student promotions/repetitions based on results (Final confirmation logic).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
 - [ ] **Detailed Admin Reports**: Implementation of various other report generation tools.
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
@@ -165,7 +164,6 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Advanced Search & Filtering**: Across all major modules.
 - [ ] **Data Import/Export**: For key data like students, teachers, marks.
 - [ ] **Enhanced Security**: Password policies, session timeouts, audit trails.
-- [ ] **Performance Optimization**: For large datasets and high traffic.
 - [ ] **Accessibility (A11Y) improvements**.
 - [ ] **Mobile Responsiveness**: Thorough testing and refinement.
 - [ ] **Theming Customization**: Allow admins more control over portal and public site appearance beyond basic colors.
