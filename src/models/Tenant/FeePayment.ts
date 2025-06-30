@@ -25,7 +25,7 @@ const FeePaymentSchema: Schema = new Schema(
   {
     studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     feeItemId: { type: Schema.Types.ObjectId, ref: 'FeeItem', required: true },
-    invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice' }, // Added invoice reference
+    invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice' },
     academicYearId: { type: Schema.Types.ObjectId, ref: 'AcademicYear', required: true },
     termId: { type: Schema.Types.ObjectId, ref: 'Term' },
     
@@ -47,6 +47,6 @@ const FeePaymentSchema: Schema = new Schema(
 FeePaymentSchema.index({ studentId: 1, academicYearId: 1, termId: 1 });
 FeePaymentSchema.index({ feeItemId: 1, paymentDate: -1 });
 FeePaymentSchema.index({ paymentDate: -1 });
-FeePaymentSchema.index({ invoiceId: 1 }); // Added index for invoiceId
+FeePaymentSchema.index({ invoiceId: 1 });
 
 export default mongoose.models.FeePayment || mongoose.model<IFeePayment>('FeePayment', FeePaymentSchema);

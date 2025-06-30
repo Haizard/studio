@@ -84,7 +84,7 @@ This document tracks the features implemented and planned for the Unified School
         - [x] UI for Fee Collection Summary Report (with filters and charts)
         - [x] API for Outstanding Balances Report
         - [x] UI for Outstanding Balances Report
-    - [x] Invoicing and receipts (API and Placeholder UI)
+    - [x] Invoicing and receipts (API and UI)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [ ] Member management (students, teachers)

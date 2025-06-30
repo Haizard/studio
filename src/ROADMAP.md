@@ -86,7 +86,7 @@ This document tracks the features implemented and planned for the Unified School
         - [x] UI for Outstanding Balances Report
         - [x] Expense Report (API and UI)
         - [x] Income Statement Report (UI)
-    - [x] Invoicing and receipts (API and Placeholder UI)
+    - [x] Invoicing and receipts (API and UI)
     - [x] Expense tracking (API and UI)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
@@ -149,8 +149,6 @@ This document tracks the features implemented and planned for the Unified School
 ## 🚧 Planned/Pending Features (High-Level)
 
 ### School Portal - Admin Section
-- [ ] **Finance Management**:
-    - [ ] Invoicing and receipts (Full UI and generation logic)
 - [ ] **Grading & Promotion**:
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
 - [ ] **Detailed Admin Reports**: Implementation of various other report generation tools.
