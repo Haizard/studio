@@ -137,14 +137,17 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Income Statement Report (UI)
     - [ ] Expense Report (UI)
 - [ ] **Pharmacy/Health Management**:
+    - [x] Placeholder Page and Navigation Created
     - [ ] Student health records
     - [ ] Medication dispensing log
     - [ ] Inventory of medical supplies
 - [ ] **Dormitory Management**:
+    - [x] Placeholder Page and Navigation Created
     - [ ] Dormitory/Room setup
     - [ ] Student room allocation
     - [ ] Check-in/Check-out
 - [ ] **Grading & Promotion**:
+    - [x] Placeholder Page and Navigation Created
     - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
 - [ ] **Detailed Admin Reports**: Implementation of various other report generation tools (beyond basic attendance and term report).
@@ -173,6 +176,7 @@ Let me know what you'd like to tackle next from the "Planned/Pending Features" s
     
 
     
+
 
 
 
