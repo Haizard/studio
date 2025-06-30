@@ -92,6 +92,12 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Fine management for overdue books (Model & API Update)**
     - [x] **UI for Fine Management on Transaction History page**
     - [x] **Library inventory and reporting** (Initial statistics page)
+- [x] **Grading & Promotion**:
+    - [x] Placeholder Page and Navigation Created
+- [x] **Pharmacy/Health Management**:
+    - [x] Placeholder Page and Navigation Created
+- [x] **Dormitory Management**:
+    - [x] Placeholder Page and Navigation Created
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -127,6 +133,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **About Us Page**: Displays content managed from School Settings (sanitized HTML).
 - [x] **Admissions Page**: Information on admission process, forms, deadlines.
 - [x] **Contact Page**: Contact form, map, detailed contact information.
+- [x] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -137,24 +144,20 @@ This document tracks the features implemented and planned for the Unified School
     - [ ] Income Statement Report (UI)
     - [ ] Expense Report (UI)
 - [ ] **Pharmacy/Health Management**:
-    - [x] Placeholder Page and Navigation Created
     - [ ] Student health records
     - [ ] Medication dispensing log
     - [ ] Inventory of medical supplies
 - [ ] **Dormitory Management**:
-    - [x] Placeholder Page and Navigation Created
     - [ ] Dormitory/Room setup
     - [ ] Student room allocation
     - [ ] Check-in/Check-out
 - [ ] **Grading & Promotion**:
-    - [x] Placeholder Page and Navigation Created
     - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
 - [ ] **Detailed Admin Reports**: Implementation of various other report generation tools (beyond basic attendance and term report).
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
 ### Public School Website
-- [ ] **Academics Page**: Overview of academic programs, departments, curriculum highlights.
 - [ ] **Staff Directory**: Public listing of teaching staff (optional).
 - [ ] **Blog/Articles**: More generic content beyond news.
 
@@ -172,11 +175,4 @@ This document tracks the features implemented and planned for the Unified School
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
-
-    
-
-    
-
-
-
 

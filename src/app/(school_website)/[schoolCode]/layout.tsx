@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HomeOutlined, InfoCircleOutlined, ReadOutlined, ContactsOutlined, CalendarOutlined, PictureOutlined } from '@ant-design/icons';
+import { HomeOutlined, InfoCircleOutlined, ReadOutlined, ContactsOutlined, CalendarOutlined, PictureOutlined, BookOutlined, SolutionOutlined } from '@ant-design/icons';
 import { getTenantConnection } from '@/lib/db';
 import WebsiteSettingsModel, { IWebsiteSettings } from '@/models/Tenant/WebsiteSettings';
 import mongoose from 'mongoose';
@@ -55,11 +55,12 @@ export default async function PublicWebsiteLayout({ children, params }: PublicWe
     : [
         { label: 'Home', slug: '', icon: <HomeOutlined />, order: 0 },
         { label: 'About Us', slug: '/about', icon: <InfoCircleOutlined />, order: 1 },
-        { label: 'Admissions', slug: '/admissions', icon: <ReadOutlined />, order: 2 },
-        { label: 'News', slug: '/news', icon: <ReadOutlined />, order: 3 },
-        { label: 'Events', slug: '/events', icon: <CalendarOutlined />, order: 4 },
-        { label: 'Gallery', slug: '/gallery', icon: <PictureOutlined />, order: 5 },
-        { label: 'Contact', slug: '/contact', icon: <ContactsOutlined />, order: 6 },
+        { label: 'Academics', slug: '/academics', icon: <BookOutlined />, order: 2 },
+        { label: 'Admissions', slug: '/admissions', icon: <SolutionOutlined />, order: 3 },
+        { label: 'News', slug: '/news', icon: <ReadOutlined />, order: 4 },
+        { label: 'Events', slug: '/events', icon: <CalendarOutlined />, order: 5 },
+        { label: 'Gallery', slug: '/gallery', icon: <PictureOutlined />, order: 6 },
+        { label: 'Contact', slug: '/contact', icon: <ContactsOutlined />, order: 7 },
       ];
 
   const pageTitle = settings.schoolName || `${schoolCode.toUpperCase()} High School`;
@@ -123,5 +124,3 @@ export default async function PublicWebsiteLayout({ children, params }: PublicWe
     </html>
   );
 }
-
-    
