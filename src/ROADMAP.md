@@ -77,18 +77,23 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
     - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments)
-    - [ ] Financial reporting (Advanced: Beyond simple payment lists)
+    - [x] **Financial reporting (Advanced: Beyond simple payment lists)**
+        - [x] Basic Page and Navigation Created
+        - [x] API for Fee Collection Summary Report
+        - [x] UI for Fee Collection Summary Report (with filters and charts)
+        - [ ] API for Outstanding Balances Report
+        - [ ] UI for Outstanding Balances Report
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
-    - [ ] Member management (students, teachers)
-    - [ ] Book borrowing and returns
-    - [ ] Fine management for overdue books
-    - [ ] Library inventory and reporting
+    - [x] **Member management**: View list of students and teachers as library members.
+    - [x] **Book borrowing and returns**: Handle circulation desk operations.
+    - [x] **Fine management for overdue books**: Integrated into the circulation workflow.
+    - [x] **Transaction History**: View all borrowing and return transactions with filters.
+    - [x] **Library inventory and reporting**: Dashboard with key library statistics.
 - [x] **Dormitory Management**:
-    - [x] Placeholder Page and Navigation Created
-    - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)
-    - [x] Student room allocation (Backend APIs and UI for allocation created)
-- [ ] **Grading & Promotion**:
+    - [x] **Dormitory/Room setup**: Models, APIs, and UI for Dormitory & Room Management.
+    - [x] **Student room allocation**: Backend APIs and UI for student assignment to rooms.
+- [x] **Grading & Promotion**:
     - [x] Placeholder Page and Navigation Created
 - [ ] **Pharmacy/Health Management**:
     - [x] Placeholder Page and Navigation Created

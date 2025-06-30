@@ -31,7 +31,7 @@ export default function FinanceDashboardPage({ params }: FinanceDashboardPagePro
      { 
       title: 'Financial Reports', 
       icon: <AreaChartOutlined />, 
-      link: `${basePortalPath}/reports`, // Placeholder for future report page, or specific finance reports
+      link: `${basePortalPath}/reports`, 
       description: 'View financial summaries, revenue reports, and outstanding balances.' 
     },
     // Add more finance modules like "Expense Tracking", "Budgeting" etc.

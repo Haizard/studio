@@ -261,11 +261,10 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { 
         selectedKey = `/${schoolCode}/portal/teacher/attendance`;
+    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/finance/reports/`)){
+        selectedKey = `/${schoolCode}/portal/admin/finance/reports`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/finance/`)){
         selectedKey = `/${schoolCode}/portal/admin/finance`; 
-         if (pathname.includes('/fee-structure')) selectedKey = `/${schoolCode}/portal/admin/finance/fee-structure`;
-         if (pathname.includes('/student-fees')) selectedKey = `/${schoolCode}/portal/admin/finance/student-fees`;
-         if (pathname.includes('/reports')) selectedKey = `/${schoolCode}/portal/admin/finance/reports`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/library/`)){
         selectedKey = `/${schoolCode}/portal/library`; 
         if (pathname.includes('/books')) selectedKey = `/${schoolCode}/portal/library/books`;
