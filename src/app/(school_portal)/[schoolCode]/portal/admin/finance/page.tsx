@@ -63,4 +63,3 @@ export default function FinanceDashboardPage({ params }: FinanceDashboardPagePro
     </div>
   );
 }
-

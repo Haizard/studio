@@ -155,4 +155,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete fee payment', details: String(error.message || 'Unknown server error') }, { status: 500 });
   }
 }
-

@@ -405,5 +405,3 @@ export default function StudentFeePaymentsPage() {
     </div>
   );
 }
-
-    
