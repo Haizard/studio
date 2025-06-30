@@ -1,5 +1,4 @@
 
-
 # Unified School Management System - Roadmap
 
 This document tracks the features implemented and planned for the Unified School Management System.
@@ -86,9 +85,10 @@ This document tracks the features implemented and planned for the Unified School
         - [x] UI for Outstanding Balances Report
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
-    - [x] Member management (students, teachers)
-    - [x] Book borrowing and returns
-    - [x] Fine management for overdue books
+    - [x] **Member management**: View list of students and teachers as library members.
+    - [x] **Book borrowing and returns**: Handle circulation desk operations.
+    - [x] **Fine management for overdue books**: Integrated into the circulation workflow.
+    - [x] **Transaction History**: View all borrowing and return transactions with filters.
     - [ ] Library inventory and reporting
 - [x] **Dormitory Management**:
     - [x] Placeholder Page and Navigation Created

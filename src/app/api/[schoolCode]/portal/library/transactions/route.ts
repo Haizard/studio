@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import BookModel, { IBook } from '@/models/Tenant/Book';
@@ -200,7 +199,9 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const memberId = searchParams.get('memberId');
   const bookId = searchParams.get('bookId');
-  const isReturned = searchParams.get('isReturned'); 
+  const status = searchParams.get('status');
+  const startDateStr = searchParams.get('startDate');
+  const endDateStr = searchParams.get('endDate');
 
   try {
     const tenantDb = await getTenantConnection(schoolCode);
@@ -208,10 +209,40 @@ export async function GET(
     const BookTransaction = tenantDb.models.BookTransaction as mongoose.Model<IBookTransaction>;
 
     const query: any = {};
-    if (memberId && mongoose.Types.ObjectId.isValid(memberId)) query.memberId = memberId;
-    if (bookId && mongoose.Types.ObjectId.isValid(bookId)) query.bookId = bookId;
-    if (isReturned === 'true') query.isReturned = true;
-    if (isReturned === 'false') query.isReturned = false;
+    if (memberId && mongoose.Types.ObjectId.isValid(memberId)) query.memberId = new mongoose.Types.ObjectId(memberId);
+    if (bookId && mongoose.Types.ObjectId.isValid(bookId)) query.bookId = new mongoose.Types.ObjectId(bookId);
+    if (startDateStr && endDateStr) {
+      const startDate = new Date(startDateStr);
+      startDate.setUTCHours(0,0,0,0);
+      const endDate = new Date(endDateStr);
+      endDate.setUTCHours(23,59,59,999);
+      query.borrowDate = { $gte: startDate, $lte: endDate };
+    }
+
+    switch(status) {
+        case 'borrowed':
+            query.isReturned = false;
+            break;
+        case 'returned':
+            query.isReturned = true;
+            break;
+        case 'overdue':
+            query.isReturned = false;
+            query.dueDate = { $lt: new Date() };
+            break;
+        case 'fine_pending':
+            query.fineStatus = 'Pending';
+            query.fineAmount = { $gt: 0 };
+            break;
+        case 'fine_paid':
+            query.fineStatus = { $in: ['Paid', 'Waived'] };
+            break;
+        case 'all':
+        default:
+            // No additional status filter
+            break;
+    }
+
 
     const transactions = await BookTransaction.find(query)
       .populate('bookId', 'title isbn')

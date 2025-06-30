@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Select, Card, Table, message, Spin, Empty, Tag, Input, DatePicker, Row, Col, Space as AntSpace, Modal, Form, InputNumber, Popconfirm } from 'antd';
@@ -126,31 +125,16 @@ export default function LibraryTransactionsPage() {
       const queryParams = new URLSearchParams();
       if (filterMemberId) queryParams.append('memberId', filterMemberId);
       if (filterBookId) queryParams.append('bookId', filterBookId);
+      if (filterStatus) queryParams.append('status', filterStatus);
       
-      // Status filtering is handled client-side for 'overdue', 'fine_pending', 'fine_paid'
-      // For API, fetch based on isReturned for 'borrowed' or 'returned'
-      if (filterStatus === 'borrowed') queryParams.append('isReturned', 'false');
-      if (filterStatus === 'returned') queryParams.append('isReturned', 'true');
+      if (filterDateRange) {
+        queryParams.append('startDate', filterDateRange[0].format('YYYY-MM-DD'));
+        queryParams.append('endDate', filterDateRange[1].format('YYYY-MM-DD'));
+      }
       
       const response = await fetch(`${API_BASE_URL}/transactions?${queryParams.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch transactions');
       let data: PopulatedBookTransaction[] = (await response.json()).map((t: any) => ({ ...t, key: t._id }));
-
-      // Client-side filtering for date range and complex statuses
-      if (filterDateRange) {
-        data = data.filter(t => 
-            moment(t.borrowDate).isSameOrAfter(filterDateRange[0], 'day') &&
-            moment(t.borrowDate).isSameOrBefore(filterDateRange[1], 'day')
-        );
-      }
-
-      if (filterStatus === 'overdue') {
-        data = data.filter(t => !t.isReturned && moment().isAfter(moment(t.dueDate), 'day'));
-      } else if (filterStatus === 'fine_pending') {
-        data = data.filter(t => t.fineStatus === 'Pending' && (t.fineAmount || 0) > 0);
-      } else if (filterStatus === 'fine_paid') {
-        data = data.filter(t => t.fineStatus === 'Paid' || t.fineStatus === 'Waived');
-      }
 
       setTransactions(data);
     } catch (error: any) {
@@ -347,8 +331,8 @@ export default function LibraryTransactionsPage() {
         >
             <Form form={fineForm} layout="vertical" className="mt-4">
                 <Descriptions bordered size="small" column={1} className="mb-4">
-                    <Descriptions.Item label="Book Title">{editingTransactionForFine.bookId.title}</Descriptions.Item>
-                    <Descriptions.Item label="Member">{`${editingTransactionForFine.memberId.firstName} ${editingTransactionForFine.memberId.lastName}`}</Descriptions.Item>
+                    <Descriptions.Item label="Book Title">{(editingTransactionForFine.bookId as IBook).title}</Descriptions.Item>
+                    <Descriptions.Item label="Member">{`${(editingTransactionForFine.memberId as ITenantUser).firstName} ${(editingTransactionForFine.memberId as ITenantUser).lastName}`}</Descriptions.Item>
                     <Descriptions.Item label="Due Date">{moment(editingTransactionForFine.dueDate).format('LL')}</Descriptions.Item>
                     {editingTransactionForFine.isReturned && editingTransactionForFine.returnDate && (
                         <Descriptions.Item label="Returned Date">{moment(editingTransactionForFine.returnDate).format('LL')}</Descriptions.Item>
