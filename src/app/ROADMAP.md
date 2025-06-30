@@ -85,6 +85,7 @@ This document tracks the features implemented and planned for the Unified School
         - [x] API for Outstanding Balances Report
         - [x] UI for Outstanding Balances Report
         - [x] Expense Report (API and UI)
+        - [x] Income Statement Report (UI)
     - [x] Invoicing and receipts (Data models created)
     - [x] Expense tracking (API and UI)
 - [x] **Library Management**:
@@ -145,8 +146,6 @@ This document tracks the features implemented and planned for the Unified School
 ## 🚧 Planned/Pending Features (High-Level)
 
 ### School Portal - Admin Section
-- [ ] **Finance Management**:
-    - [ ] Income Statement Report (UI)
 - [ ] **Pharmacy/Health Management**:
     - [ ] Student health records (View/Edit UI)
     - [ ] Medication dispensing log (View/Search UI)
