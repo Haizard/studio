@@ -14,8 +14,8 @@ interface AdminFinancialReportsPageProps {
 const potentialReports = [
   { title: 'Fee Collection Summary', description: 'Summary of fees collected over a period.', icon: <DollarOutlined />, linkKey: 'fee-collection-summary', comingSoon: false },
   { title: 'Outstanding Balances Report', description: 'Report on students with pending fee payments.', icon: <FileTextOutlined />, linkKey: 'outstanding-balances', comingSoon: false },
-  { title: 'Income Statement', description: 'Detailed statement of income (revenue).', icon: <LineChartOutlined />, linkKey: 'income-statement', comingSoon: true },
-  { title: 'Expense Report', description: 'Detailed report on school expenditures.', icon: <AreaChartOutlined />, linkKey: 'expense-report', comingSoon: true },
+  { title: 'Expense Report', description: 'Detailed report on school expenditures.', icon: <AreaChartOutlined />, linkKey: 'expense-summary', comingSoon: false },
+  { title: 'Income Statement', description: 'Detailed statement of income and expenses.', icon: <LineChartOutlined />, linkKey: 'income-statement', comingSoon: true },
 ];
 
 export default function AdminFinancialReportsPage({ params }: AdminFinancialReportsPageProps) {

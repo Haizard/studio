@@ -344,6 +344,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         title = "Record Attendance";
       } else if (snippet === 'student-fees' && relevantSnippets[index-1] === 'finance') {
         title = "Student Fee Collection";
+      } else if (snippet === 'expense-summary' && relevantSnippets[index-1] === 'reports') {
+        title = "Expense Summary";
       }
 
 

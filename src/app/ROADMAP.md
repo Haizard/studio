@@ -1,4 +1,5 @@
 
+
 # Unified School Management System - Roadmap
 
 This document tracks the features implemented and planned for the Unified School Management System.
@@ -83,8 +84,9 @@ This document tracks the features implemented and planned for the Unified School
         - [x] UI for Fee Collection Summary Report (with filters and charts)
         - [x] API for Outstanding Balances Report
         - [x] UI for Outstanding Balances Report
+        - [x] Expense Report (API and UI)
     - [x] Invoicing and receipts (Data models created)
-    - [x] Expense tracking
+    - [x] Expense tracking (API and UI)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
     - [x] **Member management**: View list of students and teachers as library members.
@@ -101,6 +103,7 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Placeholder Dashboard & Navigation Created
     - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
     - [x] **Inventory of medical supplies (CRUD UI)**
+
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -144,7 +147,6 @@ This document tracks the features implemented and planned for the Unified School
 ### School Portal - Admin Section
 - [ ] **Finance Management**:
     - [ ] Income Statement Report (UI)
-    - [ ] Expense Report (UI)
 - [ ] **Pharmacy/Health Management**:
     - [ ] Student health records (View/Edit UI)
     - [ ] Medication dispensing log (View/Search UI)
