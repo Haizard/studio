@@ -180,6 +180,12 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         }
       );
     }
+    
+    if (role === 'dormitory_master') {
+      items.push(
+        { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory Management</Link> }
+      );
+    }
 
 
     if (role === 'teacher') {
@@ -276,6 +282,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
   if(selectedKey.includes('/library')) openKeys.push('library-management');
   if(selectedKey.includes('/pharmacy')) openKeys.push('pharmacy');
+  if(selectedKey.includes('/dormitory')) openKeys.push('dormitory');
 
 
   const breadcrumbItemsGen = () => {

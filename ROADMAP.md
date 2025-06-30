@@ -96,9 +96,9 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Placeholder Page and Navigation Created
 - [ ] **Pharmacy/Health Management**:
     - [x] Placeholder Page and Navigation Created
-- [ ] **Dormitory Management**:
+- [x] **Dormitory Management**:
     - [x] Placeholder Page and Navigation Created
-    - [x] Dormitory/Room setup (In Progress: Models and Dormitory API created)
+    - [x] Dormitory/Room setup (Models, API, and UI for Dormitory Management)
     - [ ] Student room allocation
     - [ ] Check-in/Check-out
 
