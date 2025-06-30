@@ -84,29 +84,22 @@ This document tracks the features implemented and planned for the Unified School
         - [x] UI for Fee Collection Summary Report (with filters and charts)
         - [x] API for Outstanding Balances Report
         - [x] UI for Outstanding Balances Report
-        - [x] Expense Report (API and UI)
-        - [x] Income Statement Report (UI)
-    - [x] Invoicing and receipts (Data models created)
-    - [x] Expense tracking (API and UI)
+    - [x] Invoicing and receipts (API and Placeholder UI)
 - [x] **Library Management**:
     - [x] **Book cataloging**: CRUD for books (title, author, ISBN, etc.).
-    - [x] **Member management**: View list of students and teachers as library members.
-    - [x] **Book borrowing and returns**: Handle circulation desk operations.
-    - [x] **Fine management for overdue books**: Integrated into the circulation workflow.
-    - [x] **Transaction History**: View all borrowing and return transactions with filters.
-    - [x] **Library inventory and reporting**: Dashboard with key library statistics.
+    - [ ] Member management (students, teachers)
+    - [ ] Book borrowing and returns
+    - [ ] Fine management for overdue books
+    - [ ] Library inventory and reporting
 - [x] **Dormitory Management**:
-    - [x] **Dormitory/Room setup**: Models, APIs, and UI for Dormitory & Room Management.
-    - [x] **Student room allocation**: Backend APIs and UI for student assignment to rooms.
-- [x] **Grading & Promotion**:
     - [x] Placeholder Page and Navigation Created
-- [x] **Pharmacy/Health Management**:
-    - [x] Placeholder Dashboard & Navigation Created
-    - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
-    - [x] **Inventory of medical supplies (CRUD UI)**
-    - [x] **Student health records (View/Edit UI)**
-    - [x] **Check-in/Check-out workflow**
-    - [x] Medication dispensing log
+    - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)
+    - [x] Student room allocation (Backend APIs and UI for allocation created)
+- [ ] **Grading & Promotion**:
+    - [x] Placeholder Page and Navigation Created
+- [ ] **Pharmacy/Health Management**:
+    - [x] Placeholder Page and Navigation Created
+    - [ ] Check-in/Check-out
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -148,6 +141,15 @@ This document tracks the features implemented and planned for the Unified School
 ## 🚧 Planned/Pending Features (High-Level)
 
 ### School Portal - Admin Section
+- [ ] **Finance Management**:
+    - [ ] Invoicing and receipts (Full UI and generation logic)
+    - [ ] Expense tracking
+    - [ ] Income Statement Report (UI)
+    - [ ] Expense Report (UI)
+- [ ] **Pharmacy/Health Management**:
+    - [ ] Student health records
+    - [ ] Medication dispensing log
+    - [ ] Inventory of medical supplies
 - [ ] **Grading & Promotion**:
     - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).

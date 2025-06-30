@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -39,6 +40,7 @@ import {
   SlidersOutlined, 
   AreaChartOutlined,
   RocketOutlined,
+  FileProtectOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -114,7 +116,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           children: [
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
-            { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Student Fees</Link> },
+            { key: `${basePortalPath}/admin/finance/invoices`, icon: <FileProtectOutlined />, label: <Link href={`${basePortalPath}/admin/finance/invoices`}>Invoices</Link> },
+            { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Record Payments</Link> },
             { key: `${basePortalPath}/admin/finance/expenses`, icon: <FolderOpenOutlined />, label: <Link href={`${basePortalPath}/admin/finance/expenses`}>Expense Tracking</Link> },
             { key: `${basePortalPath}/admin/finance/reports`, icon: <AreaChartOutlined />, label: <Link href={`${basePortalPath}/admin/finance/reports`}>Financial Reports</Link> },
           ]
@@ -167,7 +170,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           children: [
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
-            { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Student Fees</Link> },
+            { key: `${basePortalPath}/admin/finance/invoices`, icon: <FileProtectOutlined />, label: <Link href={`${basePortalPath}/admin/finance/invoices`}>Invoices</Link> },
+            { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Record Payments</Link> },
             { key: `${basePortalPath}/admin/finance/reports`, icon: <AreaChartOutlined />, label: <Link href={`${basePortalPath}/admin/finance/reports`}>Financial Reports</Link> },
           ]
         }

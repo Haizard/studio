@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
-import { DollarCircleOutlined, BarsOutlined, CreditCardOutlined, AreaChartOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { DollarCircleOutlined, BarsOutlined, CreditCardOutlined, AreaChartOutlined, FolderOpenOutlined, FileProtectOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
@@ -22,11 +22,17 @@ export default function FinanceDashboardPage({ params }: FinanceDashboardPagePro
       link: `${basePortalPath}/fee-structure`, 
       description: 'Define and manage individual fee items, categories, and applicability.' 
     },
+    {
+      title: 'Invoicing',
+      icon: <FileProtectOutlined />,
+      link: `${basePortalPath}/invoices`,
+      description: 'Generate and manage student fee invoices for specific terms or years.'
+    },
     { 
-      title: 'Student Fee Collection', 
+      title: 'Record Payments', 
       icon: <CreditCardOutlined />, 
       link: `${basePortalPath}/student-fees`, 
-      description: 'Track student payments, generate invoices, and manage fee balances.' 
+      description: 'Record and track individual student payments against fee items.' 
     },
     { 
       title: 'Expense Tracking', 
@@ -40,7 +46,6 @@ export default function FinanceDashboardPage({ params }: FinanceDashboardPagePro
       link: `${basePortalPath}/reports`, 
       description: 'View financial summaries, revenue reports, and outstanding balances.' 
     },
-    // Add more finance modules like "Budgeting" etc.
   ];
 
   return (
