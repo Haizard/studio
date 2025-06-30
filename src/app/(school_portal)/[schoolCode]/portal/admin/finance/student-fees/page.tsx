@@ -2,7 +2,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Button, Typography, Table, Modal, Form, Input, Select, DatePicker, message, Tag, Space, Spin, Popconfirm, InputNumber, Row, Col
+  Button, Typography, Table, Modal, Form, Input, Select, DatePicker, message, Tag, Space, Spin, Popconfirm, InputNumber, Row, Col, Card
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, DollarCircleOutlined, SearchOutlined, FilterOutlined, UserOutlined, ReadOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
@@ -15,7 +15,7 @@ import type { ITerm } from '@/models/Tenant/Term';
 import moment from 'moment';
 import mongoose from 'mongoose';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
@@ -85,10 +85,8 @@ export default function StudentFeePaymentsPage() {
       setTerms(await termsRes.json());
 
       const activeYear = yearsData.find(y => y.isActive);
-      if (activeYear) {
+      if (activeYear && !filterAcademicYearId) {
         setFilterAcademicYearId(activeYear._id); // Default filter to active year
-        form.setFieldsValue({ academicYearId: activeYear._id });
-        // This will trigger the useEffect for filtering terms & fee items if modal is open
       }
 
     } catch (error: any) {
@@ -96,7 +94,7 @@ export default function StudentFeePaymentsPage() {
     } finally {
       setLoading(false); // Set loading to false after initial data fetch
     }
-  }, [schoolCode, STUDENTS_API, FEE_ITEMS_API, ACADEMIC_YEARS_API, TERMS_API_BASE, form]);
+  }, [schoolCode, STUDENTS_API, FEE_ITEMS_API, ACADEMIC_YEARS_API, TERMS_API_BASE, filterAcademicYearId]);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
@@ -111,7 +109,7 @@ export default function StudentFeePaymentsPage() {
       }
       
       const response = await fetch(`${API_URL_BASE}?${query.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch fee payments');
+      if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch fee payments');
       const data: IFeePayment[] = await response.json();
       
       setPayments(data.map(p => ({
@@ -191,7 +189,7 @@ export default function StudentFeePaymentsPage() {
   const handleDeletePayment = async (paymentId: string) => {
     try {
       const response = await fetch(`${API_URL_BASE}/${paymentId}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Failed to delete payment');
+      if (!response.ok) throw new Error((await response.json()).error || 'Failed to delete payment');
       message.success('Payment deleted successfully');
       fetchPayments();
     } catch (error: any) {
@@ -311,16 +309,6 @@ export default function StudentFeePaymentsPage() {
             />
           </Col>
         </Row>
-        <Row justify="end" className="mt-4">
-            <Col>
-                <Button type="primary" icon={<SearchOutlined />} onClick={fetchPayments} loading={loading}>
-                    Search Payments
-                </Button>
-                 <Button onClick={() => {setFilterStudentId(undefined); setFilterFeeItemId(undefined); setFilterAcademicYearId(undefined); setFilterDateRange(null); fetchPayments();}} style={{marginLeft: 8}}>
-                    Clear Filters
-                </Button>
-            </Col>
-        </Row>
       </Card>
       
       <div className="mb-4">
@@ -378,7 +366,7 @@ export default function StudentFeePaymentsPage() {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="amountPaid" label="Amount Paid" rules={[{ required: true, type: 'number', min: 0.01 }]}>
-                <InputNumber style={{width: "100%"}} placeholder="e.g. 50000" formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value!.replace(/\$\s?|(,*)/g, '')} />
+                <InputNumber style={{width: "100%"}} placeholder="e.g. 50000" formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value!.replace(/\\$\s?|(,*)/g, '')} />
               </Form.Item>
             </Col>
             <Col span={8}>
