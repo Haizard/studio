@@ -41,6 +41,7 @@ import {
   AreaChartOutlined,
   RocketOutlined,
   FileProtectOutlined,
+  FileExcelOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -158,6 +159,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/pharmacy/inventory`, icon: <UnorderedListOutlined />, label: <Link href={`${basePortalPath}/pharmacy/inventory`}>Inventory</Link> },
           ]
         },
+        { key: `${basePortalPath}/admin/data-management`, icon: <FileExcelOutlined />, label: <Link href={`${basePortalPath}/admin/data-management`}>Data Import/Export</Link> },
         { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> }
       );
     }
