@@ -116,6 +116,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/finance`, icon: <DashboardOutlined />, label: <Link href={`${basePortalPath}/admin/finance`}>Finance Overview</Link> },
             { key: `${basePortalPath}/admin/finance/fee-structure`, icon: <BarsOutlined />, label: <Link href={`${basePortalPath}/admin/finance/fee-structure`}>Fee Structure</Link> },
             { key: `${basePortalPath}/admin/finance/student-fees`, icon: <CreditCardOutlined />, label: <Link href={`${basePortalPath}/admin/finance/student-fees`}>Student Fees</Link> },
+            { key: `${basePortalPath}/admin/finance/expenses`, icon: <FolderOpenOutlined />, label: <Link href={`${basePortalPath}/admin/finance/expenses`}>Expense Tracking</Link> },
             { key: `${basePortalPath}/admin/finance/reports`, icon: <AreaChartOutlined />, label: <Link href={`${basePortalPath}/admin/finance/reports`}>Financial Reports</Link> },
           ]
         },
@@ -185,6 +186,12 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     if (role === 'dormitory_master') {
       items.push(
         { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory Management</Link> }
+      );
+    }
+    
+    if (role === 'pharmacy') {
+      items.push(
+        { key: `${basePortalPath}/pharmacy`, icon: <MedicineBoxOutlined />, label: <Link href={`${basePortalPath}/pharmacy`}>Pharmacy Management</Link> }
       );
     }
 

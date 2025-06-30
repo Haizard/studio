@@ -97,9 +97,10 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Student room allocation**: Backend APIs and UI for student assignment to rooms.
 - [x] **Grading & Promotion**:
     - [x] Placeholder Page and Navigation Created
-- [ ] **Pharmacy/Health Management**:
-    - [x] Placeholder Page and Navigation Created
-    - [ ] Check-in/Check-out
+- [x] **Pharmacy/Health Management**:
+    - [x] Placeholder Dashboard & Navigation Created
+    - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
+
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -142,12 +143,13 @@ This document tracks the features implemented and planned for the Unified School
 
 ### School Portal - Admin Section
 - [ ] **Finance Management**:
-    - [ ] Financial reporting (Advanced: Beyond simple payment lists)
+    - [ ] Income Statement Report (UI)
+    - [ ] Expense Report (UI)
 - [ ] **Pharmacy/Health Management**:
-    - [ ] Student health records
-    - [ ] Medication dispensing log
-    - [ ] Inventory of medical supplies
-    - [ ] Check-in/Check-out
+    - [ ] Student health records (View/Edit UI)
+    - [ ] Medication dispensing log (View/Search UI)
+    - [ ] Inventory of medical supplies (CRUD UI)
+    - [ ] Check-in/Check-out workflow
 - [ ] **Grading & Promotion**:
     - [ ] Process student promotions/repetitions based on results (requires report card & rule engine).
     - [ ] Generate final report cards/transcripts (requires more detailed report templates and O-Level/A-Level division/point aggregation logic).
