@@ -1,7 +1,8 @@
+
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Table, Modal, Form, Input, Select, message, Tag, Space, Spin, Popconfirm, InputNumber, Row, Col } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, HomeOutlined, ManOutlined, WomanOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, HomeOutlined, ManOutlined, WomanOutlined, AppstoreOutlined, TeamOutlined } from '@ant-design/icons';
 import type { IDormitory } from '@/models/Tenant/Dormitory';
 import type { ITenantUser } from '@/models/Tenant/User';
 import Link from 'next/link';
@@ -164,9 +165,14 @@ export default function DormitoryPage({ params }: DormitoryPageProps) {
     <div>
       <div className="flex justify-between items-center mb-6">
         <Title level={2}><HomeOutlined className="mr-2"/>Dormitory Management</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddDormitory}>
-          Add New Dormitory
-        </Button>
+        <Space>
+          <Link href={`/${schoolCode}/portal/dormitory/allocation`}>
+            <Button icon={<TeamOutlined />}>Student Allocation</Button>
+          </Link>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddDormitory}>
+            Add New Dormitory
+          </Button>
+        </Space>
       </div>
       <Table columns={columns} dataSource={dormitories} rowKey="_id" />
 

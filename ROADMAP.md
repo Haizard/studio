@@ -92,14 +92,14 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Fine management for overdue books (Model & API Update)**
     - [x] **UI for Fine Management on Transaction History page**
     - [x] **Library inventory and reporting** (Initial statistics page)
+- [x] **Dormitory Management**:
+    - [x] Placeholder Page and Navigation Created
+    - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)
+    - [x] Student room allocation (Backend APIs and UI for allocation created)
 - [ ] **Grading & Promotion**:
     - [x] Placeholder Page and Navigation Created
 - [ ] **Pharmacy/Health Management**:
     - [x] Placeholder Page and Navigation Created
-- [x] **Dormitory Management**:
-    - [x] Placeholder Page and Navigation Created
-    - [x] Dormitory/Room setup (Models, API, and UI for Dormitory & Room Management)
-    - [ ] Student room allocation (In Progress - Backend APIs created)
     - [ ] Check-in/Check-out
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
