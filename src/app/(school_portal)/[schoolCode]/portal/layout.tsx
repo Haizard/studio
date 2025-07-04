@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -45,12 +44,17 @@ import {
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react'; 
-import mongoose from 'mongoose';
+import { useSession, signOut } from 'next-auth/react';
 
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
+
+// Client-side safe check for a valid MongoDB ObjectId
+const isValidObjectId = (id: string): boolean => {
+  if (!id) return false;
+  return /^[0-9a-fA-F]{24}$/.test(id);
+};
 
 interface SchoolPortalLayoutProps {
   children: React.ReactNode;
@@ -290,7 +294,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         selectedKey = `/${schoolCode}/portal/admin/academics/timetables`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) {
         selectedKey = `/${schoolCode}/portal/admin/academics`;
-    } else if (pathname.includes('/teacher/my-classes/') && mongoose.Types.ObjectId.isValid(pathname.split('/').pop() || '')) {
+    } else if (pathname.includes('/teacher/my-classes/') && isValidObjectId(pathname.split('/').pop() || '')) {
         selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { 
         selectedKey = `/${schoolCode}/portal/teacher/attendance`;
@@ -341,24 +345,24 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
-      if (mongoose.Types.ObjectId.isValid(snippet)) {
+      if (isValidObjectId(snippet)) {
         const prevSegment = relevantSnippets[index-1];
         const secondPrevSegment = relevantSnippets[index-2]; 
         const nextSegment = relevantSnippets[index+1]; 
 
         if (prevSegment === 'exams' && nextSegment === 'assessments') { 
             title = "Manage Assessments"; 
-        } else if (prevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(relevantSnippets[index+1])) { 
+        } else if (prevSegment === 'marks-entry' && isValidObjectId(relevantSnippets[index+1])) { 
              title = `Exam Details`; 
-        } else if (secondPrevSegment === 'marks-entry' && mongoose.Types.ObjectId.isValid(prevSegment)) { 
+        } else if (secondPrevSegment === 'marks-entry' && isValidObjectId(prevSegment)) { 
              title = "Enter Marks"; 
-        } else if (prevSegment === 'my-classes' && mongoose.Types.ObjectId.isValid(snippet)) { 
+        } else if (prevSegment === 'my-classes' && isValidObjectId(snippet)) { 
              title = `Class Roster`; 
         } else if (prevSegment === 'timetables' && nextSegment === 'periods') {
              title = 'Manage Periods';
         } else if (prevSegment === 'dormitory' && nextSegment === 'rooms') {
             title = 'Manage Rooms';
-        } else if (prevSegment === 'visits' && mongoose.Types.ObjectId.isValid(snippet)) {
+        } else if (prevSegment === 'visits' && isValidObjectId(snippet)) {
             title = 'Manage Visit';
         }
         else {

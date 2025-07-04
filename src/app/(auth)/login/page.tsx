@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -6,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Form, Input, Button, Typography, Alert, Space } from 'antd';
 import { MailOutlined, LockOutlined, HomeOutlined, ReadOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -116,15 +116,12 @@ export default function LoginPage() {
       </Form>
        <Paragraph className="text-center mt-6 text-sm">
         <Text type="secondary">
-          Accessing a public school website? 
-          <Link href="/"> Find a school.</Link> 
+          Accessing a public school website?{' '}
+          <Link href="/" className="text-primary hover:underline">
+            Find a school.
+          </Link> 
         </Text>
       </Paragraph>
     </>
   );
 }
-
-// Minimalist Link for this page
-const Link: React.FC<React.AnchorHTMLAttributes<HTMLAnchorElement>> = ({ href, children, ...props }) => (
-  <a href={href} {...props} className="text-primary hover:underline">{children}</a>
-);
