@@ -8,7 +8,6 @@ import type { ITimetable } from '@/models/Tenant/Timetable';
 import type { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import type { IClass } from '@/models/Tenant/Class';
 import type { ITerm } from '@/models/Tenant/Term';
-// import moment from 'moment'; // Not directly used for dates in this component
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -222,9 +221,10 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
         method = 'PUT';
         payload = { ...values, periods: editingTimetable.periods || [] }; // Preserve existing periods
       } else if (modalMode === 'copy' && editingTimetable) {
-        url = `${API_URL_BASE}/${editingTimetable._id}/copy`;
+        url = `${API_URL_BASE}/copy`; // Use the new static copy endpoint
         method = 'POST';
-        payload = { // Payload for copy includes new definition fields
+        payload = { // Payload for copy includes sourceId and new definition fields
+            sourceTimetableId: editingTimetable._id,
             name: values.name,
             academicYearId: values.academicYearId,
             classId: values.classId,
