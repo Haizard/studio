@@ -2,12 +2,13 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Table, Modal, Form, Input, Select, Switch, message, Tag, Space, Spin, Popconfirm, Row, Col } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ScheduleOutlined, ProjectOutlined, CopyOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ScheduleOutlined, ProjectOutlined, CopyOutlined, BulbOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import type { ITimetable } from '@/models/Tenant/Timetable';
 import type { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import type { IClass } from '@/models/Tenant/Class';
 import type { ITerm } from '@/models/Tenant/Term';
+import { generateSchedule, type GenerateScheduleInput } from '@/ai/flows/generate-schedule-flow';
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -25,7 +26,7 @@ interface TimetableManagementPageProps {
   params: { schoolCode: string };
 }
 
-type ModalMode = 'add' | 'edit' | 'copy';
+type ModalMode = 'add' | 'edit' | 'copy' | 'ai';
 
 export default function TimetableManagementPage({ params }: TimetableManagementPageProps) {
   const { schoolCode } = params;
@@ -44,6 +45,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
   const [form] = Form.useForm();
   
   const selectedAcademicYearInModal = Form.useWatch('academicYearId', form);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const API_URL_BASE = `/api/${schoolCode}/portal/admin/academics/timetables`;
   const ACADEMIC_YEARS_API = `/api/${schoolCode}/portal/academics/academic-years`;
@@ -105,16 +107,11 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
       setFilteredClasses([]);
       setFilteredTerms([]);
     }
-    // Reset class and term if AY changes and it's not matching the editing/copying source's AY
-    if (isModalVisible && editingTimetable) {
-      const sourceAYId = typeof editingTimetable.academicYearId === 'object' ? editingTimetable.academicYearId._id : editingTimetable.academicYearId;
-      if (sourceAYId !== selectedAcademicYearInModal) {
+    // Reset class and term if AY changes to ensure only relevant options are shown/selected
+    if (isModalVisible && modalMode !== 'edit') {
         form.setFieldsValue({ classId: undefined, termId: undefined });
-      }
-    } else if (isModalVisible && modalMode !== 'edit') { // For 'add' or 'copy' mode, if AY changes, reset class/term
-         form.setFieldsValue({ classId: undefined, termId: undefined });
     }
-  }, [selectedAcademicYearInModal, allClasses, allTerms, isModalVisible, form, editingTimetable, modalMode]);
+  }, [selectedAcademicYearInModal, allClasses, allTerms, isModalVisible, form, modalMode]);
 
 
   const handleAddTimetable = () => {
@@ -177,37 +174,74 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
     setIsModalVisible(true);
   };
 
-  const handleAcademicYearChangeInModal = (yearId: string | undefined, isNewEntry: boolean) => {
-    if (yearId) {
-        setFilteredClasses(allClasses.filter(cls => (typeof cls.academicYearId === 'string' ? cls.academicYearId : (cls.academicYearId as IAcademicYear)?._id) === yearId));
-        setFilteredTerms(allTerms.filter(term => (typeof term.academicYearId === 'string' ? term.academicYearId : (term.academicYearId as IAcademicYear)?._id) === yearId));
-        if(isNewEntry || modalMode !== 'edit' || (editingTimetable && (typeof editingTimetable.academicYearId === 'object' ? editingTimetable.academicYearId._id : editingTimetable.academicYearId) !== yearId)) {
-            form.setFieldsValue({ classId: undefined, termId: undefined });
-        }
-    } else {
-        setFilteredClasses([]);
-        setFilteredTerms([]);
-        form.setFieldsValue({ classId: undefined, termId: undefined });
-    }
+  const handleAIGenerate = () => {
+    setEditingTimetable(null);
+    setModalMode('ai');
+    form.resetFields();
+    const activeYear = academicYears.find(ay => ay.isActive);
+    form.setFieldsValue({ academicYearId: activeYear?._id });
+    if(activeYear?._id) handleAcademicYearChangeInModal(activeYear._id, true);
+    setIsModalVisible(true);
   };
 
-  const handleDeleteTimetable = async (timetableId: string) => {
-    try {
-      const response = await fetch(`${API_URL_BASE}/${timetableId}`, { method: 'DELETE' });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete timetable');
-      }
-      message.success('Timetable deleted successfully');
-      fetchData();
-    } catch (error: any) {
-      message.error(error.message || 'Could not delete timetable.');
-    }
+
+  const handleAcademicYearChangeInModal = (yearId: string, isNew: boolean) => {
+     setFilteredClasses(allClasses.filter(cls => (typeof cls.academicYearId === 'string' ? cls.academicYearId : (cls.academicYearId as IAcademicYear)?._id) === yearId));
+     setFilteredTerms(allTerms.filter(term => (typeof term.academicYearId === 'string' ? term.academicYearId : (term.academicYearId as IAcademicYear)?._id) === yearId));
+     if (isNew || (modalMode !== 'edit' || (editingTimetable && (typeof editingTimetable.academicYearId === 'object' ? editingTimetable.academicYearId._id : editingTimetable.academicYearId) !== yearId))) {
+        form.setFieldsValue({ classId: undefined, termId: undefined });
+     }
   };
 
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
+      
+      if (modalMode === 'ai') {
+        setAiLoading(true);
+        try {
+          const selectedClass = allClasses.find(c => c._id === values.classId);
+          if (!selectedClass) throw new Error("Selected class details not found.");
+          
+          const aiInput: GenerateScheduleInput = {
+            classId: values.classId,
+            academicYearId: values.academicYearId,
+            instructions: values.instructions,
+          };
+          const generatedPeriods = await generateSchedule(aiInput);
+
+          const newTimetablePayload = {
+            name: `${selectedClass.name} - AI Generated`,
+            academicYearId: values.academicYearId,
+            classId: values.classId,
+            termId: values.termId,
+            description: `AI generated schedule with instructions: ${values.instructions || 'none'}`.trim(),
+            periods: generatedPeriods.periods,
+            isActive: false,
+          };
+
+          const createResponse = await fetch(API_URL_BASE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newTimetablePayload),
+          });
+
+          if (!createResponse.ok) {
+            const errorData = await createResponse.json();
+            throw new Error(errorData.error || "Failed to save the AI-generated timetable.");
+          }
+          message.success('AI-generated timetable has been successfully created as a new draft!');
+          setIsModalVisible(false);
+          fetchData();
+        } catch (error: any) {
+          console.error("AI Generation Error:", error);
+          message.error(`AI generation failed: ${error.message}`);
+        } finally {
+          setAiLoading(false);
+        }
+        return;
+      }
+      
       let url = '';
       let method = '';
       let payload: any = {};
@@ -312,6 +346,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
     if (modalMode === 'add') return 'Add New Timetable Definition';
     if (modalMode === 'edit') return 'Edit Timetable Details';
     if (modalMode === 'copy') return 'Copy Timetable As...';
+    if (modalMode === 'ai') return 'Generate Timetable with AI';
     return 'Manage Timetable';
   };
 
@@ -320,9 +355,14 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
     <div>
       <div className="flex justify-between items-center mb-6">
         <Title level={2}><ScheduleOutlined className="mr-2"/>Timetable Management</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTimetable}>
-          Add New Timetable Definition
-        </Button>
+        <Space>
+           <Button type="default" icon={<BulbOutlined />} onClick={handleAIGenerate}>
+             AI Generate Schedule
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTimetable}>
+              Add New Timetable Definition
+            </Button>
+        </Space>
       </div>
       <Table columns={columns} dataSource={timetables} rowKey="_id" scroll={{ x: 1300 }} />
 
@@ -330,8 +370,9 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
         title={getModalTitle()}
         open={isModalVisible}
         onOk={handleModalOk}
+        okButtonProps={{ loading: aiLoading || form.isSubmitting }}
         onCancel={() => setIsModalVisible(false)}
-        confirmLoading={form.isSubmitting}
+        confirmLoading={aiLoading || form.isSubmitting}
         destroyOnClose
         width={700}
       >
@@ -342,15 +383,15 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
             }
           }}
         >
-          <Form.Item name="name" label="Timetable Name" rules={[{ required: true, message: "E.g., 'Form 1A - Term 1 Regular'" }]}>
-            <Input placeholder="e.g., Form 1A - Term 1 Regular" />
-          </Form.Item>
+          { modalMode !== 'ai' && (
+            <Form.Item name="name" label="Timetable Name" rules={[{ required: true, message: "E.g., 'Form 1A - Term 1 Regular'" }]}>
+                <Input placeholder="e.g., Form 1A - Term 1 Regular" />
+            </Form.Item>
+          )}
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="academicYearId" label="Academic Year" rules={[{ required: true }]}>
-                <Select 
-                    placeholder="Select academic year"
-                >
+                <Select placeholder="Select academic year">
                   {academicYears.map(year => <Option key={year._id} value={year._id}>{year.name}</Option>)}
                 </Select>
               </Form.Item>
@@ -381,7 +422,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
               </Form.Item>
             </Col>
             <Col span={12}>
-              {modalMode !== 'copy' && ( 
+              {modalMode === 'edit' && ( 
                 <Form.Item 
                     name="isActive" 
                     label="Set as Active Timetable" 
@@ -393,10 +434,17 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
               )}
             </Col>
           </Row>
-          <Form.Item name="description" label="Description (Optional)">
-            <TextArea rows={3} placeholder="Any specific notes about this timetable version or scope." />
-          </Form.Item>
-          {modalMode !== 'copy' && (
+           { modalMode !== 'ai' ? (
+                <Form.Item name="description" label="Description (Optional)">
+                    <TextArea rows={3} placeholder="Any specific notes about this timetable version or scope." />
+                </Form.Item>
+           ) : (
+                <Form.Item name="instructions" label="AI Instructions (Optional)">
+                    <TextArea rows={4} placeholder="Provide special instructions, e.g., 'Prioritize math in the morning. Avoid back-to-back science classes. Physical Education should be in the afternoon.'" />
+                </Form.Item>
+           )}
+
+          {modalMode !== 'copy' && modalMode !== 'ai' && (
             <Paragraph type="secondary" className="text-sm">
                 Detailed period scheduling (days, times, subjects, teachers) will be managed on the next page after creating or selecting a timetable definition.
             </Paragraph>
@@ -405,6 +453,14 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
             <Paragraph type="warning" className="text-sm">
                 You are copying the structure and periods from an existing timetable. Adjust the name and academic context as needed for the new copy. The new timetable will be created as inactive by default.
             </Paragraph>
+          )}
+           {modalMode === 'ai' && (
+            <Alert
+                message="AI Generation Note"
+                description="The AI will generate a complete, balanced weekly schedule based on the subjects and teachers assigned to the selected class. This process can take up to a minute. The generated timetable will be saved as a new draft, which you can then activate or edit."
+                type="info"
+                showIcon
+            />
           )}
         </Form>
       </Modal>
