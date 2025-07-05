@@ -153,7 +153,9 @@ This document tracks the features implemented and planned for the Unified School
 
 ### VII. Cross-Cutting Concerns
 - [x] **Enhanced Security (Audit Trails)**: Backend service and logging for key actions (logins, user management).
-- [x] **Theming Customization**: Allow admins more control over portal and public site appearance beyond basic colors.
+- [x] **Theming Customization**: Admins can control portal and public site appearance and navigation.
+- [x] **Advanced Search & Filtering**: Library and Finance modules enhanced with search/filter capabilities.
+- [x] **Data Import/Export (UI Shell)**: UI and navigation created for import/export of key data.
 
 ## 🚧 Planned/Pending Features (High-Level)
 
@@ -162,8 +164,7 @@ This document tracks the features implemented and planned for the Unified School
 
 ### Cross-Cutting Concerns
 - [ ] **Notifications System**: In-app and email notifications for important events.
-- [ ] **Advanced Search & Filtering**: Across all major modules.
-- [ ] **Data Import/Export**: For key data like students, teachers, marks.
+- [ ] **Data Import/Export (Backend Logic)**: Implement CSV/Excel parsing and data processing for students, teachers, marks.
 - [ ] **Enhanced Security (Other)**: Password policies, session timeouts.
 - [ ] **Accessibility (A11Y) improvements**.
 - [ ] **Mobile Responsiveness**: Thorough testing and refinement.
