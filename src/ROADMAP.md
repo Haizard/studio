@@ -80,14 +80,14 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Class Performance Report**: View page for admins to see performance summary of all students in a class.
 - [x] **Finance Management**:
     - [x] **Fee structure setup**: CRUD for individual fee items (name, amount, applicability).
-    - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments)
+    - [x] **Student fee collection and tracking** (Model, APIs, and UI Page for recording/viewing payments with filters)
     - [x] **Financial reporting (Advanced: Beyond simple payment lists)**
         - [x] Basic Page and Navigation Created
         - [x] API for Fee Collection Summary Report
         - [x] UI for Fee Collection Summary Report (with filters and charts)
         - [x] API for Outstanding Balances Report
         - [x] UI for Outstanding Balances Report
-        - [x] Expense Report (API and UI)
+        - [x] Expense Report (API and UI with filters)
         - [x] Income Statement Report (UI)
     - [x] Invoicing and receipts (API and UI)
     - [x] Expense tracking (API and UI)
@@ -109,9 +109,9 @@ This document tracks the features implemented and planned for the Unified School
     - [x] Placeholder Dashboard & Navigation Created
     - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
     - [x] **Inventory of medical supplies (CRUD UI)**
+    - [x] **Check-in/Check-out workflow**
+    - [x] **Medication dispensing log**
     - [ ] **Student health records (View/Edit UI)**
-    - [ ] **Check-in/Check-out workflow**
-    - [ ] Medication dispensing log
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:

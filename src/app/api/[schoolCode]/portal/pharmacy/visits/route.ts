@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { getTenantConnection } from '@/lib/db';
 import VisitModel, { IVisit } from '@/models/Tenant/Visit';

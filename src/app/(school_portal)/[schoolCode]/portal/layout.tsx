@@ -313,14 +313,11 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         if (pathname.includes('/inventory')) selectedKey = `/${schoolCode}/portal/library/inventory`;
     } else if (pathname.startsWith(`/${schoolCode}/portal/dormitory/`)){
         selectedKey = `/${schoolCode}/portal/dormitory`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/inventory`)) {
-        selectedKey = `/${schoolCode}/portal/pharmacy/inventory`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/records`)) {
-        selectedKey = `/${schoolCode}/portal/pharmacy/records`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/visits`)) {
-        selectedKey = `/${schoolCode}/portal/pharmacy/visits`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy`)) {
+    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/`)) {
         selectedKey = `/${schoolCode}/portal/pharmacy`;
+        if (pathname.includes('/inventory')) selectedKey = `/${schoolCode}/portal/pharmacy/inventory`;
+        if (pathname.includes('/records')) selectedKey = `/${schoolCode}/portal/pharmacy/records`;
+        if (pathname.includes('/visits')) selectedKey = `/${schoolCode}/portal/pharmacy/visits`;
     }
   }
   openKeys = activeKeysResult.open || [];
@@ -330,7 +327,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
   if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
   if(selectedKey.includes('/library')) openKeys.push('library-management');
-  if(selectedKey.includes('/pharmacy')) openKeys.push(`${basePortalPath}/pharmacy`);
+  if(selectedKey.includes('/pharmacy')) openKeys.push(`${schoolCode}/portal/pharmacy`);
 
 
   const breadcrumbItemsGen = () => {
