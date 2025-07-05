@@ -108,7 +108,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Pharmacy/Health Management**:
     - [x] Placeholder Dashboard &amp; Navigation Created
     - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
-    - [ ] **Inventory of medical supplies (CRUD UI)**
+    - [x] **Inventory of medical supplies (CRUD UI)**
     - [ ] **Student health records (View/Edit UI)**
     - [ ] **Check-in/Check-out workflow**
     - [ ] Medication dispensing log
