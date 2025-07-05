@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col, Button } from 'antd';
@@ -20,28 +21,32 @@ export default function DataManagementPage({ params }: DataManagementPageProps) 
       icon: <UploadOutlined />, 
       link: `${basePortalPath}/import-students`, 
       description: 'Bulk import new student data from a CSV or Excel file.',
-      comingSoon: true
+      comingSoon: true,
+      isExportLink: false,
     },
     { 
       title: 'Export Students', 
       icon: <DownloadOutlined />, 
-      link: `${basePortalPath}/export-students`, 
+      link: `/api/${schoolCode}/portal/admin/data-management/export/students`, 
       description: 'Export student roster and details to a CSV or Excel file.',
-      comingSoon: true 
+      comingSoon: false,
+      isExportLink: true,
     },
     { 
       title: 'Import Marks', 
       icon: <UploadOutlined />, 
       link: `${basePortalPath}/import-marks`, 
       description: 'Bulk upload student assessment marks from a template.',
-      comingSoon: true
+      comingSoon: true,
+      isExportLink: false,
     },
     { 
       title: 'Export Marks', 
       icon: <DownloadOutlined />, 
       link: `${basePortalPath}/export-marks`, 
       description: 'Export marks for a class, subject, or exam.',
-      comingSoon: true
+      comingSoon: true,
+      isExportLink: false,
     },
   ];
 
@@ -66,6 +71,10 @@ export default function DataManagementPage({ params }: DataManagementPageProps) 
                     <Paragraph type="secondary">{section.description}</Paragraph>
                     {section.comingSoon ? (
                         <Button type="primary" disabled>Coming Soon</Button>
+                    ) : section.isExportLink ? (
+                        <a href={section.link} download>
+                            <Button type="primary">Proceed</Button>
+                        </a>
                     ) : (
                          <Link href={section.link}>
                             <Button type="primary">Proceed</Button>
