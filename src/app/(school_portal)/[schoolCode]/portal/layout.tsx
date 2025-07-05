@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -110,7 +111,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
             { key: `${basePortalPath}/admin/attendance`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/admin/attendance`}>Attendance Records</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
-            { key: `${basePortalPath}/admin/grading-promotion`, icon: <RocketOutlined />, label: <Link href={`${basePortalPath}/admin/grading-promotion`}>Grading & Promotion</Link> },
+            { key: `${basePortalPath}/admin/grading-promotion`, icon: <RocketOutlined />, label: <Link href={`${basePortalPath}/admin/grading-promotion`}>Grading &amp; Promotion</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
           ],
         },
@@ -149,7 +150,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/library/members`, icon: <MembersIcon />, label: <Link href={`${basePortalPath}/library/members`}>Member Management</Link> },
             { key: `${basePortalPath}/library/circulation`, icon: <ContainerOutlined />, label: <Link href={`${basePortalPath}/library/circulation`}>Circulation Desk</Link> },
             { key: `${basePortalPath}/library/transactions`, icon: <HistoryOutlined />, label: <Link href={`${basePortalPath}/library/transactions`}>Transactions</Link> },
-            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory & Reports</Link> },
+            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory &amp; Reports</Link> },
           ]
         },
         { 
@@ -197,7 +198,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/library/members`, icon: <MembersIcon />, label: <Link href={`${basePortalPath}/library/members`}>Member Management</Link> },
             { key: `${basePortalPath}/library/circulation`, icon: <ContainerOutlined />, label: <Link href={`${basePortalPath}/library/circulation`}>Circulation Desk</Link> },
             { key: `${basePortalPath}/library/transactions`, icon: <HistoryOutlined />, label: <Link href={`${basePortalPath}/library/transactions`}>Transactions</Link> },
-            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory & Reports</Link> },
+            { key: `${basePortalPath}/library/inventory`, icon: <PieChartOutlined />, label: <Link href={`${basePortalPath}/library/inventory`}>Inventory &amp; Reports</Link> },
           ]
         }
       );
@@ -328,7 +329,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
   if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
   if(selectedKey.includes('/library')) openKeys.push('library-management');
-  if(selectedKey.includes('/pharmacy')) openKeys.push(`${schoolCode}/portal/pharmacy`);
+  if(selectedKey.includes('/pharmacy')) openKeys.push(`${basePortalPath}/pharmacy`);
 
 
   const breadcrumbItemsGen = () => {

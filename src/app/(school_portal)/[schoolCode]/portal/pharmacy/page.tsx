@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { Typography, Card, Row, Col } from 'antd';
@@ -18,21 +19,21 @@ export default function PharmacyDashboardPage({ params }: PharmacyDashboardPageP
       icon: <UserOutlined />, 
       link: `${basePortalPath}/records`, 
       description: "View and manage student allergies, conditions, and emergency contacts.",
-      comingSoon: false
+      comingSoon: true
     },
     { 
       title: 'Visit Log & Check-in', 
       icon: <HistoryOutlined />, 
       link: `${basePortalPath}/visits`,
       description: 'Log new student visits to the pharmacy and view past visit history.',
-      comingSoon: false
+      comingSoon: true
     },
     { 
       title: 'Medication Inventory', 
       icon: <UnorderedListOutlined />, 
       link: `${basePortalPath}/inventory`, 
       description: 'Manage the stock of available medications and supplies.',
-      comingSoon: false
+      comingSoon: true
     },
     {
       title: 'Dispense Medication',
@@ -46,7 +47,7 @@ export default function PharmacyDashboardPage({ params }: PharmacyDashboardPageP
   return (
     <div>
       <Title level={2} className="mb-8">
-        <MedicineBoxOutlined className="mr-2" /> Pharmacy & Health Management
+        <MedicineBoxOutlined className="mr-2" /> Pharmacy &amp; Health Management
       </Title>
       <Paragraph className="mb-8">
         Oversee student health records, manage visits, and track medication inventory for {schoolCode.toUpperCase()}.

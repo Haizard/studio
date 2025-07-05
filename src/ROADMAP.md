@@ -99,19 +99,19 @@ This document tracks the features implemented and planned for the Unified School
     - [x] **Transaction History**: View all borrowing and return transactions with filters.
     - [x] **Library inventory and reporting**: Dashboard with key library statistics.
 - [x] **Dormitory Management**:
-    - [x] **Dormitory/Room setup**: Models, APIs, and UI for Dormitory & Room Management.
+    - [x] **Dormitory/Room setup**: Models, APIs, and UI for Dormitory &amp; Room Management.
     - [x] **Student room allocation**: Backend APIs and UI for student assignment to rooms.
-- [x] **Grading & Promotion**:
+- [x] **Grading &amp; Promotion**:
     - [x] **Process Promotions (Analysis)**: UI to view class performance and suggested promotion actions.
     - [x] **Process Promotions (Execution)**: UI and API to confirm and finalize student promotions.
     - [x] **Generate final report cards/transcripts**: Detailed student term report generation.
 - [x] **Pharmacy/Health Management**:
-    - [x] Placeholder Dashboard & Navigation Created
+    - [x] Placeholder Dashboard &amp; Navigation Created
     - [x] Data Models Created (HealthRecord, Visit, Medication, Dispensation)
-    - [x] **Inventory of medical supplies (CRUD UI)**
-    - [x] **Student health records (View/Edit UI)**
-    - [x] **Check-in/Check-out workflow**
-    - [x] Medication dispensing log
+    - [ ] **Inventory of medical supplies (CRUD UI)**
+    - [ ] **Student health records (View/Edit UI)**
+    - [ ] **Check-in/Check-out workflow**
+    - [ ] Medication dispensing log
 
 ### IV. School Portal - Teacher Section (`/[schoolCode]/portal/teacher/...`)
 - [x] **Marks Entry**:
@@ -154,7 +154,7 @@ This document tracks the features implemented and planned for the Unified School
 ### VII. Cross-Cutting Concerns
 - [x] **Enhanced Security (Audit Trails)**: Backend service and logging for key actions (logins, user management).
 - [x] **Theming Customization**: Admins can control portal and public site appearance and navigation.
-- [x] **Advanced Search & Filtering**: Library and Finance modules enhanced with search/filter capabilities.
+- [x] **Advanced Search &amp; Filtering**: Library and Finance modules enhanced with search/filter capabilities.
 - [x] **Data Import/Export (UI Shell)**: UI and navigation created for import/export of key data.
 
 ## 🚧 Planned/Pending Features (High-Level)
@@ -171,7 +171,7 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Accessibility (A11Y) improvements**.
 - [ ] **Mobile Responsiveness**: Thorough testing and refinement.
 - [ ] **AI Features (Genkit)**: Specific integrations (e.g., support chatbot, data analysis, beyond news summary/generation).
-- [ ] **Backup & Restore**: Strategies for tenant data.
+- [ ] **Backup &amp; Restore**: Strategies for tenant data.
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.
