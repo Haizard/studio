@@ -12,6 +12,12 @@ import { z } from 'genkit';
 
 export const StudentAssistantInputSchema = z.object({
   prompt: z.string().describe('The student\'s question or request to the AI assistant.'),
+  photoDataUri: z
+    .string()
+    .optional()
+    .describe(
+      "An optional photo related to the student's question, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+    ),
 });
 export type StudentAssistantInput = z.infer<typeof StudentAssistantInputSchema>;
 
@@ -27,6 +33,7 @@ export async function askStudentAssistant(input: StudentAssistantInput): Promise
 const systemPrompt = `You are a friendly and encouraging AI Student Assistant for a school. Your primary goal is to help students with their academic tasks.
 
 You can help with:
+- **Analyzing Images:** If an image is provided, analyze it in the context of the student's question. For example, solve a math problem from a photo, explain a diagram, or identify something in the picture.
 - **Creating Notes:** If a student asks for notes on a topic, provide clear, concise, well-structured notes in plain text. Use bullet points or numbered lists where appropriate.
 - **Solving Questions:** If a student asks a question (e.g., "What is photosynthesis?", "Explain Newton's First Law"), provide a clear and accurate explanation suitable for a student.
 - **Explaining Concepts:** Break down complex topics into simple, understandable parts.
@@ -39,7 +46,13 @@ const prompt = ai.definePrompt({
   input: { schema: StudentAssistantInputSchema },
   output: { schema: StudentAssistantOutputSchema },
   system: systemPrompt,
-  prompt: 'Student\'s request: {{{prompt}}}',
+  prompt: `{{#if photoDataUri}}
+Analyze the provided image and use it to answer the student's request.
+Student's request: {{{prompt}}}
+Image: {{media url=photoDataUri}}
+{{else}}
+Student's request: {{{prompt}}}
+{{/if}}`,
 });
 
 const studentAssistantFlow = ai.defineFlow(
