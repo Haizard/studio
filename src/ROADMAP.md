@@ -156,9 +156,7 @@ This document tracks the features implemented and planned for the Unified School
 - [x] **Theming Customization**: Admins can control portal and public site appearance and navigation.
 - [x] **Advanced Search & Filtering**: Library and Finance modules enhanced with search/filter capabilities.
 - [x] **Data Import/Export (UI Shell)**: UI and navigation created for import/export of key data.
-- [x] **Notifications System**: 
-    - [x] Backend model and APIs for fetching/marking read
-    - [x] UI component for displaying notifications
+- [x] **Notifications System**: In-app notifications for key events (e.g., new resources). Includes backend, UI, and event triggers.
 
 ## 🚧 Planned/Pending Features (High-Level)
 

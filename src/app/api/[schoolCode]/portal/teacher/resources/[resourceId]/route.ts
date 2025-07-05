@@ -7,6 +7,7 @@ import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
+import { createNotificationsForClassLevel } from '@/lib/notificationService';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.TeacherResource) tenantDb.model<ITeacherResource>('TeacherResource', TeacherResourceModel.schema);
@@ -85,6 +86,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Resource not found or you do not have permission to update it' }, { status: 404 });
     }
     
+    const wasPublic = resourceToUpdate.isPublic; // Capture state before update
+
     resourceToUpdate.title = title;
     resourceToUpdate.description = description;
     resourceToUpdate.fileUrl = fileUrl;
@@ -95,6 +98,17 @@ export async function PUT(
     resourceToUpdate.isPublic = isPublic !== undefined ? isPublic : resourceToUpdate.isPublic;
 
     await resourceToUpdate.save();
+
+    // After saving, check if it just became public
+    if (!wasPublic && resourceToUpdate.isPublic) {
+        createNotificationsForClassLevel(schoolCode, resourceToUpdate.classLevel, {
+            title: 'New Learning Resource Available',
+            message: `A resource has been made available by your teacher: "${resourceToUpdate.title}"`,
+            link: `/${schoolCode}/portal/student/resources`,
+            type: 'info'
+        });
+    }
+
     const populatedResource = await TeacherResource.findById(resourceToUpdate._id)
       .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
       .populate<{ subjectId?: ISubject }>('subjectId', 'name')

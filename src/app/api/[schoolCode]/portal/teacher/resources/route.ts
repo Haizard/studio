@@ -7,6 +7,7 @@ import SubjectModel, { ISubject } from '@/models/Tenant/Subject';
 import { ITenantUser, TenantUserSchemaDefinition } from '@/models/Tenant/User';
 import { getToken } from 'next-auth/jwt';
 import mongoose from 'mongoose';
+import { createNotificationsForClassLevel } from '@/lib/notificationService';
 
 async function ensureTenantModelsRegistered(tenantDb: mongoose.Connection) {
   if (!tenantDb.models.TeacherResource) tenantDb.model<ITeacherResource>('TeacherResource', TeacherResourceModel.schema);
@@ -95,6 +96,18 @@ export async function POST(
     });
 
     await newResource.save();
+
+    // After successfully saving, trigger notifications if it's public
+    if (newResource.isPublic) {
+        // Fire and forget - no need to await this and slow down the API response
+        createNotificationsForClassLevel(schoolCode, newResource.classLevel, {
+            title: 'New Learning Resource Available',
+            message: `Your teacher has shared a new resource: "${newResource.title}"`,
+            link: `/${schoolCode}/portal/student/resources`,
+            type: 'info'
+        });
+    }
+
     const populatedResource = await TeacherResource.findById(newResource._id)
       .populate<{ academicYearId: IAcademicYear }>('academicYearId', 'name')
       .populate<{ subjectId?: ISubject }>('subjectId', 'name')
