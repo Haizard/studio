@@ -164,15 +164,16 @@ This document tracks the features implemented and planned for the Unified School
     - [x] AI summary & content generation for news/blog.
     - [x] AI-assisted timetable generation.
     - [x] Student support chatbot.
+- [x] **Backup & Restore (UI Shell)**: UI for initiating backups and restores created.
 
 ## 🚧 Planned/Pending Features (High-Level)
 
 ### Cross-Cutting Concerns
 - [ ] **Data Import/Export (Backend Logic)**: Implement CSV/Excel parsing and data processing for students, teachers, marks.
+- [ ] **Backup & Restore (Backend)**: Implement logic for creating and restoring database snapshots.
 - [ ] **Enhanced Security (Other)**: Password policies, session timeouts.
 - [ ] **Accessibility (A11Y) improvements**.
 - [ ] **Mobile Responsiveness**: Thorough testing and refinement.
-- [ ] **Backup & Restore**: Strategies for tenant data.
 
 This roadmap should give us a clear overview of our progress and what lies ahead!
 Let me know what you'd like to tackle next from the "Planned/Pending Features" section.

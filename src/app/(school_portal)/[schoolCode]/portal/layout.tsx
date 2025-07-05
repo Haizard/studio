@@ -43,6 +43,7 @@ import {
   FileProtectOutlined,
   FileExcelOutlined,
   RobotOutlined,
+  SaveOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -113,7 +114,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
             { key: `${basePortalPath}/admin/attendance`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/admin/attendance`}>Attendance Records</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
-            { key: `${basePortalPath}/admin/grading-promotion`, icon: <RocketOutlined />, label: <Link href={`${basePortalPath}/admin/grading-promotion`}>Grading &amp; Promotion</Link> },
+            { key: `${basePortalPath}/admin/grading-promotion`, icon: <RocketOutlined />, label: <Link href={`${basePortalPath}/admin/grading-promotion`}>Grading & Promotion</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
           ],
         },
@@ -167,6 +168,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           ]
         },
         { key: `${basePortalPath}/admin/data-management`, icon: <FileExcelOutlined />, label: <Link href={`${basePortalPath}/admin/data-management`}>Data Import/Export</Link> },
+        { key: `${basePortalPath}/admin/backup-restore`, icon: <SaveOutlined />, label: <Link href={`${basePortalPath}/admin/backup-restore`}>Backup & Restore</Link> },
         { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> }
       );
     }
@@ -325,7 +327,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   openKeys = activeKeysResult.open || [];
 
   if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
-  if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports') || selectedKey.includes('/admin/settings') || selectedKey.includes('/admin/users') || selectedKey.includes('/admin/students') || selectedKey.includes('/admin/teachers') || selectedKey.includes('/admin/grading-promotion')) openKeys.push('admin-management');
+  if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports') || selectedKey.includes('/admin/settings') || selectedKey.includes('/admin/users') || selectedKey.includes('/admin/students') || selectedKey.includes('/admin/teachers') || selectedKey.includes('/admin/grading-promotion') || selectedKey.includes('/admin/backup-restore')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
   if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
   if(selectedKey.includes('/library')) openKeys.push('library-management');
