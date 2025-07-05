@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, List, Spin, Typography, Avatar, Card, Alert, Upload } from 'antd';
-import { SendOutlined, UserOutlined, RobotOutlined, PaperClipOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { Button, Input, List, Spin, Typography, Avatar, Card, Alert, Upload, Select } from 'antd';
+import { SendOutlined, UserOutlined, RobotOutlined, PaperClipOutlined, CloseCircleOutlined, UserSwitchOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
-import { askStudentAssistant, type StudentAssistantInput } from '@/ai/flows/student-assistant-flow';
+import { askStudentAssistant, type StudentAssistantInput, SupportedExperts } from '@/ai/flows/student-assistant-flow';
 import Image from 'next/image';
 
 const { Title, Paragraph } = Typography;
+const { Option } = Select;
 
 interface Message {
   text: string;
@@ -22,6 +23,7 @@ export default function AiAssistantPage() {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedExpert, setSelectedExpert] = useState<typeof SupportedExperts[number]>('General Assistant');
   const listEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,6 +59,7 @@ export default function AiAssistantPage() {
     try {
       const input: StudentAssistantInput = { 
         prompt: inputValue,
+        expert: selectedExpert,
         photoDataUri: imagePreview || undefined, // Send data URI if it exists
       };
       const result = await askStudentAssistant(input);
@@ -84,8 +87,20 @@ export default function AiAssistantPage() {
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
-      <Title level={2} className="text-center mb-4">AI Student Assistant</Title>
-      <Paragraph type="secondary" className="text-center mb-6">Your personal AI-powered tutor. Ask a question or upload an image to get started.</Paragraph>
+      <Title level={2} className="text-center mb-2">AI Student Assistant</Title>
+      <div className="text-center mb-6">
+        <Select
+            value={selectedExpert}
+            onChange={value => setSelectedExpert(value)}
+            style={{ width: 240 }}
+            suffixIcon={<UserSwitchOutlined />}
+            size="large"
+        >
+            {SupportedExperts.map(expert => (
+                <Option key={expert} value={expert}>{expert}</Option>
+            ))}
+        </Select>
+      </div>
       
       <Card className="flex-grow flex flex-col shadow-lg">
         <div className="flex-grow overflow-y-auto pr-4 h-[55vh]">
