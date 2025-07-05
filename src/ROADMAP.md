@@ -163,7 +163,9 @@ This document tracks the features implemented and planned for the Unified School
 - [ ] **Timetable Generation Tools**: (Advanced) AI or constraint-based tools to assist in or automate timetable creation.
 
 ### Cross-Cutting Concerns
-- [ ] **Notifications System**: In-app and email notifications for important events.
+- [ ] **Notifications System**: 
+    - [x] Backend model and APIs for fetching/marking read
+    - [ ] UI component for displaying notifications
 - [ ] **Data Import/Export (Backend Logic)**: Implement CSV/Excel parsing and data processing for students, teachers, marks.
 - [ ] **Enhanced Security (Other)**: Password policies, session timeouts.
 - [ ] **Accessibility (A11Y) improvements**.
