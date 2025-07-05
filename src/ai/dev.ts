@@ -3,3 +3,4 @@
 import './flows/summarize-text-flow';
 import './flows/generate-article-flow';
 import './flows/generate-schedule-flow';
+import './flows/student-assistant-flow';

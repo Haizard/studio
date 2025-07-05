@@ -42,6 +42,7 @@ import {
   RocketOutlined,
   FileProtectOutlined,
   FileExcelOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -246,6 +247,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         { key: `${basePortalPath}/student/my-attendance`, icon: <CheckSquareOutlined />, label: <Link href={`${basePortalPath}/student/my-attendance`}>My Attendance</Link> },
         { key: `${basePortalPath}/student/resources`, icon: <FolderOpenOutlined />, label: <Link href={`${basePortalPath}/student/resources`}>Resources</Link> },
         { key: `${basePortalPath}/student/my-timetable`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/student/my-timetable`}>My Timetable</Link> },
+        { key: `${basePortalPath}/student/ai-assistant`, icon: <RobotOutlined />, label: <Link href={`${basePortalPath}/student/ai-assistant`}>AI Assistant</Link> },
       );
     }
 
