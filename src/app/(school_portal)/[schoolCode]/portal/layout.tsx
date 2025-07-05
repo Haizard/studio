@@ -46,6 +46,7 @@ import {
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import NotificationBell from '@/components/NotificationBell';
 
 
 const { Header, Sider, Content } = Layout;
@@ -426,14 +427,17 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         <Header className="bg-white p-0 px-6 flex justify-between items-center shadow">
           <Breadcrumb items={breadcrumbItems} className="text-sm" />
           {session?.user ? (
-            <Dropdown menu={{ items: userAccountMenuItems }} trigger={['click']}>
-              <a onClick={(e) => e.preventDefault()} className="flex items-center cursor-pointer p-2 hover:bg-gray-100 rounded">
-                <Space>
-                  <Avatar icon={<UserOutlined />} src={userAvatar} />
-                  <Text>{userName}</Text>
-                </Space>
-              </a>
-            </Dropdown>
+            <Space align="center" size="middle">
+              <NotificationBell />
+              <Dropdown menu={{ items: userAccountMenuItems }} trigger={['click']}>
+                <a onClick={(e) => e.preventDefault()} className="flex items-center cursor-pointer p-2 hover:bg-gray-100 rounded">
+                  <Space>
+                    <Avatar icon={<UserOutlined />} src={userAvatar} />
+                    <Text>{userName}</Text>
+                  </Space>
+                </a>
+              </Dropdown>
+            </Space>
           ) : (
             <AntButton onClick={() => router.push(`/login?schoolCode=${schoolCode}`)}>"Login"</AntButton>
           )}
