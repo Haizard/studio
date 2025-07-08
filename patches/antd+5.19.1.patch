@@ -1,14 +1,10 @@
-diff --git a/node_modules/antd/es/compatible.js b/node_modules/antd/es/compatible.js
-index 738e4a9..50a4980 100644
---- a/node_modules/antd/es/compatible.js
-+++ b/node_modules/antd/es/compatible.js
-@@ -1,6 +1,6 @@
- import React from 'react';
- import { warning } from "rc-util/es/warning";
- // ZombieJ: We export as `config` since internal use `config` as context value.
--if (process.env.NODE_ENV !== 'production' && parseInt(React.version) >= 19) {
--  warning(false, 'compatible', 'antd v5 support React is 16 ~ 18. see https://u.ant.design/v5-for-19 for compatible.');
--}
-+// if (process.env.NODE_ENV !== 'production' && parseInt(React.version) >= 19) {
-+//   warning(false, 'compatible', 'antd v5 support React is 16 ~ 18. see https://u.ant.design/v5-for-19 for compatible.');
-+// }
+patch-package
+--- a/node_modules/antd/lib/version/compatible.js
++++ b/node_modules/antd/lib/version/compatible.js
+@@ -7,5 +7,5 @@
+ // eslint-disable-next-line import/no-mutable-exports
+ let antd = {};
+ // @ts-ignore
+-(0, _warning.default)(parseInt(_react.default.version, 10) >= 16, 'antd', 'An old version of React is not compatible with antd 5.x');
++(0, _warning.default)(true, 'antd', 'An old version of React is not compatible with antd 5.x');
+ var _default = exports.default = antd;
