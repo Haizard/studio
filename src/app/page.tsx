@@ -1,43 +1,77 @@
+'use client';
 
-"use client";
-
-import React from 'react';
-import { Button as AntButton, Typography, Space, Card } from 'antd';
-import { SmileOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Button, Typography, Input, Card, Space, Form, Alert } from 'antd';
+import { SearchOutlined, LoginOutlined, ReadOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
 
 export default function HomePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const onFinish = ({ schoolCode }: { schoolCode: string }) => {
+    if (!schoolCode || schoolCode.trim() === '') {
+      setError('Please enter a school code.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    // The router push will navigate to the school's public website.
+    // The existence of the school will be handled by the [schoolCode] pages.
+    router.push(`/${schoolCode.trim().toLowerCase()}`);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-light-gray p-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-light-gray p-4 sm:p-8">
       <Card className="w-full max-w-2xl shadow-xl">
         <div className="text-center">
-          <SmileOutlined style={{ fontSize: '48px', color: '#1677ff' }} className="mb-4" />
-          <Title level={2} className="text-primary">Welcome to the School Management System</Title>
+          <ReadOutlined style={{ fontSize: '48px', color: 'var(--ant-primary-color)' }} className="mb-4" />
+          <Title level={2} className="text-primary">Unified School Management System</Title>
           <Paragraph className="text-secondary-default mb-8">
-            This is the starting point for your new application. Tailwind CSS and Ant Design are configured.
+            The all-in-one platform to manage academics, finance, and communication for educational institutions.
           </Paragraph>
           
-          <Space wrap size="large">
-            <AntButton type="primary" size="large">
-              AntD Primary Button
-            </AntButton>
-            <AntButton size="large">
-              AntD Default Button
-            </AntButton>
-            <button className="bg-accent text-white font-semibold py-2 px-6 rounded-DEFAULT hover:bg-opacity-80 transition-colors text-base">
-              Tailwind Styled Button
-            </button>
-          </Space>
+          <Title level={4}>Find Your School</Title>
+          <Paragraph type="secondary" className="mb-6">
+            Enter your school's unique code below to visit its public website.
+          </Paragraph>
 
-          <div className="mt-10 p-4 border border-dashed border-primary-dark rounded-DEFAULT">
-            <Title level={4} className="!text-primary-dark !mb-2">Next Steps:</Title>
-            <ul className="list-disc list-inside text-left text-dark-text">
-              <li>Explore the Ant Design component library.</li>
-              <li>Start building out layouts and pages based on your roadmap.</li>
-              <li>Define your Mongoose models.</li>
-              <li>Implement API routes for data handling.</li>
-            </ul>
+          <Form onFinish={onFinish}>
+            <Space.Compact style={{ width: '100%' }}>
+              <Form.Item
+                name="schoolCode"
+                noStyle
+                rules={[{ required: true, message: 'Please input a school code!' }]}
+              >
+                <Input
+                  size="large"
+                  placeholder="e.g. springfield, riverdale"
+                  prefix={<SearchOutlined />}
+                  onChange={() => error && setError('')}
+                />
+              </Form.Item>
+              <Form.Item noStyle>
+                <Button type="primary" htmlType="submit" size="large" loading={loading}>
+                  Go
+                </Button>
+              </Form.Item>
+            </Space.Compact>
+            {error && <Alert message={error} type="error" showIcon className="mt-2 text-left" />}
+          </Form>
+
+          <div className="mt-10 pt-6 border-t border-gray-200">
+            <Paragraph>
+              Are you an administrator, teacher, or student?
+            </Paragraph>
+            <Link href="/login">
+              <Button type="default" size="large" icon={<LoginOutlined />}>
+                Go to Login Portal
+              </Button>
+            </Link>
           </div>
         </div>
       </Card>
