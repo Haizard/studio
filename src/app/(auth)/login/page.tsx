@@ -77,6 +77,20 @@ export default function LoginPage() {
       <Title level={2} className="text-center mb-8 text-primary">
         School System Login
       </Title>
+
+      <Alert
+        message="Login Instructions"
+        description={
+          <div>
+            <p className="mb-1"><strong>For School Users (Admin, Teacher, Student):</strong> Enter your email, password, and your school's code.</p>
+            <p className="mb-0"><strong>For System Administrators:</strong> Enter your super admin credentials and leave the School Code field blank.</p>
+          </div>
+        }
+        type="info"
+        showIcon
+        className="mb-6"
+      />
+
       {error && (
         <Alert message={error} type="error" showIcon closable className="mb-4" onClose={() => setError(null)} />
       )}
