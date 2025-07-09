@@ -5,6 +5,10 @@ import Link from 'next/link'; // For potential future single event pages
 import Image from 'next/image';
 import type { IEvent } from '@/models/Tenant/Event';
 import { CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { getTenantConnection } from '@/lib/db';
+import EventModel from '@/models/Tenant/Event';
+import { TenantUserSchemaDefinition, ITenantUser } from '@/models/Tenant/User';
+import mongoose from 'mongoose';
 
 interface EventsPageProps {
   params: { schoolCode: string };
@@ -12,39 +16,27 @@ interface EventsPageProps {
 
 async function getEvents(schoolCode: string): Promise<IEvent[]> {
   try {
-    const apiUrl = `/api/${schoolCode}/website/events`;
-    // console.log(`Fetching events from: ${apiUrl}`); // Logging API URL for debugging
-
-    const res = await fetch(apiUrl, {
-      cache: 'no-store', 
-    });
-
-    if (!res.ok) {
-      const responseText = await res.text(); // Get raw response text
-      console.error(`Failed to fetch events for ${schoolCode}: ${res.status} ${res.statusText}`);
-      console.error("API Response Text:", responseText); // Log the raw response
-      // Depending on how you want to handle API errors in Server Components,
-      // you might throw an error here to trigger Next.js error handling,
-      // or return empty array / specific error state to be handled by the component.
-      // For now, returning empty array to prevent page crash, but logs will indicate the problem.
-      return [];
+    const tenantDb = await getTenantConnection(schoolCode);
+    if (!tenantDb.models.Event) {
+        tenantDb.model<IEvent>('Event', EventModel.schema);
     }
-
-    // Try to parse JSON, and catch if it's not valid JSON (e.g., HTML error page from API)
-    let data;
-    try {
-      data = await res.json();
-    } catch (jsonError: any) {
-      const responseText = await res.text(); // Re-fetch text if json parsing fails.
-      console.error(`Failed to parse JSON response from API for ${schoolCode}: ${jsonError.message}`);
-      console.error("Raw API Response (that caused JSON parse error):", responseText);
-      return [];
+     if (!tenantDb.models.User) {
+      tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
     }
+    const Event = tenantDb.models.Event as mongoose.Model<IEvent>;
     
-    return Array.isArray(data) ? data : [];
+    const events = await Event.find({ isActive: true })
+      .populate<{ authorId: ITenantUser }>({
+        path: 'authorId', 
+        model: 'User',
+        select: 'firstName lastName username'
+      })
+      .sort({ startDate: 1 }) 
+      .lean(); 
+
+    return events as IEvent[];
   } catch (error: any) {
-    // This catches network errors or errors from fetch itself, or if we re-throw above.
-    console.error(`Generic error in getEvents function for ${schoolCode}:`, error);
+    console.error(`Error fetching events for ${schoolCode}:`, error);
     return [];
   }
 }
@@ -118,9 +110,6 @@ export default async function EventsListingPage({ params }: EventsPageProps) {
                   {event.category && <Tag color="blue" className="mr-1 mb-1">{event.category}</Tag>}
                   {event.audience && event.audience.map(aud => <Tag key={aud} className="text-xs mb-1">{aud}</Tag>)}
                 </div>
-                {/* <div className="mt-auto pt-4">
-                  <Button type="primary" ghost>View Details</Button> // For future single event page
-                </div> */}
               </Card>
             </Col>
           ))}

@@ -5,6 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { IBlogArticle } from '@/models/Tenant/BlogArticle';
 import { EditOutlined } from '@ant-design/icons';
+import { getTenantConnection } from '@/lib/db';
+import BlogArticleModel from '@/models/Tenant/BlogArticle';
+import { TenantUserSchemaDefinition, ITenantUser } from '@/models/Tenant/User';
+import mongoose from 'mongoose';
+
 
 interface BlogPageProps {
   params: { schoolCode: string };
@@ -12,15 +17,25 @@ interface BlogPageProps {
 
 async function getBlogArticles(schoolCode: string): Promise<IBlogArticle[]> {
   try {
-    const res = await fetch(`/api/${schoolCode}/website/blog`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) {
-      console.error(`Failed to fetch blog articles for ${schoolCode}: ${res.status} ${res.statusText}`);
-      return [];
+    const tenantDb = await getTenantConnection(schoolCode);
+    if (!tenantDb.models.BlogArticle) {
+        tenantDb.model<IBlogArticle>('BlogArticle', BlogArticleModel.schema);
     }
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    if (!tenantDb.models.User) {
+        tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
+    }
+    const BlogArticle = tenantDb.models.BlogArticle as mongoose.Model<IBlogArticle>;
+
+    const articles = await BlogArticle.find({ isActive: true })
+        .populate<{ authorId: ITenantUser }>({
+            path: 'authorId', 
+            model: 'User',
+            select: 'firstName lastName'
+        }) 
+        .sort({ publishedDate: -1 })
+        .lean();
+
+    return articles as IBlogArticle[];
   } catch (error) {
     console.error('Error fetching blog articles:', error);
     return [];

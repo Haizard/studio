@@ -3,8 +3,12 @@ import React from 'react';
 import { Typography, Card, Row, Col, Button, Empty, Tag } from 'antd';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { INewsArticle } from '@/models/Tenant/NewsArticle'; // Adjust path if needed
+import type { INewsArticle } from '@/models/Tenant/NewsArticle';
 import { ReadOutlined } from '@ant-design/icons';
+import { getTenantConnection } from '@/lib/db';
+import NewsArticleModel from '@/models/Tenant/NewsArticle';
+import { TenantUserSchemaDefinition, ITenantUser } from '@/models/Tenant/User';
+import mongoose from 'mongoose';
 
 interface NewsPageProps {
   params: { schoolCode: string };
@@ -12,18 +16,25 @@ interface NewsPageProps {
 
 async function getNewsArticles(schoolCode: string): Promise<INewsArticle[]> {
   try {
-    const res = await fetch(`/api/${schoolCode}/website/news`, {
-      cache: 'no-store', // Fetch fresh data on each request
-    });
-    if (!res.ok) {
-      // Log error or handle specific error codes
-      console.error(`Failed to fetch news for ${schoolCode}: ${res.status} ${res.statusText}`);
-      const errorBody = await res.json().catch(() => ({})); // Try to parse error, default to empty obj
-      console.error("Error body:", errorBody);
-      return [];
+    const tenantDb = await getTenantConnection(schoolCode);
+    if (!tenantDb.models.NewsArticle) {
+        tenantDb.model<INewsArticle>('NewsArticle', NewsArticleModel.schema);
     }
-    const data = await res.json();
-    return Array.isArray(data) ? data : []; // Ensure it returns an array
+     if (!tenantDb.models.User) {
+        tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
+    }
+    const NewsArticle = tenantDb.models.NewsArticle as mongoose.Model<INewsArticle>;
+    
+    const articles = await NewsArticle.find({ isActive: true })
+        .populate<{ authorId: ITenantUser }>({
+            path: 'authorId', 
+            model: 'User',
+            select: 'firstName lastName'
+        }) 
+        .sort({ publishedDate: -1 })
+        .lean();
+    
+    return articles as INewsArticle[];
   } catch (error) {
     console.error('Error fetching news articles:', error);
     return [];

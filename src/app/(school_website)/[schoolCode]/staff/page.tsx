@@ -5,6 +5,11 @@ import { UserOutlined, BookOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import type { ITeacher } from '@/models/Tenant/Teacher';
 import type { ITenantUser } from '@/models/Tenant/User';
+import { getTenantConnection } from '@/lib/db';
+import TeacherModel from '@/models/Tenant/Teacher';
+import { TenantUserSchemaDefinition } from '@/models/Tenant/User';
+import mongoose from 'mongoose';
+
 
 interface PublicStaffMember extends Pick<ITeacher, 'specialization'> {
   _id: string;
@@ -18,16 +23,28 @@ interface StaffPageProps {
 
 async function getStaff(schoolCode: string): Promise<PublicStaffMember[]> {
   try {
-    const apiUrl = `/api/${schoolCode}/website/staff`;
-    const res = await fetch(apiUrl, { cache: 'no-store' });
-
-    if (!res.ok) {
-      console.error(`Failed to fetch staff for ${schoolCode}: ${res.status} ${res.statusText}`);
-      return [];
+    const tenantDb = await getTenantConnection(schoolCode);
+     if (!tenantDb.models.Teacher) {
+        tenantDb.model<ITeacher>('Teacher', TeacherModel.schema);
     }
+     if (!tenantDb.models.User) {
+        tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
+    }
+    const Teacher = tenantDb.models.Teacher as mongoose.Model<ITeacher>;
 
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    const staff = await Teacher.find({ isActive: true })
+      .populate<{ userId: ITenantUser }>({
+        path: 'userId',
+        model: 'User',
+        select: 'firstName lastName profilePictureUrl' 
+      })
+      .select('specialization userId') 
+      .sort({ 'userId.lastName': 1, 'userId.firstName': 1 })
+      .lean();
+
+    const publicStaffData = staff.filter(s => s.userId);
+
+    return publicStaffData as PublicStaffMember[];
   } catch (error: any) {
     console.error(`Error in getStaff function for ${schoolCode}:`, error);
     return [];

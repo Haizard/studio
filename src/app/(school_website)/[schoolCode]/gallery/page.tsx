@@ -1,9 +1,14 @@
 
 import React from 'react';
-import { Typography, Row, Col, Empty, Card, Tag, Image as AntImage, Select as AntSelect, Button } from 'antd'; // AntSelect for album filtering
+import { Typography, Row, Col, Empty, Card, Tag, Image as AntImage, Select as AntSelect, Button, Alert } from 'antd'; 
 import Link from 'next/link';
 import type { IGalleryItem } from '@/models/Tenant/GalleryItem';
 import { PictureOutlined } from '@ant-design/icons';
+import { getTenantConnection } from '@/lib/db';
+import GalleryItemModel from '@/models/Tenant/GalleryItem';
+import { TenantUserSchemaDefinition, ITenantUser } from '@/models/Tenant/User';
+import mongoose from 'mongoose';
+
 
 interface GalleryPageProps {
   params: { schoolCode: string };
@@ -16,60 +21,29 @@ async function getGalleryData(schoolCode: string, album?: string): Promise<{ ite
   let errorMsg: string | undefined = undefined;
 
   try {
-    let itemsUrl = `/api/${schoolCode}/website/gallery`;
-    const queryParams = new URLSearchParams();
+    const tenantDb = await getTenantConnection(schoolCode);
+    if (!tenantDb.models.GalleryItem) {
+        tenantDb.model<IGalleryItem>('GalleryItem', GalleryItemModel.schema);
+    }
+     if (!tenantDb.models.User) {
+        tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
+    }
+    const GalleryItem = tenantDb.models.GalleryItem as mongoose.Model<IGalleryItem>;
+
+    const itemsQuery: any = { isActive: true };
     if (album) {
-      queryParams.append('album', album);
+      itemsQuery.album = album.toLowerCase();
     }
-    // queryParams.append('adminView', 'false'); // Explicitly public view
-    const fullItemsUrl = `${itemsUrl}?${queryParams.toString()}`;
+
+    items = await GalleryItem.find(itemsQuery).sort({ uploadDate: -1 }).lean();
     
-    // console.log(`[Public Gallery Page] Fetching items from: ${fullItemsUrl}`);
-    const itemsRes = await fetch(fullItemsUrl, { cache: 'no-store' });
+    // Fetch all unique album names for the filter dropdown
+    const allItems = await GalleryItem.find({ isActive: true }).select('album').lean();
+    albums = Array.from(new Set(allItems.map(item => item.album).filter(Boolean) as string[])).sort();
 
-    if (!itemsRes.ok) {
-      const responseText = await itemsRes.text();
-      errorMsg = `Failed to fetch gallery items for ${schoolCode}, album ${album}. Status: ${itemsRes.status}. Response: ${responseText.substring(0, 500)}`;
-      console.error(errorMsg);
-      return { items, albums, error: errorMsg };
-    }
-
-    try {
-      items = await itemsRes.json();
-      if (!Array.isArray(items)) {
-        errorMsg = `API response for items was not an array. School: ${schoolCode}, Album: ${album}. Received: ${JSON.stringify(items).substring(0,200)}`;
-        console.error(errorMsg);
-        items = []; // Reset to empty array if response is not as expected
-      }
-    } catch (e: any) {
-      const responseText = await itemsRes.text(); // Re-read text if JSON parsing fails
-      errorMsg = `Failed to parse JSON for gallery items. School: ${schoolCode}, Album: ${album}. Error: ${e.message}. API Response: ${responseText.substring(0, 500)}`;
-      console.error(errorMsg);
-      return { items: [], albums, error: errorMsg };
-    }
-
-    // Fetch all unique album names if no specific album is selected, for the filter dropdown
-    // Always fetch all albums for the dropdown regardless of current filter
-    // console.log(`[Public Gallery Page] Fetching all albums for school: ${schoolCode}`);
-    const allAlbumsRes = await fetch(`/api/${schoolCode}/website/gallery?adminView=false`, { cache: 'no-store' });
-    if (allAlbumsRes.ok) {
-      try {
-        const allItemsData: IGalleryItem[] = await allAlbumsRes.json();
-        if (Array.isArray(allItemsData)) {
-          albums = Array.from(new Set(allItemsData.map(item => item.album).filter(Boolean) as string[])).sort();
-        } else {
-          console.warn(`[Public Gallery Page] API response for all albums was not an array. School: ${schoolCode}`);
-        }
-      } catch (e: any) {
-        console.error(`[Public Gallery Page] Failed to parse JSON for all albums. School: ${schoolCode}. Error: ${e.message}`);
-      }
-    } else {
-      console.error(`[Public Gallery Page] Failed to fetch all albums for filter. Status: ${allAlbumsRes.status}`);
-    }
-    
-    return { items, albums, error: errorMsg };
+    return { items: items as IGalleryItem[], albums, error: errorMsg };
   } catch (e: any) {
-    errorMsg = `Generic error in getGalleryData function for ${schoolCode}. Error: ${e.message}`;
+    errorMsg = `Error fetching gallery data for ${schoolCode}: ${e.message}`;
     console.error(errorMsg, e);
     return { items, albums, error: errorMsg };
   }

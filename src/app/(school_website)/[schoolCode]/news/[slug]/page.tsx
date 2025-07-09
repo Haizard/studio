@@ -5,6 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { INewsArticle } from '@/models/Tenant/NewsArticle'; 
 import { CalendarOutlined, UserOutlined, TagsOutlined } from '@ant-design/icons';
+import { getTenantConnection } from '@/lib/db';
+import NewsArticleModel from '@/models/Tenant/NewsArticle';
+import { TenantUserSchemaDefinition, ITenantUser } from '@/models/Tenant/User';
+import mongoose from 'mongoose';
+
 
 interface SingleNewsPageProps {
   params: { schoolCode: string; slug: string };
@@ -12,19 +17,26 @@ interface SingleNewsPageProps {
 
 async function getArticleBySlug(schoolCode: string, slug: string): Promise<INewsArticle | null> {
   try {
-    const res = await fetch(`/api/${schoolCode}/website/news?slug=${slug}`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) {
-      if (res.status === 404) return null; 
-      console.error(`Failed to fetch article ${slug} for ${schoolCode}: ${res.status} ${res.statusText}`);
-      const errorBody = await res.json().catch(() => ({})); // Try to parse error, default to empty obj
-      console.error("Error body:", errorBody);
-      return null;
+    const tenantDb = await getTenantConnection(schoolCode);
+    if (!tenantDb.models.NewsArticle) {
+        tenantDb.model<INewsArticle>('NewsArticle', NewsArticleModel.schema);
     }
-    return await res.json();
+     if (!tenantDb.models.User) {
+        tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
+    }
+    const NewsArticle = tenantDb.models.NewsArticle as mongoose.Model<INewsArticle>;
+
+    const article = await NewsArticle.findOne({ slug: slug.toLowerCase(), isActive: true })
+      .populate<{ authorId: ITenantUser }>({
+        path: 'authorId', 
+        model: 'User',
+        select: 'firstName lastName username'
+      })
+      .lean();
+      
+    return article as INewsArticle | null;
   } catch (error) {
-    console.error('Error fetching article by slug:', error);
+    console.error(`Error fetching news article ${slug} for ${schoolCode}:`, error);
     return null;
   }
 }
