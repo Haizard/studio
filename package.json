@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "create:superadmin": "ts-node scripts/create-superadmin.ts"
+    "create:superadmin": "ts-node --project tsconfig-script.json scripts/create-superadmin.ts"
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.7",
