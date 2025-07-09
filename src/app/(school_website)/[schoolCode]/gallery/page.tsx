@@ -16,7 +16,7 @@ async function getGalleryData(schoolCode: string, album?: string): Promise<{ ite
   let errorMsg: string | undefined = undefined;
 
   try {
-    let itemsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/${schoolCode}/website/gallery`;
+    let itemsUrl = `/api/${schoolCode}/website/gallery`;
     const queryParams = new URLSearchParams();
     if (album) {
       queryParams.append('album', album);
@@ -51,7 +51,7 @@ async function getGalleryData(schoolCode: string, album?: string): Promise<{ ite
     // Fetch all unique album names if no specific album is selected, for the filter dropdown
     // Always fetch all albums for the dropdown regardless of current filter
     // console.log(`[Public Gallery Page] Fetching all albums for school: ${schoolCode}`);
-    const allAlbumsRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/${schoolCode}/website/gallery?adminView=false`, { cache: 'no-store' });
+    const allAlbumsRes = await fetch(`/api/${schoolCode}/website/gallery?adminView=false`, { cache: 'no-store' });
     if (allAlbumsRes.ok) {
       try {
         const allItemsData: IGalleryItem[] = await allAlbumsRes.json();

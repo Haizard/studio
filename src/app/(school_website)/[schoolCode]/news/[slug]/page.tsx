@@ -12,13 +12,13 @@ interface SingleNewsPageProps {
 
 async function getArticleBySlug(schoolCode: string, slug: string): Promise<INewsArticle | null> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/${schoolCode}/website/news?slug=${slug}`, {
+    const res = await fetch(`/api/${schoolCode}/website/news?slug=${slug}`, {
       cache: 'no-store',
     });
     if (!res.ok) {
       if (res.status === 404) return null; 
       console.error(`Failed to fetch article ${slug} for ${schoolCode}: ${res.status} ${res.statusText}`);
-      const errorBody = await res.json().catch(() => ({}));
+      const errorBody = await res.json().catch(() => ({})); // Try to parse error, default to empty obj
       console.error("Error body:", errorBody);
       return null;
     }

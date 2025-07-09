@@ -12,7 +12,7 @@ interface NewsPageProps {
 
 async function getNewsArticles(schoolCode: string): Promise<INewsArticle[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/${schoolCode}/website/news`, {
+    const res = await fetch(`/api/${schoolCode}/website/news`, {
       cache: 'no-store', // Fetch fresh data on each request
     });
     if (!res.ok) {
@@ -100,5 +100,3 @@ export default async function NewsListingPage({ params }: NewsPageProps) {
     </div>
   );
 }
-
-    

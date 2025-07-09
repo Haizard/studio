@@ -12,7 +12,7 @@ interface EventsPageProps {
 
 async function getEvents(schoolCode: string): Promise<IEvent[]> {
   try {
-    const apiUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/${schoolCode}/website/events`;
+    const apiUrl = `/api/${schoolCode}/website/events`;
     // console.log(`Fetching events from: ${apiUrl}`); // Logging API URL for debugging
 
     const res = await fetch(apiUrl, {

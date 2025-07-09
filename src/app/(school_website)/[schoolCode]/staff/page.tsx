@@ -18,7 +18,7 @@ interface StaffPageProps {
 
 async function getStaff(schoolCode: string): Promise<PublicStaffMember[]> {
   try {
-    const apiUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/${schoolCode}/website/staff`;
+    const apiUrl = `/api/${schoolCode}/website/staff`;
     const res = await fetch(apiUrl, { cache: 'no-store' });
 
     if (!res.ok) {

@@ -12,7 +12,7 @@ interface BlogPageProps {
 
 async function getBlogArticles(schoolCode: string): Promise<IBlogArticle[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/${schoolCode}/website/blog`, {
+    const res = await fetch(`/api/${schoolCode}/website/blog`, {
       cache: 'no-store',
     });
     if (!res.ok) {
