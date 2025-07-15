@@ -87,7 +87,7 @@ function PharmacyVisitsCore() {
             const newVisit = await response.json();
             message.success('Visit logged successfully. Redirecting to manage visit...');
             setIsModalVisible(false);
-            router.push(`/${schoolCode}/portal/pharmacy/visits/${newVisit._id}`);
+            router.push(`/${encodeURIComponent(schoolCode)}/portal/pharmacy/visits/${encodeURIComponent(newVisit._id)}`);
         } catch (error: any) {
             message.error(error.message || 'Could not log visit.');
         }
@@ -107,7 +107,7 @@ function PharmacyVisitsCore() {
             title: 'Actions',
             key: 'actions',
             render: (_: any, record: VisitDataType) => (
-                <Button icon={<EyeOutlined />} onClick={() => router.push(`/${schoolCode}/portal/pharmacy/visits/${record._id}`)}>
+                <Button icon={<EyeOutlined />} onClick={() => router.push(`/${encodeURIComponent(schoolCode)}/portal/pharmacy/visits/${encodeURIComponent(record._id)}`)}>
                     Manage Visit
                 </Button>
             ),
