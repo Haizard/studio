@@ -34,7 +34,6 @@ export async function GET(
   }
 
   try {
-    // ** THE FIX IS HERE **: Decode the parameter before using it.
     classId = decodeURIComponent(classId);
   } catch (e) {
     return NextResponse.json({ error: 'Invalid Class ID format in URL' }, { status: 400 });
