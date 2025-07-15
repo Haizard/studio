@@ -1,9 +1,10 @@
 
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Typography, Spin, Alert, Descriptions, Avatar, Tag, Row, Col, Card, List } from 'antd';
 import { UserOutlined, IdcardOutlined, CalendarOutlined, SolutionOutlined, BookOutlined, AuditOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
+import { useParams, useSearchParams } from 'next/navigation';
 import type { ITeacher, IAssignedClassSubject } from '@/models/Tenant/Teacher';
 import type { ITenantUser } from '@/models/Tenant/User';
 import type { IClass } from '@/models/Tenant/Class';
@@ -30,36 +31,45 @@ interface PopulatedTeacherProfile extends Omit<ITeacher, 'userId' | 'isClassTeac
 
 export default function TeacherProfilePage({ params }: TeacherProfilePageProps) {
   const { schoolCode } = params;
+  const searchParams = useSearchParams();
   const { data: session, status: sessionStatus } = useSession();
   const [teacherProfile, setTeacherProfile] = useState<PopulatedTeacherProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (sessionStatus === 'authenticated' && session?.user) {
-      const fetchProfile = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-          const response = await fetch(`/api/${schoolCode}/portal/teachers/me`);
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Failed to fetch profile: ${response.statusText}`);
-          }
-          const data = await response.json();
-          setTeacherProfile(data);
-        } catch (err: any) {
-          setError(err.message || 'Could not load teacher profile.');
-        } finally {
-          setLoading(false);
+  const teacherIdFromQuery = searchParams.get('teacherId'); // For admin/superadmin view
+  const viewingOwnProfile = !teacherIdFromQuery;
+
+
+  const fetchProfile = useCallback(async () => {
+    if (sessionStatus !== 'authenticated') return;
+    setLoading(true);
+    setError(null);
+    try {
+        let response;
+        if (viewingOwnProfile) {
+            response = await fetch(`/api/${schoolCode}/portal/teachers/me`);
+        } else {
+            // Admin is viewing a specific teacher's profile
+            response = await fetch(`/api/${schoolCode}/portal/teachers/${teacherIdFromQuery}`);
         }
-      };
-      fetchProfile();
-    } else if (sessionStatus === 'unauthenticated') {
-      setError("You are not authenticated.");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to fetch profile: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setTeacherProfile(data);
+    } catch (err: any) {
+      setError(err.message || 'Could not load teacher profile.');
+    } finally {
       setLoading(false);
     }
-  }, [sessionStatus, session, schoolCode]);
+  }, [sessionStatus, schoolCode, viewingOwnProfile, teacherIdFromQuery]);
+
+  useEffect(() => {
+     fetchProfile();
+  }, [fetchProfile]);
 
   if (loading || sessionStatus === 'loading') {
     return <div className="flex justify-center items-center h-full"><Spin size="large" tip="Loading profile..." /></div>;
@@ -82,7 +92,8 @@ export default function TeacherProfilePage({ params }: TeacherProfilePageProps) 
   return (
     <div className="p-4">
       <Typography.Title level={2} className="mb-8 flex items-center">
-        <IdcardOutlined className="mr-3" /> My Teacher Profile
+        <IdcardOutlined className="mr-3" /> 
+        {viewingOwnProfile ? 'My Teacher Profile' : `Profile: ${userId.firstName} ${userId.lastName}`}
       </Typography.Title>
 
       <Row gutter={[24, 24]}>

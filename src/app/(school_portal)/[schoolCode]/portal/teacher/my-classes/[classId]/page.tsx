@@ -2,7 +2,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Typography, Spin, Alert, Table, Avatar, Breadcrumb, Button } from 'antd';
-import { UserOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { UserOutlined, ArrowLeftOutlined, EyeOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import type { IStudent } from '@/models/Tenant/Student';
@@ -31,9 +31,6 @@ export default function TeacherClassRosterPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchClassDetails = useCallback(async () => {
-    // Fetch general class details if needed (e.g., from classes API)
-    // For now, we might get enough from the roster API or previous page context
-    // This is a placeholder if we need to fetch class specific info not from roster
     try {
         const res = await fetch(`/api/${schoolCode}/portal/academics/classes/${classId}`);
         if(!res.ok) throw new Error('Failed to fetch class details');
@@ -41,9 +38,7 @@ export default function TeacherClassRosterPage() {
         setClassDetails({_id: data._id, name: data.name, level: data.level, stream: data.stream });
     } catch (err:any) {
         console.warn("Could not fetch class details:", err.message);
-        // Not critical if student list still loads
     }
-
   }, [schoolCode, classId]);
 
 
@@ -61,14 +56,14 @@ export default function TeacherClassRosterPage() {
         const errData = await res.json();
         throw new Error(errData.error || `Failed to fetch student roster: ${res.statusText}`);
       }
-      const data: IStudent[] = await res.json(); // API returns array of IStudent populated with userId
+      const data: IStudent[] = await res.json(); 
       
       setStudents(data.map(student => ({
         key: student._id.toString(),
         _id: student._id,
         studentIdNumber: student.studentIdNumber,
         gender: student.gender,
-        userId: student.userId as Pick<ITenantUser, '_id' | 'firstName' | 'lastName' | 'username' | 'email' | 'profilePictureUrl'>, // Assuming userId is populated
+        userId: student.userId as Pick<ITenantUser, '_id' | 'firstName' | 'lastName' | 'username' | 'email' | 'profilePictureUrl'>,
       })));
 
     } catch (err: any) {
@@ -79,8 +74,8 @@ export default function TeacherClassRosterPage() {
   }, [schoolCode, classId]);
 
   useEffect(() => {
-    fetchClassDetails(); // Fetch class details
-    fetchStudentRoster(); // Fetch roster
+    fetchClassDetails(); 
+    fetchStudentRoster();
   }, [fetchClassDetails, fetchStudentRoster]);
 
   const columns = [
@@ -100,7 +95,15 @@ export default function TeacherClassRosterPage() {
     { title: 'Student ID', dataIndex: 'studentIdNumber', key: 'studentIdNumber', sorter: (a: StudentRosterItem, b: StudentRosterItem) => (a.studentIdNumber || "").localeCompare(b.studentIdNumber || "") },
     { title: 'Username', dataIndex: ['userId', 'username'], key: 'username', sorter: (a: StudentRosterItem, b: StudentRosterItem) => a.userId.username.localeCompare(b.userId.username) },
     { title: 'Gender', dataIndex: 'gender', key: 'gender', sorter: (a: StudentRosterItem, b: StudentRosterItem) => (a.gender || "").localeCompare(b.gender || "")},
-    // Add more columns like Contact, Guardian, etc. if needed later
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_: any, record: StudentRosterItem) => (
+        <Link href={`/${encodeURIComponent(schoolCode)}/portal/admin/students?userId=${encodeURIComponent(record.userId._id.toString())}`} legacyBehavior>
+            <a target="_blank"><Button icon={<EyeOutlined />}>View Profile</Button></a>
+        </Link>
+      ),
+    },
   ];
   
   const breadcrumbItems = [
@@ -153,5 +156,3 @@ export default function TeacherClassRosterPage() {
     </div>
   );
 }
-
-    

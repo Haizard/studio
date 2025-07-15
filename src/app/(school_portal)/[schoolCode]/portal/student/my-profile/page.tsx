@@ -1,9 +1,10 @@
 
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Typography, Spin, Alert, Descriptions, Avatar, Tag, Row, Col, Card } from 'antd';
-import { UserOutlined, IdcardOutlined, CalendarOutlined, AuditOutlined, TeamOutlined, BookOutlined } from '@ant-design/icons';
+import { UserOutlined, IdcardOutlined, CalendarOutlined, TeamOutlined, BookOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
+import { useParams, useSearchParams } from 'next/navigation';
 import type { IStudent } from '@/models/Tenant/Student';
 import type { ITenantUser } from '@/models/Tenant/User';
 import type { IClass } from '@/models/Tenant/Class';
@@ -27,37 +28,55 @@ interface PopulatedStudentProfile extends Omit<IStudent, 'userId' | 'currentClas
 
 export default function StudentProfilePage({ params }: StudentProfilePageProps) {
   const { schoolCode } = params;
+  const searchParams = useSearchParams();
   const { data: session, status: sessionStatus } = useSession();
   const [studentProfile, setStudentProfile] = useState<PopulatedStudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (sessionStatus === 'authenticated' && session?.user) {
-      const fetchProfile = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-          const response = await fetch(`/api/${schoolCode}/portal/students/me`);
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Failed to fetch profile: ${response.statusText}`);
-          }
-          const data = await response.json();
-          setStudentProfile(data);
-        } catch (err: any) {
-          setError(err.message || 'Could not load student profile.');
-        } finally {
-          setLoading(false);
+  const studentIdFromQuery = searchParams.get('studentId'); // For admin/teacher view
+  const viewingOwnProfile = !studentIdFromQuery;
+
+  const fetchProfile = useCallback(async () => {
+    if (sessionStatus !== 'authenticated') return;
+
+    let targetUrl: string;
+    if (viewingOwnProfile) {
+        targetUrl = `/api/${schoolCode}/portal/students/me`;
+    } else {
+        // This is tricky because a student could view another student's profile.
+        // We need to ensure only admins/teachers can use the query param.
+        // The API at `students/me` should handle this logic.
+        // Let's assume the API is updated to handle `?userId=` for authorized roles.
+        const studentUserId = searchParams.get('userId'); // Assuming teacher passes userId
+        if(!studentUserId) {
+            setError("No student specified for viewing.");
+            setLoading(false);
+            return;
         }
-      };
-      fetchProfile();
-    } else if (sessionStatus === 'unauthenticated') {
-      setError("You are not authenticated.");
+        targetUrl = `/api/${schoolCode}/portal/students/me?userId=${studentUserId}`;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(targetUrl);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to fetch profile: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setStudentProfile(data);
+    } catch (err: any) {
+      setError(err.message || 'Could not load student profile.');
+    } finally {
       setLoading(false);
     }
-     // If sessionStatus is 'loading', we wait
-  }, [sessionStatus, session, schoolCode]);
+  }, [sessionStatus, schoolCode, viewingOwnProfile, searchParams]);
+  
+  useEffect(() => {
+     fetchProfile();
+  }, [fetchProfile]);
 
   if (loading || sessionStatus === 'loading') {
     return <div className="flex justify-center items-center h-full"><Spin size="large" tip="Loading profile..." /></div>;
@@ -76,7 +95,8 @@ export default function StudentProfilePage({ params }: StudentProfilePageProps) 
   return (
     <div className="p-4">
       <Typography.Title level={2} className="mb-8 flex items-center">
-        <UserOutlined className="mr-3" /> My Student Profile
+        <UserOutlined className="mr-3" /> 
+        {viewingOwnProfile ? 'My Student Profile' : `Profile: ${userId.firstName} ${userId.lastName}`}
       </Typography.Title>
 
       <Row gutter={[24, 24]}>

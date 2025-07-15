@@ -24,52 +24,53 @@ export async function GET(
   { params }: { params: { schoolCode: string } }
 ) {
   const { schoolCode } = params;
-  console.log(`[API Students ME GET / ${schoolCode}] Received request.`);
+  const { searchParams } = new URL(request.url);
+  const userIdFromQuery = searchParams.get('userId'); // Allow admin/teacher to fetch specific student profile
 
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
-
-  if (!token || token.role !== 'student' || token.schoolCode !== schoolCode) {
-    console.warn(`[API Students ME GET / ${schoolCode}] Unauthorized access attempt. Token role: ${token?.role}, Token schoolCode: ${token?.schoolCode}`);
-    return NextResponse.json({ error: 'Unauthorized or not a student of this school' }, { status: 403 });
+  
+  if (!token || token.schoolCode !== schoolCode) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  if (!token.uid) {
-    console.error(`[API Students ME GET / ${schoolCode}] User ID not found in token.`);
-    return NextResponse.json({ error: 'User ID not found in token' }, { status: 400 });
+  let targetUserId;
+
+  if (userIdFromQuery && mongoose.Types.ObjectId.isValid(userIdFromQuery)) {
+    // Admin or teacher is requesting a specific student's profile
+    if (token.role !== 'admin' && token.role !== 'teacher' && token.role !== 'superadmin') {
+      return NextResponse.json({ error: 'Forbidden: You do not have permission to view other user profiles.' }, { status: 403 });
+    }
+    targetUserId = new mongoose.Types.ObjectId(userIdFromQuery);
+  } else if (token.role === 'student' && token.uid) {
+    // Student is requesting their own profile
+    targetUserId = new mongoose.Types.ObjectId(token.uid as string);
+  } else {
+    return NextResponse.json({ error: 'User ID not found in token or query' }, { status: 400 });
   }
-  console.log(`[API Students ME GET / ${schoolCode}] Authorized. User ID: ${token.uid}. Fetching profile.`);
 
   try {
-    console.log(`[API Students ME GET / ${schoolCode}] Attempting to get tenant DB connection.`);
     const tenantDb = await getTenantConnection(schoolCode);
-    console.log(`[API Students ME GET / ${schoolCode}] Tenant DB connection obtained. Ensuring models are registered.`);
     await ensureTenantModelsRegistered(tenantDb);
-    console.log(`[API Students ME GET / ${schoolCode}] Models registered.`);
     
     const Student = tenantDb.models.Student as mongoose.Model<IStudent>;
 
-    console.log(`[API Students ME GET / ${schoolCode}] Attempting to find student profile for userId: ${token.uid}`);
-    const studentProfile = await Student.findOne({ userId: token.uid })
+    const studentProfile = await Student.findOne({ userId: targetUserId })
       .populate<{ userId: ITenantUser }>('userId', 'firstName lastName username email isActive role profilePictureUrl')
       .populate<{ currentClassId: IClass }>('currentClassId', 'name level stream')
       .populate<{ currentAcademicYearId: IAcademicYear }>('currentAcademicYearId', 'name startDate endDate')
       .populate<{ alevelCombinationId: IAlevelCombination }>({
         path: 'alevelCombinationId',
-        model: 'AlevelCombination', // Explicit model name
+        model: 'AlevelCombination',
         select: 'name code',
         populate: { path: 'subjects', model: 'Subject', select: 'name code' }
       })
       .populate<{ oLevelOptionalSubjects: ISubject[] }>('oLevelOptionalSubjects', 'name code')
       .lean();
     
-    console.log(`[API Students ME GET / ${schoolCode}] Student profile query completed. Profile found: ${!!studentProfile}`);
-
     if (!studentProfile) {
-      console.warn(`[API Students ME GET / ${schoolCode}] Student profile not found for userId: ${token.uid}`);
-      return NextResponse.json({ error: 'Student profile not found for the logged-in user.' }, { status: 404 });
+      return NextResponse.json({ error: 'Student profile not found.' }, { status: 404 });
     }
     
-    console.log(`[API Students ME GET / ${schoolCode}] Student profile found. Preparing response.`);
     if (studentProfile.userId && typeof studentProfile.userId === 'object' && (studentProfile.userId as any).passwordHash) {
         // @ts-ignore
         delete (studentProfile.userId as any).passwordHash;
@@ -77,8 +78,7 @@ export async function GET(
 
     return NextResponse.json(studentProfile);
   } catch (error: any) {
-    console.error(`[API Students ME GET / ${schoolCode}] Critical error fetching student profile for user ${token.uid}:`, error.message);
-    console.error(`[API Students ME GET / ${schoolCode}] Error stack:`, error.stack); 
-    return NextResponse.json({ error: 'Failed to fetch student profile due to a server issue.', details: error.message }, { status: 500 });
+    console.error(`Error fetching student profile for user ${targetUserId} in ${schoolCode}:`, error);
+    return NextResponse.json({ error: 'Failed to fetch student profile', details: error.message }, { status: 500 });
   }
 }

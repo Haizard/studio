@@ -9,6 +9,7 @@ import type { ITenantUser } from '@/models/Tenant/User';
 import type { IClass } from '@/models/Tenant/Class';
 import type { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import moment from 'moment';
+import { useSearchParams } from 'next/navigation';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -26,6 +27,9 @@ interface StudentsPageProps {
 
 export default function StudentsPage({ params }: StudentsPageProps) {
   const { schoolCode } = params;
+  const searchParams = useSearchParams();
+  const userIdFromQuery = searchParams.get('userId');
+
   const [students, setStudents] = useState<StudentDataType[]>([]);
   const [academicYears, setAcademicYears] = useState<IAcademicYear[]>([]);
   const [classes, setClasses] = useState<IClass[]>([]);
@@ -57,16 +61,26 @@ export default function StudentsPage({ params }: StudentsPageProps) {
       const yearsData: IAcademicYear[] = await yearsRes.json();
       const classesData: IClass[] = await classesRes.json();
 
-      setStudents(studentsData.map(std => ({ ...std, key: std._id } as StudentDataType)));
+      const mappedStudents = studentsData.map(std => ({ ...std, key: std._id } as StudentDataType));
+      setStudents(mappedStudents);
       setAcademicYears(yearsData.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
       setClasses(classesData);
+      
+      if (userIdFromQuery) {
+        const studentToEdit = mappedStudents.find(s => s.userId._id === userIdFromQuery);
+        if (studentToEdit) {
+            handleEditStudent(studentToEdit);
+        } else {
+            message.warning(`Student with user ID ${userIdFromQuery} not found.`);
+        }
+      }
 
     } catch (error: any) {
       message.error(error.message || 'Could not load initial data.');
     } finally {
       setLoading(false);
     }
-  }, [schoolCode, API_URL_BASE, ACADEMIC_YEARS_API, CLASSES_API]);
+  }, [schoolCode, API_URL_BASE, ACADEMIC_YEARS_API, CLASSES_API, userIdFromQuery]);
 
   useEffect(() => {
     fetchData();
@@ -191,9 +205,6 @@ export default function StudentsPage({ params }: StudentsPageProps) {
       render: (_: any, record: StudentDataType) => (
         <Space>
           <Button icon={<EditOutlined />} onClick={() => handleEditStudent(record)}>Edit</Button>
-          <Link href={`/${encodeURIComponent(schoolCode)}/portal/student/my-profile?studentId=${record._id}`} target="_blank">
-            <Button icon={<EyeOutlined />}>View Profile</Button>
-          </Link>
           <Button 
             icon={<DeleteOutlined />} 
             danger={record.userId.isActive} 

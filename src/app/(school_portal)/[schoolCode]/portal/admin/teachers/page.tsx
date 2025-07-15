@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Table, Modal, Form, Input, Select, Switch, message, Tag, Space, Spin, DatePicker, Row, Col } from 'antd';
 import { PlusOutlined, EditOutlined, UserOutlined, DeleteOutlined, SolutionOutlined } from '@ant-design/icons';
-// import Link from 'next/link'; // For future "View Details" page
+import Link from 'next/link'; 
 import type { ITeacher } from '@/models/Tenant/Teacher';
 import type { ITenantUser } from '@/models/Tenant/User';
 import type { IClass } from '@/models/Tenant/Class';
@@ -33,37 +33,15 @@ export default function TeachersPage({ params }: TeachersPageProps) {
   const [editingTeacher, setEditingTeacher] = useState<TeacherDataType | null>(null);
   const [form] = Form.useForm();
 
-  // Data for assignment select dropdowns (simplified for now, ideally fetched dynamically based on AY)
-  // const [academicYears, setAcademicYears] = useState<IAcademicYear[]>([]);
-  // const [classes, setClasses] = useState<IClass[]>([]);
-  // const [subjects, setSubjects] = useState<ISubject[]>([]);
-
   const API_URL_BASE = `/api/${schoolCode}/portal/teachers`;
-  // const ACADEMIC_YEARS_API = `/api/${schoolCode}/portal/academics/academic-years`;
-  // const CLASSES_API = `/api/${schoolCode}/portal/academics/classes`;
-  // const SUBJECTS_API = `/api/${schoolCode}/portal/academics/subjects`;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch teachers and other necessary data in parallel if needed
       const teachersRes = await fetch(API_URL_BASE);
       if (!teachersRes.ok) throw new Error((await teachersRes.json()).error || 'Failed to fetch teachers');
       const teachersData: ITeacher[] = await teachersRes.json();
       setTeachers(teachersData.map(t => ({ ...t, key: t._id } as TeacherDataType)));
-
-      // Example: Fetch data for select dropdowns (can be optimized)
-      // const [yearsRes, classesRes, subjectsRes] = await Promise.all([
-      //   fetch(ACADEMIC_YEARS_API),
-      //   fetch(CLASSES_API),
-      //   fetch(SUBJECTS_API)
-      // ]);
-      // if (!yearsRes.ok) throw new Error('Failed to fetch academic years');
-      // if (!classesRes.ok) throw new Error('Failed to fetch classes');
-      // if (!subjectsRes.ok) throw new Error('Failed to fetch subjects');
-      // setAcademicYears(await yearsRes.json());
-      // setClasses(await classesRes.json());
-      // setSubjects(await subjectsRes.json());
 
     } catch (error: any) {
       message.error(error.message || 'Could not load initial data.');
@@ -105,7 +83,6 @@ export default function TeachersPage({ params }: TeachersPageProps) {
       const response = await fetch(`${API_URL_BASE}/${teacherProfileId}`, { 
         method: 'DELETE', // API handles this as deactivation/activation
         headers: { 'Content-Type': 'application/json' },
-        // body: JSON.stringify({ isActive: !currentStatus }) // API should infer from current state or handle idempotent DELETE
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -125,7 +102,6 @@ export default function TeachersPage({ params }: TeachersPageProps) {
         ...values,
         dateOfJoining: values.dateOfJoining ? values.dateOfJoining.toISOString() : undefined,
         qualifications: Array.isArray(values.qualifications) ? values.qualifications : (values.qualifications ? (values.qualifications as string).split(',').map(q => q.trim()) : []),
-        // assignedClassesAndSubjects: For now, not directly editable in this simple modal. API handles full array.
       };
       
       const url = editingTeacher ? `${API_URL_BASE}/${editingTeacher._id}` : API_URL_BASE;
@@ -176,9 +152,9 @@ export default function TeachersPage({ params }: TeachersPageProps) {
       render: (_: any, record: TeacherDataType) => (
         <Space>
           <Button icon={<EditOutlined />} onClick={() => handleEditTeacher(record)}>Edit</Button>
-          {/* <Link href={`/${schoolCode}/portal/teacher/${record._id}/details`}> // Future details page
+          <Link href={`/${encodeURIComponent(schoolCode)}/portal/teacher/my-profile?teacherId=${record._id.toString()}`}>
             <Button icon={<SolutionOutlined />}>View Details</Button>
-          </Link> */}
+          </Link>
           <Button 
             icon={<DeleteOutlined />} 
             danger={record.userId.isActive} 
@@ -245,23 +221,6 @@ export default function TeachersPage({ params }: TeachersPageProps) {
               </Form.Item>
             </Col>
           </Row>
-
-          {/* Placeholder for assignedClassesAndSubjects - complex UI for later iteration */}
-          {/* {editingTeacher && editingTeacher.assignedClassesAndSubjects && editingTeacher.assignedClassesAndSubjects.length > 0 && (
-            <>
-              <Title level={4} className="my-4 pt-4 border-t">Current Assignments</Title>
-              <List
-                size="small"
-                bordered
-                dataSource={editingTeacher.assignedClassesAndSubjects}
-                renderItem={item => (
-                  <List.Item>
-                    {`AY: ${item.academicYearId.name} - Class: ${item.classId.name} - Subject: ${item.subjectId.name}`}
-                  </List.Item>
-                )}
-              />
-            </>
-          )} */}
         </Form>
       </Modal>
     </div>
