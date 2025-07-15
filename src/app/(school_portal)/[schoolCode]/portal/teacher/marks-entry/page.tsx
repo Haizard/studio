@@ -279,7 +279,9 @@ export default function MarksEntrySelectionPage() {
           onRow={(record) => ({
             onClick: () => {
               if (selectedExam && record._id) {
-                router.push(`/${schoolCode}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(record._id)}`);
+                // This is the definitive fix: ensure record._id is a string before using in URL
+                const assessmentIdString = record._id.toString();
+                router.push(`/${encodeURIComponent(schoolCode)}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(assessmentIdString)}`);
               }
             },
             style: { cursor: 'pointer' },
