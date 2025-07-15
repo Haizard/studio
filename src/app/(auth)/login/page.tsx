@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -19,7 +20,6 @@ export default function LoginPage() {
   useEffect(() => {
     const callbackError = searchParams.get('error');
     if (callbackError) {
-      // More user-friendly messages for common NextAuth errors
       if (callbackError === "CredentialsSignin") {
         setError("Invalid email, password, or school code. Please check your credentials and try again.");
       } else if (callbackError === "Callback") {
@@ -42,10 +42,10 @@ export default function LoginPage() {
     const callbackUrlFromQuery = searchParams.get('callbackUrl');
     
     const result = await signIn('credentials', {
-      redirect: false, // We will handle redirect manually
+      redirect: false,
       email: values.email,
       password: values.password,
-      schoolCode: values.schoolCode ? values.schoolCode.trim() : undefined, // Pass undefined if empty
+      schoolCode: values.schoolCode ? values.schoolCode.trim() : undefined,
     });
 
     setLoading(false);
@@ -56,16 +56,11 @@ export default function LoginPage() {
       } else {
         setError(`Login error: ${result.error}. If this persists, contact support.`);
       }
-    } else if (result?.ok && result.url) {
-        // Determine redirect path based on user type or a default
-        // For now, redirecting to callbackUrl or a sensible default.
-        // NextAuth will typically set result.url to the callbackUrl if successful.
-        // The middleware will handle routing to the correct dashboard based on role.
-        const finalRedirectUrl = callbackUrlFromQuery || '/'; // Default to home if no callback
-        router.push(finalRedirectUrl);
     } else if (result?.ok) {
-        // Fallback if result.url is not provided but login is ok
-        router.push('/');
+        // The middleware will handle routing to the correct dashboard based on role.
+        // We decode the callbackUrl to handle any encoded characters safely.
+        const finalRedirectUrl = callbackUrlFromQuery ? decodeURIComponent(callbackUrlFromQuery) : '/';
+        router.push(finalRedirectUrl);
     }
   };
 
