@@ -120,7 +120,7 @@ export default function TeacherMyClassesPage() {
                 title={<span className="truncate">{`${cls.name} ${cls.level ? `(${cls.level}${cls.stream ? ` - ${cls.stream}` : ''})` : ''}`}</span>}
                 className="h-full shadow-md rounded-lg"
                 actions={[
-                  <Link href={`/${schoolCode}/portal/teacher/my-classes/${cls._id}`} key="view_roster">
+                  <Link href={`/${schoolCode}/portal/teacher/my-classes/${encodeURIComponent(cls._id)}`} key="view_roster">
                     <Button type="primary" icon={<ArrowRightOutlined />} block>View Roster</Button>
                   </Link>
                 ]}

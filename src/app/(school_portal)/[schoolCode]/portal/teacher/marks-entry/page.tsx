@@ -198,7 +198,7 @@ export default function MarksEntrySelectionPage() {
       key: 'actions',
       render: (_: any, record: IAssessment) => (
         <Tooltip title="Enter or View Marks">
-          <Link href={`/${schoolCode}/portal/teacher/marks-entry/${selectedExam}/${record._id}`}>
+          <Link href={`/${schoolCode}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam as string)}/${encodeURIComponent(record._id)}`}>
             <Button icon={<EditOutlined />} type="primary">Enter/View Marks</Button>
           </Link>
         </Tooltip>

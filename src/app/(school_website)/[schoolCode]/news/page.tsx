@@ -64,7 +64,7 @@ export default async function NewsListingPage({ params }: NewsPageProps) {
                 className="h-full flex flex-col"
                 cover={
                   article.featuredImageUrl ? (
-                    <Link href={`/${schoolCode}/news/${article.slug}`}>
+                    <Link href={`/${schoolCode}/news/${encodeURIComponent(article.slug)}`}>
                        <Image
                         alt={article.title}
                         src={article.featuredImageUrl}
@@ -75,7 +75,7 @@ export default async function NewsListingPage({ params }: NewsPageProps) {
                       />
                     </Link>
                   ) : (
-                    <Link href={`/${schoolCode}/news/${article.slug}`}>
+                    <Link href={`/${schoolCode}/news/${encodeURIComponent(article.slug)}`}>
                       <div className="w-full h-56 bg-gray-200 flex items-center justify-center text-gray-400">
                         <ReadOutlined style={{ fontSize: '48px' }} />
                       </div>
@@ -84,7 +84,7 @@ export default async function NewsListingPage({ params }: NewsPageProps) {
                 }
               >
                 <Card.Meta
-                  title={<Link href={`/${schoolCode}/news/${article.slug}`} className="text-lg hover:text-primary">{article.title}</Link>}
+                  title={<Link href={`/${schoolCode}/news/${encodeURIComponent(article.slug)}`} className="text-lg hover:text-primary">{article.title}</Link>}
                   description={
                     <Typography.Paragraph ellipsis={{ rows: 3 }}>
                       {article.summary || article.content.substring(0, 150) + '...'}
@@ -99,7 +99,7 @@ export default async function NewsListingPage({ params }: NewsPageProps) {
                   {(article.tags && Array.isArray(article.tags)) && article.tags.map(tag => <Tag key={tag} className="text-xs">{tag}</Tag>)}
                 </div>
                 <div className="mt-auto pt-4">
-                  <Link href={`/${schoolCode}/news/${article.slug}`}>
+                  <Link href={`/${schoolCode}/news/${encodeURIComponent(article.slug)}`}>
                     <Button type="primary" ghost>Read More</Button>
                   </Link>
                 </div>

@@ -204,6 +204,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
           if (!selectedClass) throw new Error("Selected class details not found.");
           
           const aiInput: GenerateScheduleInput = {
+            schoolCode: schoolCode,
             classId: values.classId,
             academicYearId: values.academicYearId,
             instructions: values.instructions,
@@ -319,7 +320,7 @@ export default function TimetableManagementPage({ params }: TimetableManagementP
       key: 'actions',
       render: (_: any, record: TimetableDataType) => (
         <Space>
-          <Link href={`/${schoolCode}/portal/admin/academics/timetables/${record._id}/periods`}>
+          <Link href={`/${schoolCode}/portal/admin/academics/timetables/${encodeURIComponent(record._id)}/periods`}>
             <Button icon={<ProjectOutlined />}>Manage Periods</Button>
           </Link>
           <Button icon={<EditOutlined />} onClick={() => handleEditTimetable(record)}>Edit Details</Button>

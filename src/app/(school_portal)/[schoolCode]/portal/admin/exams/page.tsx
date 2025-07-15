@@ -191,7 +191,7 @@ export default function ExamsPage({ params }: ExamsPageProps) {
       key: 'actions',
       render: (_: any, record: ExamDataType) => (
         <Space>
-          <Link href={`/${schoolCode}/portal/admin/exams/${record._id}/assessments`}>
+          <Link href={`/${schoolCode}/portal/admin/exams/${encodeURIComponent(record._id)}/assessments`}>
             <Button icon={<ReadOutlined />}>Assessments</Button>
           </Link>
           <Button icon={<EditOutlined />} onClick={() => handleEditExam(record)}>Edit</Button>
