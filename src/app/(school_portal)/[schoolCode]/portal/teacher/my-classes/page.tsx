@@ -36,7 +36,7 @@ export default function TeacherMyClassesPage() {
 
   const fetchActiveAcademicYear = useCallback(async () => {
     try {
-      const res = await fetch(`/api/${schoolCode}/portal/academics/academic-years?active=true`);
+      const res = await fetch(`/${schoolCode}/portal/academics/academic-years?active=true`);
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch active academic year');
       const years: IAcademicYear[] = await res.json();
       if (years.length > 0) {
@@ -54,7 +54,7 @@ export default function TeacherMyClassesPage() {
 
   const fetchTeacherAssignments = useCallback(async (yearId: string) => {
     try {
-      const res = await fetch(`/api/${schoolCode}/portal/teachers/my-assignments?academicYearId=${yearId}`);
+      const res = await fetch(`/${schoolCode}/portal/teachers/my-assignments?academicYearId=${yearId}`);
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch teacher assignments');
       const assignments: TeacherAssignment[] = await res.json();
       
