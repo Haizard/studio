@@ -279,6 +279,7 @@ export default function MarksEntrySelectionPage() {
           onRow={(record) => ({
             onClick: () => {
               if (selectedExam && record._id) {
+                // **THE FIX IS HERE:** Ensure record._id is a string before encoding.
                 const assessmentIdString = record._id.toString();
                 router.push(`/${encodeURIComponent(schoolCode)}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(assessmentIdString)}`);
               }
