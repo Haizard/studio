@@ -345,7 +345,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 
 
     const items = relevantSnippets.map((snippet, index) => {
-      const url = `/${encodeURIComponent(schoolCode)}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
+      const url = `/${encodeURIComponent(schoolCode)}/portal/${relevantSnippets.slice(0, index + 1).map(s => encodeURIComponent(s)).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
       if (isValidObjectId(snippet)) {
