@@ -114,7 +114,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
             { key: `${basePortalPath}/admin/exams`, icon: <FileTextOutlined />, label: <Link href={`${basePortalPath}/admin/exams`}>Exams</Link> },
             { key: `${basePortalPath}/admin/attendance`, icon: <TimetableIcon />, label: <Link href={`${basePortalPath}/admin/attendance`}>Attendance Records</Link> },
             { key: `${basePortalPath}/admin/reports`, icon: <BarChartOutlined />, label: <Link href={`${basePortalPath}/admin/reports`}>Reports</Link> },
-            { key: `${basePortalPath}/admin/grading-promotion`, icon: <RocketOutlined />, label: <Link href={`${basePortalPath}/admin/grading-promotion`}>Grading & Promotion</Link> },
+            { key: `${basePortalPath}/admin/grading-promotion`, icon: <RocketOutlined />, label: <Link href={`${basePortalPath}/admin/grading-promotion`}>Grading &amp; Promotion</Link> },
             { key: `${basePortalPath}/admin/settings`, icon: <SettingOutlined />, label: <Link href={`${basePortalPath}/admin/settings`}>School Settings</Link> },
           ],
         },
@@ -168,7 +168,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
           ]
         },
         { key: `${basePortalPath}/admin/data-management`, icon: <FileExcelOutlined />, label: <Link href={`${basePortalPath}/admin/data-management`}>Data Import/Export</Link> },
-        { key: `${basePortalPath}/admin/backup-restore`, icon: <SaveOutlined />, label: <Link href={`${basePortalPath}/admin/backup-restore`}>Backup & Restore</Link> },
+        { key: `${basePortalPath}/admin/backup-restore`, icon: <SaveOutlined />, label: <Link href={`${basePortalPath}/admin/backup-restore`}>Backup &amp; Restore</Link> },
         { key: `${basePortalPath}/dormitory`, icon: <HomeOutlined />, label: <Link href={`${basePortalPath}/dormitory`}>Dormitory</Link> }
       );
     }
@@ -345,7 +345,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 
 
     const items = relevantSnippets.map((snippet, index) => {
-      const url = `/${encodeURIComponent(schoolCode)}/portal/${relevantSnippets.slice(0, index + 1).map(s => encodeURIComponent(s)).join('/')}`;
+      // For breadcrumbs, we only want to show text, not create links, to avoid URL state issues.
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
       if (isValidObjectId(snippet)) {
@@ -379,12 +379,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         title = "Expense Summary";
       }
 
-
-      const isLast = index === relevantSnippets.length - 1;
-      return {
-        title: isLast ? title : <Link href={url}>{title}</Link>,
-        key: url
-      };
+      return { title: title, key: title };
     });
     return [{ title: <Link href={`/${encodeURIComponent(schoolCode)}/portal/dashboard`}>Home</Link>, key: `/${encodeURIComponent(schoolCode)}/portal/dashboard` }, ...items];
   }
@@ -440,7 +435,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               </Dropdown>
             </Space>
           ) : (
-            <AntButton onClick={() => router.push(`/login?schoolCode=${encodeURIComponent(schoolCode)}`)}>"Login"</AntButton>
+            <AntButton onClick={() => router.push(`/login?schoolCode=${encodeURIComponent(schoolCode)}`)}&gt;"Login"</AntButton>
           )}
         </Header>
         <Content className="m-4">
@@ -454,3 +449,5 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
 };
 
 export default SchoolPortalLayout;
+
+    

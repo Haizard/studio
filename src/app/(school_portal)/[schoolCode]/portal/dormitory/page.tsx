@@ -139,7 +139,7 @@ export default function DormitoryPage({ params }: DormitoryPageProps) {
       key: 'actions',
       render: (_: any, record: DormitoryDataType) => (
         <Space>
-          <Link href={`/${schoolCode}/portal/dormitory/${record._id}/rooms`}>
+          <Link href={`/${schoolCode}/portal/dormitory/${record._id}`}>
              <Button icon={<AppstoreOutlined />}>Manage Rooms</Button>
           </Link>
           <Button icon={<EditOutlined />} onClick={() => handleEditDormitory(record)}>Edit</Button>
