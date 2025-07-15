@@ -29,7 +29,7 @@ async function getArticleBySlug(schoolCode: string, slug: string): Promise<INews
     const article = await NewsArticle.findOne({ slug: slug.toLowerCase(), isActive: true })
       .populate<{ authorId: ITenantUser }>({
         path: 'authorId', 
-        model: 'User',
+        model: 'User', // Explicit model name
         select: 'firstName lastName username'
       })
       .lean();
@@ -55,7 +55,7 @@ export default async function SingleNewsArticlePage({ params }: SingleNewsPagePr
           type="error"
           showIcon
           action={
-            <Link href={`/${schoolCode}/news`}>
+            <Link href={`/${encodeURIComponent(schoolCode)}/news`}>
               <Button type="primary">Back to News</Button>
             </Link>
           }
@@ -73,8 +73,8 @@ export default async function SingleNewsArticlePage({ params }: SingleNewsPagePr
   return (
     <div className="container mx-auto px-4 py-8">
       <Breadcrumb className="mb-6">
-        <Breadcrumb.Item><Link href={`/${schoolCode}`}>Home</Link></Breadcrumb.Item>
-        <Breadcrumb.Item><Link href={`/${schoolCode}/news`}>News</Link></Breadcrumb.Item>
+        <Breadcrumb.Item><Link href={`/${encodeURIComponent(schoolCode)}`}>Home</Link></Breadcrumb.Item>
+        <Breadcrumb.Item><Link href={`/${encodeURIComponent(schoolCode)}/news`}>News</Link></Breadcrumb.Item>
         <Breadcrumb.Item>{article.title}</Breadcrumb.Item>
       </Breadcrumb>
 

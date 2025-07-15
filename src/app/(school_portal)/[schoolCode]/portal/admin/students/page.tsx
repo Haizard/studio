@@ -191,7 +191,7 @@ export default function StudentsPage({ params }: StudentsPageProps) {
       render: (_: any, record: StudentDataType) => (
         <Space>
           <Button icon={<EditOutlined />} onClick={() => handleEditStudent(record)}>Edit</Button>
-          <Link href={`/${schoolCode}/portal/student/my-profile?studentId=${record._id}`} target="_blank">
+          <Link href={`/${encodeURIComponent(schoolCode)}/portal/student/my-profile?studentId=${record._id}`} target="_blank">
             <Button icon={<EyeOutlined />}>View Profile</Button>
           </Link>
           <Button 
@@ -288,5 +288,3 @@ export default function StudentsPage({ params }: StudentsPageProps) {
     </div>
   );
 }
-
-    

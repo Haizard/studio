@@ -99,7 +99,7 @@ export default async function PublicWebsiteLayout({ children, params }: PublicWe
       <body className="font-sans text-dark-text bg-light-gray flex flex-col min-h-screen">
         <header className="bg-white shadow-md sticky top-0 z-50">
           <nav className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center">
-            <Link href={`/${schoolCode}`} className="flex items-center">
+            <Link href={`/${encodeURIComponent(schoolCode)}`} className="flex items-center">
               {settings.logoUrl ? (
                 <img 
                   src={settings.logoUrl} 
@@ -123,7 +123,7 @@ export default async function PublicWebsiteLayout({ children, params }: PublicWe
               {navLinks.map(link => (
                 <li key={link.slug}>
                   <Link 
-                    href={`/${schoolCode}${link.slug}`} 
+                    href={`/${encodeURIComponent(schoolCode)}${link.slug}`} 
                     className="text-gray-600 hover:text-[var(--website-primary-color)] px-2 py-1 rounded-md text-sm sm:text-base flex items-center gap-1 transition-colors duration-200"
                   >
                     {getIcon(link.icon)}

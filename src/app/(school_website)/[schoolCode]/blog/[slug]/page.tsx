@@ -49,7 +49,7 @@ export default async function SingleBlogArticlePage({ params }: SingleBlogPagePr
           type="error"
           showIcon
           action={
-            <Link href={`/${schoolCode}/blog`}>
+            <Link href={`/${encodeURIComponent(schoolCode)}/blog`}>
               <Button type="primary">Back to Blog</Button>
             </Link>
           }
@@ -67,8 +67,8 @@ export default async function SingleBlogArticlePage({ params }: SingleBlogPagePr
   return (
     <div className="container mx-auto px-4 py-8">
       <Breadcrumb className="mb-6">
-        <Breadcrumb.Item><Link href={`/${schoolCode}`}>Home</Link></Breadcrumb.Item>
-        <Breadcrumb.Item><Link href={`/${schoolCode}/blog`}>Blog</Link></Breadcrumb.Item>
+        <Breadcrumb.Item><Link href={`/${encodeURIComponent(schoolCode)}`}>Home</Link></Breadcrumb.Item>
+        <Breadcrumb.Item><Link href={`/${encodeURIComponent(schoolCode)}/blog`}>Blog</Link></Breadcrumb.Item>
         <Breadcrumb.Item>{article.title}</Breadcrumb.Item>
       </Breadcrumb>
 

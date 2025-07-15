@@ -87,7 +87,7 @@ export default async function PublicGalleryPage({ params, searchParams }: Galler
       {selectedAlbum && (
         <Typography.Title level={4} className="mb-6 text-center font-normal">
           Album: <Tag color="blue" className="text-lg px-2 py-1">{selectedAlbum}</Tag>
-           <Link href={`/${schoolCode}/gallery`} className="ml-2 text-sm text-primary hover:underline">(View All Albums)</Link>
+           <Link href={`/${encodeURIComponent(schoolCode)}/gallery`} className="ml-2 text-sm text-primary hover:underline">(View All Albums)</Link>
         </Typography.Title>
       )}
 
@@ -100,9 +100,9 @@ export default async function PublicGalleryPage({ params, searchParams }: Galler
             placeholder="Select an album"
             onChange={(value) => {
               if (value) {
-                window.location.href = `/${schoolCode}/gallery?album=${encodeURIComponent(value)}`;
+                window.location.href = `/${encodeURIComponent(schoolCode)}/gallery?album=${encodeURIComponent(value)}`;
               } else {
-                window.location.href = `/${schoolCode}/gallery`;
+                window.location.href = `/${encodeURIComponent(schoolCode)}/gallery`;
               }
             }}
             defaultValue={selectedAlbum}
@@ -119,7 +119,7 @@ export default async function PublicGalleryPage({ params, searchParams }: Galler
       {items.length === 0 ? (
         <div className="text-center mt-10">
           <Empty description={selectedAlbum ? `No images found in the album "${selectedAlbum}".` : "No gallery items found. Please check back later."} />
-          {selectedAlbum && <Link href={`/${schoolCode}/gallery`}><Button type="link" className="mt-4">Back to All Albums</Button></Link>}
+          {selectedAlbum && <Link href={`/${encodeURIComponent(schoolCode)}/gallery`}><Button type="link" className="mt-4">Back to All Albums</Button></Link>}
         </div>
       ) : (
         selectedAlbum ? (
@@ -156,7 +156,7 @@ export default async function PublicGalleryPage({ params, searchParams }: Galler
           Object.entries(groupedByAlbum).map(([albumName, albumItems]) => (
             <div key={albumName} className="mb-12">
               <Typography.Title level={3} className="mb-4 capitalize">
-                <Link href={`/${schoolCode}/gallery?album=${encodeURIComponent(albumName === 'uncategorized' ? '' : albumName)}`} className="hover:text-primary">
+                <Link href={`/${encodeURIComponent(schoolCode)}/gallery?album=${encodeURIComponent(albumName === 'uncategorized' ? '' : albumName)}`} className="hover:text-primary">
                   {albumName === 'uncategorized' ? 'Uncategorized Images' : albumName} ({albumItems.length})
                 </Link>
               </Typography.Title>
@@ -191,7 +191,7 @@ export default async function PublicGalleryPage({ params, searchParams }: Galler
               </Row>
               {albumItems.length > 8 && (
                 <div className="text-center mt-4">
-                   <Link href={`/${schoolCode}/gallery?album=${encodeURIComponent(albumName === 'uncategorized' ? '' : albumName)}`}>
+                   <Link href={`/${encodeURIComponent(schoolCode)}/gallery?album=${encodeURIComponent(albumName === 'uncategorized' ? '' : albumName)}`}>
                     <Button type="link">View all {albumItems.length} images in {albumName === 'uncategorized' ? 'Uncategorized' : albumName}</Button>
                   </Link>
                 </div>

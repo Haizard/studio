@@ -76,7 +76,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   const userAvatar = (session?.user as any)?.image;
 
   const getMenuItems = (role: string) => {
-    const basePortalPath = `/${schoolCode}/portal`;
+    const basePortalPath = `/${encodeURIComponent(schoolCode)}/portal`;
     let items = [
       {
         key: `${basePortalPath}/dashboard`,
@@ -259,8 +259,8 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   const menuItems = getMenuItems(userRole);
 
   const handleLogout = async () => {
-    await signOut({ redirect: false, callbackUrl: `/login?schoolCode=${schoolCode}` });
-    router.push(`/login?schoolCode=${schoolCode}`);
+    await signOut({ redirect: false, callbackUrl: `/login?schoolCode=${encodeURIComponent(schoolCode)}` });
+    router.push(`/login?schoolCode=${encodeURIComponent(schoolCode)}`);
   };
 
   const userAccountMenuItems = [
@@ -287,51 +287,51 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
   };
   
   const activeKeysResult = findActiveKeys(menuItems, pathname);
-  selectedKey = activeKeysResult.selected || `/${schoolCode}/portal/dashboard`;
+  selectedKey = activeKeysResult.selected || `/${encodeURIComponent(schoolCode)}/portal/dashboard`;
   
   if (!activeKeysResult.selected) {
     if (pathname.includes('/admin/exams/') && pathname.includes('/assessments')) { 
-        selectedKey = `/${schoolCode}/portal/admin/exams`; 
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/admin/exams`; 
     } else if (pathname.includes('/teacher/marks-entry/') && pathname.split('/').length > 6) {
-        selectedKey = `/${schoolCode}/portal/teacher/marks-entry`; 
-    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/website-management/`)) {
-        selectedKey = `/${schoolCode}/portal/admin/website-management`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/timetables`) && pathname.includes('/periods')) {
-        selectedKey = `/${schoolCode}/portal/admin/academics/timetables`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) {
-        selectedKey = `/${schoolCode}/portal/admin/academics`;
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/teacher/marks-entry`; 
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/admin/website-management/`)) {
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/admin/website-management`;
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/admin/academics/timetables`) && pathname.includes('/periods')) {
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/admin/academics/timetables`;
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/admin/academics/`)) {
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/admin/academics`;
     } else if (pathname.includes('/teacher/my-classes/') && isValidObjectId(pathname.split('/').pop() || '')) {
-        selectedKey = `/${schoolCode}/portal/teacher/my-classes`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/teacher/attendance/entry`)) { 
-        selectedKey = `/${schoolCode}/portal/teacher/attendance`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/finance/reports/`)){
-        selectedKey = `/${schoolCode}/portal/admin/finance/reports`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/admin/finance/`)){
-        selectedKey = `/${schoolCode}/portal/admin/finance`; 
-    } else if (pathname.startsWith(`/${schoolCode}/portal/library/`)){
-        selectedKey = `/${schoolCode}/portal/library`; 
-        if (pathname.includes('/books')) selectedKey = `/${schoolCode}/portal/library/books`;
-        if (pathname.includes('/members')) selectedKey = `/${schoolCode}/portal/library/members`;
-        if (pathname.includes('/circulation')) selectedKey = `/${schoolCode}/portal/library/circulation`;
-        if (pathname.includes('/transactions')) selectedKey = `/${schoolCode}/portal/library/transactions`;
-        if (pathname.includes('/inventory')) selectedKey = `/${schoolCode}/portal/library/inventory`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/dormitory/`)){
-        selectedKey = `/${schoolCode}/portal/dormitory`;
-    } else if (pathname.startsWith(`/${schoolCode}/portal/pharmacy/`)) {
-        selectedKey = `/${schoolCode}/portal/pharmacy`;
-        if (pathname.includes('/inventory')) selectedKey = `/${schoolCode}/portal/pharmacy/inventory`;
-        if (pathname.includes('/records')) selectedKey = `/${schoolCode}/portal/pharmacy/records`;
-        if (pathname.includes('/visits')) selectedKey = `/${schoolCode}/portal/pharmacy/visits`;
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/teacher/my-classes`;
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/teacher/attendance/entry`)) { 
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/teacher/attendance`;
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/admin/finance/reports/`)){
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/admin/finance/reports`;
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/admin/finance/`)){
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/admin/finance`; 
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/library/`)){
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/library`; 
+        if (pathname.includes('/books')) selectedKey = `/${encodeURIComponent(schoolCode)}/portal/library/books`;
+        if (pathname.includes('/members')) selectedKey = `/${encodeURIComponent(schoolCode)}/portal/library/members`;
+        if (pathname.includes('/circulation')) selectedKey = `/${encodeURIComponent(schoolCode)}/portal/library/circulation`;
+        if (pathname.includes('/transactions')) selectedKey = `/${encodeURIComponent(schoolCode)}/portal/library/transactions`;
+        if (pathname.includes('/inventory')) selectedKey = `/${encodeURIComponent(schoolCode)}/portal/library/inventory`;
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/dormitory/`)){
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/dormitory`;
+    } else if (pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/pharmacy/`)) {
+        selectedKey = `/${encodeURIComponent(schoolCode)}/portal/pharmacy`;
+        if (pathname.includes('/inventory')) selectedKey = `/${encodeURIComponent(schoolCode)}/portal/pharmacy/inventory`;
+        if (pathname.includes('/records')) selectedKey = `/${encodeURIComponent(schoolCode)}/portal/pharmacy/records`;
+        if (pathname.includes('/visits')) selectedKey = `/${encodeURIComponent(schoolCode)}/portal/pharmacy/visits`;
     }
   }
   openKeys = activeKeysResult.open || [];
 
-  if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${schoolCode}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
+  if(selectedKey.includes('/admin/academics') || pathname.startsWith(`/${encodeURIComponent(schoolCode)}/portal/admin/academics/`)) openKeys.push('admin-academics','admin-management');
   if(selectedKey.includes('/admin/exams') || selectedKey.includes('/admin/attendance') || selectedKey.includes('/admin/reports') || selectedKey.includes('/admin/settings') || selectedKey.includes('/admin/users') || selectedKey.includes('/admin/students') || selectedKey.includes('/admin/teachers') || selectedKey.includes('/admin/grading-promotion') || selectedKey.includes('/admin/backup-restore')) openKeys.push('admin-management');
   if(selectedKey.includes('/admin/website-management')) openKeys.push('website-management'); 
   if(selectedKey.includes('/admin/finance')) openKeys.push('admin-finance');
   if(selectedKey.includes('/library')) openKeys.push('library-management');
-  if(selectedKey.includes('/pharmacy')) openKeys.push(`${schoolCode}/portal/pharmacy`);
+  if(selectedKey.includes('/pharmacy')) openKeys.push(`${encodeURIComponent(schoolCode)}/portal/pharmacy`);
 
 
   const breadcrumbItemsGen = () => {
@@ -339,13 +339,13 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     const portalIndex = pathSnippets.findIndex(p => p === 'portal');
     
     if (portalIndex === -1 || pathSnippets.length <= portalIndex + 1 ) { 
-         return [{ title: <Link href={`/${schoolCode}/portal/dashboard`}>Home</Link>, key: `/${schoolCode}/portal/dashboard` }];
+         return [{ title: <Link href={`/${encodeURIComponent(schoolCode)}/portal/dashboard`}>Home</Link>, key: `/${encodeURIComponent(schoolCode)}/portal/dashboard` }];
     }
     const relevantSnippets = pathSnippets.slice(portalIndex + 1); 
 
 
     const items = relevantSnippets.map((snippet, index) => {
-      const url = `/${schoolCode}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
+      const url = `/${encodeURIComponent(schoolCode)}/portal/${relevantSnippets.slice(0, index + 1).join('/')}`;
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
       if (isValidObjectId(snippet)) {
@@ -386,7 +386,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         key: url
       };
     });
-    return [{ title: <Link href={`/${schoolCode}/portal/dashboard`}>Home</Link>, key: `/${schoolCode}/portal/dashboard` }, ...items];
+    return [{ title: <Link href={`/${encodeURIComponent(schoolCode)}/portal/dashboard`}>Home</Link>, key: `/${encodeURIComponent(schoolCode)}/portal/dashboard` }, ...items];
   }
   const breadcrumbItems = breadcrumbItemsGen();
 
@@ -409,7 +409,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         collapsedWidth="0"
       >
         <div className="h-16 flex items-center justify-center bg-primary-dark">
-          <Link href={`/${schoolCode}/portal/dashboard`}>
+          <Link href={`/${encodeURIComponent(schoolCode)}/portal/dashboard`}>
             <Title level={3} style={{ color: 'white', margin: 0, cursor: 'pointer', padding: '0 10px', textAlign: 'center' }}>
               {schoolCode.toUpperCase()} Portal
             </Title>
@@ -440,7 +440,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
               </Dropdown>
             </Space>
           ) : (
-            <AntButton onClick={() => router.push(`/login?schoolCode=${schoolCode}`)}>"Login"</AntButton>
+            <AntButton onClick={() => router.push(`/login?schoolCode=${encodeURIComponent(schoolCode)}`)}>"Login"</AntButton>
           )}
         </Header>
         <Content className="m-4">
