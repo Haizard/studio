@@ -250,8 +250,15 @@ function AttendanceEntryCore() {
               onChange={(newDate) => {
                 if (newDate) {
                     const newDateString = newDate.format('YYYY-MM-DD');
-                    let newUrl = `/${encodeURIComponent(schoolCode)}/portal/teacher/attendance/entry?academicYearId=${encodeURIComponent(academicYearId || '')}&classId=${encodeURIComponent(classId || '')}&date=${encodeURIComponent(newDateString)}`;
-                    if (subjectId) newUrl += `&subjectId=${encodeURIComponent(subjectId)}`;
+                    const encodedSchoolCode = encodeURIComponent(schoolCode || '');
+                    const encodedAcademicYearId = encodeURIComponent(academicYearId || '');
+                    const encodedClassId = encodeURIComponent(classId || '');
+                    const encodedDate = encodeURIComponent(newDateString);
+
+                    let newUrl = `/${encodedSchoolCode}/portal/teacher/attendance/entry?academicYearId=${encodedAcademicYearId}&classId=${encodedClassId}&date=${encodedDate}`;
+                    if (subjectId) {
+                      newUrl += `&subjectId=${encodeURIComponent(subjectId)}`;
+                    }
                     router.push(newUrl);
                 }
               }}
@@ -289,7 +296,7 @@ function AttendanceEntryCore() {
       />
       <div className="mt-6 text-right">
          <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveAttendance} loading={saving}>
-            Save Attendance
+            Save All Marks
           </Button>
        </div>
     </div>
@@ -304,4 +311,3 @@ export default function AttendanceEntryPage() {
         </Suspense>
     );
 }
-
