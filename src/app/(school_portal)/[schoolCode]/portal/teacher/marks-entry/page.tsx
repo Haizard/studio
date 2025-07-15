@@ -198,9 +198,7 @@ export default function MarksEntrySelectionPage() {
       key: 'actions',
       render: (_: any, record: IAssessment) => (
         <Tooltip title="Enter or View Marks">
-          <Link href={`/${schoolCode}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam as string)}/${encodeURIComponent(record._id)}`}>
-            <Button icon={<EditOutlined />} type="primary">Enter/View Marks</Button>
-          </Link>
+          <Button icon={<EditOutlined />} type="primary">Enter/View Marks</Button>
         </Tooltip>
       ),
     },
@@ -278,6 +276,14 @@ export default function MarksEntrySelectionPage() {
           columns={assessmentColumns} 
           dataSource={assessments} 
           rowKey="_id"
+          onRow={(record) => ({
+            onClick: () => {
+              if (selectedExam && record._id) {
+                router.push(`/${schoolCode}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(record._id)}`);
+              }
+            },
+            style: { cursor: 'pointer' },
+          })}
           locale={{ emptyText: <Empty description="No assessments found for the selected criteria. Please ensure all filters (Academic Year, Exam, Class, Subject) are selected and have valid assignments." /> }}
         />
       )}
