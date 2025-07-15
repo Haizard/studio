@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
-  const { pathname, origin, searchParams } = req.nextUrl;
+  const { pathname, origin, search } = req.nextUrl;
 
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) {
@@ -33,7 +33,10 @@ export async function middleware(req: NextRequest) {
 
   if (!isLoggedIn && (isSuperAdminOnlyRoute || isSchoolPortalRoute)) {
     const loginUrl = new URL('/login', origin);
-    loginUrl.searchParams.set('callbackUrl', pathname + searchParams.toString());
+    // Correctly encode the full callback URL to prevent decoding errors
+    const fullCallbackUrl = pathname + search;
+    loginUrl.searchParams.set('callbackUrl', fullCallbackUrl);
+
     if (isSchoolPortalRoute) {
         const schoolCodeFromPath = pathname.split('/')[1];
         if (schoolCodeFromPath) {

@@ -57,9 +57,9 @@ export default function LoginPage() {
         setError(`Login error: ${result.error}. If this persists, contact support.`);
       }
     } else if (result?.ok) {
-        // The middleware will handle routing to the correct dashboard based on role.
-        // We decode the callbackUrl to handle any encoded characters safely.
-        const finalRedirectUrl = callbackUrlFromQuery ? decodeURIComponent(callbackUrlFromQuery) : '/';
+        // The middleware handles routing to the correct dashboard based on role.
+        // The callbackUrl from the query string is already a full, valid path.
+        const finalRedirectUrl = callbackUrlFromQuery ? callbackUrlFromQuery : '/';
         router.push(finalRedirectUrl);
     }
   };
