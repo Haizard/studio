@@ -250,8 +250,8 @@ function AttendanceEntryCore() {
               onChange={(newDate) => {
                 if (newDate) {
                     const newDateString = newDate.format('YYYY-MM-DD');
-                    let newUrl = `/${schoolCode}/portal/teacher/attendance/entry?academicYearId=${academicYearId}&classId=${classId}&date=${newDateString}`;
-                    if (subjectId) newUrl += `&subjectId=${subjectId}`;
+                    let newUrl = `/${encodeURIComponent(schoolCode)}/portal/teacher/attendance/entry?academicYearId=${encodeURIComponent(academicYearId || '')}&classId=${encodeURIComponent(classId || '')}&date=${encodeURIComponent(newDateString)}`;
+                    if (subjectId) newUrl += `&subjectId=${encodeURIComponent(subjectId)}`;
                     router.push(newUrl);
                 }
               }}
