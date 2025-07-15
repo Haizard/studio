@@ -339,13 +339,12 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
     const portalIndex = pathSnippets.findIndex(p => p === 'portal');
     
     if (portalIndex === -1 || pathSnippets.length <= portalIndex + 1 ) { 
-         return [{ title: <Link href={`/${encodeURIComponent(schoolCode)}/portal/dashboard`}>Home</Link>, key: `/${encodeURIComponent(schoolCode)}/portal/dashboard` }];
+         return [{ title: 'Home', href: `/${encodeURIComponent(schoolCode)}/portal/dashboard` }];
     }
     const relevantSnippets = pathSnippets.slice(portalIndex + 1); 
 
 
     const items = relevantSnippets.map((snippet, index) => {
-      // For breadcrumbs, we only want to show text, not create links, to avoid URL state issues.
       let title = snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, ' ');
       
       if (isValidObjectId(snippet)) {
@@ -379,10 +378,21 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
         title = "Expense Summary";
       }
 
-      return { title: title, key: title };
+      return { title: title };
     });
-    return [{ title: <Link href={`/${encodeURIComponent(schoolCode)}/portal/dashboard`}>Home</Link>, key: `/${encodeURIComponent(schoolCode)}/portal/dashboard` }, ...items];
+    return [{ title: 'Home', href: `/${encodeURIComponent(schoolCode)}/portal/dashboard` }, ...items];
   }
+  
+  // Use AntD's itemRender for breadcrumbs to control link generation safely
+  const breadcrumbItemRender = (route: any, params: any, routes: any[], paths: string[]) => {
+    const isLast = routes.indexOf(route) === routes.length - 1;
+    // Only the 'Home' breadcrumb is a link. The rest are text labels.
+    if (route.href) {
+      return <Link href={route.href}>{route.title}</Link>;
+    }
+    return <span>{route.title}</span>;
+  };
+
   const breadcrumbItems = breadcrumbItemsGen();
 
   if (status === "loading") {
@@ -421,7 +431,7 @@ const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({ children, param
       </Sider>
       <Layout>
         <Header className="bg-white p-0 px-6 flex justify-between items-center shadow">
-          <Breadcrumb items={breadcrumbItems} className="text-sm" />
+          <Breadcrumb items={breadcrumbItems} itemRender={breadcrumbItemRender} className="text-sm" />
           {session?.user ? (
             <Space align="center" size="middle">
               <NotificationBell />
