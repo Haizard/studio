@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Typography, Select, Card, Row, Col, message, Spin, Table, Empty, Space, Tooltip } from 'antd';
 import { EditOutlined, ReadOutlined } from '@ant-design/icons';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import type { IAcademicYear } from '@/models/Tenant/AcademicYear';
 import type { IExam } from '@/models/Tenant/Exam';
 import type { IClass } from '@/models/Tenant/Class';
@@ -26,10 +25,9 @@ interface AssessmentWithDetails extends IAssessment {
   className?: string;
 }
 
-export default function MarksEntrySelectionPage() {
-  const params = useParams();
+export default function MarksEntrySelectionPage({ params }: { params: { schoolCode: string } }) {
+  const { schoolCode } = params;
   const router = useRouter();
-  const schoolCode = params.schoolCode as string;
 
   const [academicYears, setAcademicYears] = useState<IAcademicYear[]>([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string | undefined>();
@@ -53,10 +51,9 @@ export default function MarksEntrySelectionPage() {
 
   const ACADEMIC_YEARS_API = `/api/${schoolCode}/portal/academics/academic-years`;
   const TEACHER_ASSIGNMENTS_API = `/api/${schoolCode}/portal/teachers/my-assignments`;
-  const EXAMS_API_BASE = `/api/${schoolCode}/portal/exams`; // Query by academicYearId
-  const ASSESSMENTS_API_BASE = `/api/${schoolCode}/portal/exams`; // /:examId/assessments
+  const EXAMS_API_BASE = `/api/${schoolCode}/portal/exams`;
+  const ASSESSMENTS_API_BASE = `/api/${schoolCode}/portal/exams`;
 
-  // Fetch Academic Years
   useEffect(() => {
     const fetchYears = async () => {
       setLoadingYears(true);
@@ -76,7 +73,6 @@ export default function MarksEntrySelectionPage() {
     fetchYears();
   }, [schoolCode, ACADEMIC_YEARS_API]);
 
-  // Fetch Teacher Assignments when Academic Year changes
   useEffect(() => {
     if (!selectedAcademicYear) {
       setTeacherAssignments([]);
@@ -93,11 +89,8 @@ export default function MarksEntrySelectionPage() {
         if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch teacher assignments');
         const data: TeacherAssignment[] = await res.json();
         setTeacherAssignments(data);
-
-        // Populate unique classes
         const uniqueClasses = Array.from(new Map(data.map(item => [item.classId._id, item.classId])).values());
         setAssignedClasses(uniqueClasses as IClass[]);
-
       } catch (err: any) {
         message.error(err.message || 'Could not load teacher assignments.');
         setTeacherAssignments([]);
@@ -109,7 +102,6 @@ export default function MarksEntrySelectionPage() {
     fetchAssignments();
   }, [selectedAcademicYear, schoolCode, TEACHER_ASSIGNMENTS_API]);
 
-  // Update assigned subjects when class changes
   useEffect(() => {
     if (!selectedClass || teacherAssignments.length === 0) {
       setAssignedSubjects([]);
@@ -120,14 +112,11 @@ export default function MarksEntrySelectionPage() {
       .filter(assign => assign.classId._id === selectedClass && assign.academicYearId._id === selectedAcademicYear)
       .map(assign => assign.subjectId);
     
-    // Ensure unique subjects if a teacher teaches the same subject multiple times (though unlikely with current structure)
     const uniqueSubjects = Array.from(new Map(subjectsForClass.map(sub => [sub._id, sub])).values());
     setAssignedSubjects(uniqueSubjects as ISubject[]);
-    setSelectedSubject(undefined); // Reset subject selection
+    setSelectedSubject(undefined);
   }, [selectedClass, teacherAssignments, selectedAcademicYear]);
 
-
-  // Fetch Exams when Academic Year changes
   useEffect(() => {
     if (!selectedAcademicYear) {
       setExams([]);
@@ -150,8 +139,6 @@ export default function MarksEntrySelectionPage() {
     fetchExams();
   }, [selectedAcademicYear, EXAMS_API_BASE]);
 
-
-  // Fetch Assessments when Exam, Class, and Subject are selected
   const fetchAssessments = useCallback(async () => {
     if (!selectedExam || !selectedClass || !selectedSubject) {
       setAssessments([]);
@@ -161,13 +148,13 @@ export default function MarksEntrySelectionPage() {
     try {
       const res = await fetch(`${ASSESSMENTS_API_BASE}/${selectedExam}/assessments?classId=${selectedClass}&subjectId=${selectedSubject}`);
       if (!res.ok) throw new Error('Failed to fetch assessments for the selected criteria.');
-      const data: IAssessment[] = await res.json();
-
+      const data: any[] = await res.json(); // Data from API is already sanitized
+      
       const detailedData = data.map(asm => {
-          const subjectDetails = assignedSubjects.find(s => s._id === (typeof asm.subjectId === 'string' ? asm.subjectId : (asm.subjectId as any)._id));
-          const classDetails = assignedClasses.find(c => c._id === (typeof asm.classId === 'string' ? asm.classId : (asm.classId as any)._id));
+          const subjectDetails = assignedSubjects.find(s => s._id === asm.subjectId);
+          const classDetails = assignedClasses.find(c => c._id === asm.classId);
           return {
-              ...JSON.parse(JSON.stringify(asm)), // Deep copy and serialize ObjectIds
+              ...asm,
               subjectName: subjectDetails?.name || 'N/A',
               className: classDetails?.name || 'N/A',
           }
@@ -185,7 +172,6 @@ export default function MarksEntrySelectionPage() {
   useEffect(() => {
     fetchAssessments();
   }, [fetchAssessments]);
-
 
   const assessmentColumns = [
     { title: 'Assessment Name', dataIndex: 'assessmentName', key: 'assessmentName' },
@@ -261,7 +247,7 @@ export default function MarksEntrySelectionPage() {
               placeholder="Select Subject"
               value={selectedSubject}
               onChange={setSelectedSubject}
-              loading={loadingAssignments && !!selectedClass} // only show loading if class is selected and still processing assignments
+              loading={loadingAssignments && !!selectedClass}
               disabled={!selectedClass || loadingAssignments || assignedSubjects.length === 0}
               notFoundContent={loadingAssignments && !!selectedClass ? <Spin size="small" /> : "No subjects assigned for this class, or select class."}
             >
@@ -280,7 +266,7 @@ export default function MarksEntrySelectionPage() {
           onRow={(record) => ({
             onClick: () => {
               if (selectedExam && record._id) {
-                // record._id is now guaranteed to be a string
+                // The API now provides a string _id, so this is safe.
                 router.push(`/${encodeURIComponent(schoolCode)}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(record._id)}`);
               }
             },

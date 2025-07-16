@@ -169,10 +169,6 @@ export async function PUT(
     
     // Sanitize the response to convert ObjectIds to strings and remove sensitive data
     const sanitizedStudent = JSON.parse(JSON.stringify(updatedStudent));
-    if (sanitizedStudent.userId && sanitizedStudent.userId.passwordHash) {
-        delete sanitizedStudent.userId.passwordHash;
-    }
-
 
     return NextResponse.json(sanitizedStudent);
 

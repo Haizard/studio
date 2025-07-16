@@ -82,7 +82,7 @@ export async function GET(
     .populate<{ userId: ITenantUser }>({
         path: 'userId',
         model: 'User',
-        select: 'firstName lastName username email gender profilePictureUrl' // Added gender
+        select: 'firstName lastName username email profilePictureUrl isActive'
     })
     .sort({ 'userId.lastName': 1, 'userId.firstName': 1 })
     .lean();
