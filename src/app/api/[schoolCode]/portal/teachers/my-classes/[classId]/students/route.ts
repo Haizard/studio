@@ -86,12 +86,14 @@ export async function GET(
     })
     .sort({ 'userId.lastName': 1, 'userId.firstName': 1 })
     .lean();
+    
+    // Sanitize response to convert ObjectIds to strings
+    const sanitizedStudents = JSON.parse(JSON.stringify(students));
 
-    return NextResponse.json(students);
+    return NextResponse.json(sanitizedStudents);
 
   } catch (error: any) {
     console.error(`Error fetching students for class ${classId} by teacher ${token.uid} in ${schoolCode}:`, error);
     return NextResponse.json({ error: 'Failed to fetch students for class', details: error.message }, { status: 500 });
   }
 }
-    

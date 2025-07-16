@@ -12,9 +12,19 @@ import mongoose from 'mongoose';
 
 const { Title, Paragraph } = Typography;
 
-interface StudentRosterItem extends Pick<IStudent, '_id' | 'studentIdNumber' | 'gender'> {
+interface StudentRosterItem {
+  _id: string; // This is the Student profile ID, now a string
   key: string;
-  userId: Pick<ITenantUser, '_id' | 'firstName' | 'lastName' | 'username' | 'email' | 'profilePictureUrl'>;
+  studentIdNumber?: string;
+  gender: 'Male' | 'Female' | 'Other';
+  userId: { 
+    _id: string; // This is the User ID, now a string
+    firstName: string; 
+    lastName: string; 
+    username: string; 
+    email?: string; 
+    profilePictureUrl?: string; 
+  };
 }
 
 interface ClassDetails extends Pick<IClass, '_id' | 'name' | 'level' | 'stream'> {}
@@ -43,7 +53,8 @@ export default function TeacherClassRosterPage() {
 
 
   const fetchStudentRoster = useCallback(async () => {
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
+    const decodedClassId = decodeURIComponent(classId);
+    if (!mongoose.Types.ObjectId.isValid(decodedClassId)) {
         setError("Invalid Class ID provided in URL.");
         setLoading(false);
         return;
@@ -51,19 +62,16 @@ export default function TeacherClassRosterPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/${schoolCode}/portal/teachers/my-classes/${classId}/students`);
+      const res = await fetch(`/api/${schoolCode}/portal/teachers/my-classes/${decodedClassId}/students`);
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || `Failed to fetch student roster: ${res.statusText}`);
       }
-      const data: IStudent[] = await res.json(); 
+      const data: StudentRosterItem[] = await res.json(); 
       
       setStudents(data.map(student => ({
-        key: student._id.toString(),
-        _id: student._id,
-        studentIdNumber: student.studentIdNumber,
-        gender: student.gender,
-        userId: student.userId as Pick<ITenantUser, '_id' | 'firstName' | 'lastName' | 'username' | 'email' | 'profilePictureUrl'>,
+        ...student,
+        key: student._id, // Use the string ID from sanitized API response
       })));
 
     } catch (err: any) {
@@ -99,7 +107,7 @@ export default function TeacherClassRosterPage() {
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: StudentRosterItem) => (
-        <Link href={`/${encodeURIComponent(schoolCode)}/portal/admin/students?userId=${encodeURIComponent(record.userId._id.toString())}`} legacyBehavior>
+        <Link href={`/${encodeURIComponent(schoolCode)}/portal/admin/students?userId=${encodeURIComponent(record.userId._id)}`} legacyBehavior>
             <a target="_blank"><Button icon={<EyeOutlined />}>View Profile</Button></a>
         </Link>
       ),

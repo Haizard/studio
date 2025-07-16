@@ -54,13 +54,14 @@ export async function GET(
     if (!student) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
-    if (student.userId && typeof student.userId === 'object' && (student.userId as any).passwordHash) {
-        // @ts-ignore
-        delete (student.userId as any).passwordHash;
+    
+    // Sanitize the response to convert ObjectIds to strings and remove sensitive data
+    const sanitizedStudent = JSON.parse(JSON.stringify(student));
+    if (sanitizedStudent.userId && sanitizedStudent.userId.passwordHash) {
+        delete sanitizedStudent.userId.passwordHash;
     }
 
-
-    return NextResponse.json(student);
+    return NextResponse.json(sanitizedStudent);
   } catch (error: any) {
     console.error(`Error fetching student ${studentProfileId} for ${schoolCode}:`, error);
     return NextResponse.json({ error: 'Failed to fetch student', details: error.message }, { status: 500 });
@@ -154,7 +155,7 @@ export async function PUT(
       entity: 'Student',
       entityId: studentProfile._id.toString(),
       details: `Updated student: ${userAccount.firstName} ${userAccount.lastName}`,
-      originalValues: { student: safeObject(originalStudent), user: safeObject(originalUser) },
+      originalValues: safeObject(originalStudent),
       newValues: { student: safeObject(studentProfile.toObject()), user: safeObject(userAccount.toObject()) },
       req: request as any,
     });
@@ -166,12 +167,14 @@ export async function PUT(
         .populate<{ currentAcademicYearId: IAcademicYear }>('currentAcademicYearId', 'name')
         .lean();
     
-    if (updatedStudent && updatedStudent.userId && typeof updatedStudent.userId === 'object' && (updatedStudent.userId as any).passwordHash) {
-        // @ts-ignore
-        delete (updatedStudent.userId as any).passwordHash;
+    // Sanitize the response to convert ObjectIds to strings and remove sensitive data
+    const sanitizedStudent = JSON.parse(JSON.stringify(updatedStudent));
+    if (sanitizedStudent.userId && sanitizedStudent.userId.passwordHash) {
+        delete sanitizedStudent.userId.passwordHash;
     }
 
-    return NextResponse.json(updatedStudent);
+
+    return NextResponse.json(sanitizedStudent);
 
   } catch (error: any) {
     console.error(`Error updating student ${studentProfileId} for ${schoolCode}:`, error);

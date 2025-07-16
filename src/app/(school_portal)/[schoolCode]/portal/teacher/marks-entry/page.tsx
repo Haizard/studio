@@ -21,6 +21,7 @@ interface TeacherAssignment {
 }
 
 interface AssessmentWithDetails extends IAssessment {
+  _id: string; // Ensure _id is a string after sanitization
   subjectName?: string;
   className?: string;
 }
@@ -166,7 +167,7 @@ export default function MarksEntrySelectionPage() {
           const subjectDetails = assignedSubjects.find(s => s._id === (typeof asm.subjectId === 'string' ? asm.subjectId : (asm.subjectId as any)._id));
           const classDetails = assignedClasses.find(c => c._id === (typeof asm.classId === 'string' ? asm.classId : (asm.classId as any)._id));
           return {
-              ...asm,
+              ...JSON.parse(JSON.stringify(asm)), // Deep copy and serialize ObjectIds
               subjectName: subjectDetails?.name || 'N/A',
               className: classDetails?.name || 'N/A',
           }
@@ -196,7 +197,7 @@ export default function MarksEntrySelectionPage() {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: IAssessment) => (
+      render: (_: any, record: AssessmentWithDetails) => (
         <Tooltip title="Enter or View Marks">
           <Button icon={<EditOutlined />} type="primary">Enter/View Marks</Button>
         </Tooltip>
@@ -279,8 +280,8 @@ export default function MarksEntrySelectionPage() {
           onRow={(record) => ({
             onClick: () => {
               if (selectedExam && record._id) {
-                const assessmentIdString = record._id.toString();
-                router.push(`/${encodeURIComponent(schoolCode)}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(assessmentIdString)}`);
+                // record._id is now guaranteed to be a string
+                router.push(`/${encodeURIComponent(schoolCode)}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(record._id)}`);
               }
             },
             style: { cursor: 'pointer' },
