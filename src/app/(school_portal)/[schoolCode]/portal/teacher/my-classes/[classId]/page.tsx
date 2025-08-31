@@ -45,7 +45,8 @@ export default function TeacherClassRosterPage() {
         const res = await fetch(`/api/${schoolCode}/portal/academics/classes/${classId}`);
         if(!res.ok) throw new Error('Failed to fetch class details');
         const data: IClass = await res.json();
-        setClassDetails({_id: data._id, name: data.name, level: data.level, stream: data.stream });
+        const sanitizedData = JSON.parse(JSON.stringify(data));
+        setClassDetails({_id: sanitizedData._id, name: sanitizedData.name, level: sanitizedData.level, stream: sanitizedData.stream });
     } catch (err:any) {
         console.warn("Could not fetch class details:", err.message);
     }
@@ -53,8 +54,7 @@ export default function TeacherClassRosterPage() {
 
 
   const fetchStudentRoster = useCallback(async () => {
-    const decodedClassId = decodeURIComponent(classId);
-    if (!mongoose.Types.ObjectId.isValid(decodedClassId)) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
         setError("Invalid Class ID provided in URL.");
         setLoading(false);
         return;
@@ -62,7 +62,7 @@ export default function TeacherClassRosterPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/${schoolCode}/portal/teachers/my-classes/${decodedClassId}/students`);
+      const res = await fetch(`/api/${schoolCode}/portal/teachers/my-classes/${classId}/students`);
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || `Failed to fetch student roster: ${res.statusText}`);
@@ -71,7 +71,7 @@ export default function TeacherClassRosterPage() {
       
       setStudents(data.map(student => ({
         ...student,
-        key: student._id, // Use the string ID from sanitized API response
+        key: student._id,
       })));
 
     } catch (err: any) {

@@ -21,8 +21,7 @@ export async function GET(
   request: Request,
   { params }: { params: { schoolCode: string; classId: string } }
 ) {
-  const { schoolCode } = params;
-  let { classId } = params;
+  const { schoolCode, classId } = params;
   const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
 
   // Allow teachers, admins, and superadmins to fetch students for a class
@@ -31,12 +30,6 @@ export async function GET(
   }
    if ((token.role === 'teacher' || token.role === 'admin') && token.schoolCode !== schoolCode) {
       return NextResponse.json({ error: 'Unauthorized for this school' }, { status: 403 });
-  }
-
-  try {
-    classId = decodeURIComponent(classId);
-  } catch (e) {
-    return NextResponse.json({ error: 'Invalid Class ID format in URL' }, { status: 400 });
   }
 
   if (!mongoose.Types.ObjectId.isValid(classId)) {

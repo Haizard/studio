@@ -266,8 +266,9 @@ export default function MarksEntrySelectionPage({ params }: { params: { schoolCo
           onRow={(record) => ({
             onClick: () => {
               if (selectedExam && record._id) {
-                // The API now provides a string _id, so this is safe.
-                router.push(`/${encodeURIComponent(schoolCode)}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(record._id)}`);
+                // Ensure record._id is a string before encoding
+                const assessmentIdString = typeof record._id === 'object' ? record._id.toString() : record._id;
+                router.push(`/${encodeURIComponent(schoolCode)}/portal/teacher/marks-entry/${encodeURIComponent(selectedExam)}/${encodeURIComponent(assessmentIdString)}`);
               }
             },
             style: { cursor: 'pointer' },
