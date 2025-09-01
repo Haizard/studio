@@ -1,7 +1,7 @@
 
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, Table, Modal, Form, Input, message, Tag, Spin } from 'antd';
+import { Button, Typography, Table, Modal, Form, Input, message, Tag, Spin, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ISchool } from '@/models/SuperAdmin/School'; // Adjust path as necessary
 

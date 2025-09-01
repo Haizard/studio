@@ -2,9 +2,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getCsrfToken } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Form, Input, Button, Typography, Alert, Space } from 'antd';
+import { Form, Input, Button, Alert, Typography } from 'antd';
 import { MailOutlined, LockOutlined, HomeOutlined, ReadOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
@@ -15,7 +15,8 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [initialSchoolCode, setInitialSchoolCode] = useState('');
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const initialSchoolCode = searchParams.get('schoolCode') || '';
 
   useEffect(() => {
     const callbackError = searchParams.get('error');
@@ -29,10 +30,19 @@ export default function LoginPage() {
         setError(`Login failed: ${callbackError}`);
       }
     }
-    const schoolCodeFromQuery = searchParams.get('schoolCode');
-    if (schoolCodeFromQuery) {
-        setInitialSchoolCode(schoolCodeFromQuery);
-    }
+
+    
+    // Get CSRF token
+    const fetchCsrfToken = async () => {
+      try {
+        const token = await getCsrfToken();
+        setCsrfToken(token || null);
+      } catch (error) {
+        console.error('Failed to fetch CSRF token:', error);
+      }
+    };
+    
+    fetchCsrfToken();
   }, [searchParams]);
 
   const onFinish = async (values: any) => {
@@ -46,6 +56,7 @@ export default function LoginPage() {
       email: values.email,
       password: values.password,
       schoolCode: values.schoolCode ? values.schoolCode.trim() : undefined,
+      csrfToken: csrfToken,
     });
 
     setLoading(false);

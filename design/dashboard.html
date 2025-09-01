@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schooli Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Schooli</span>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+                    <li><i class="fas fa-user-graduate"></i> Students</li>
+                    <li><i class="fas fa-chalkboard-teacher"></i> Teachers</li>
+                    <li><i class="fas fa-book"></i> Library</li>
+                    <li><i class="fas fa-user"></i> Account</li>
+                    <li><i class="fas fa-calendar-alt"></i> Class</li>
+                    <li><i class="fas fa-clipboard-list"></i> Subject</li>
+                    <li><i class="fas fa-route"></i> Routine</li>
+                    <li><i class="fas fa-calendar-check"></i> Attendance</li>
+                    <li><i class="fas fa-clipboard"></i> Exam</li>
+                    <li><i class="fas fa-sticky-note"></i> Notice</li>
+                    <li><i class="fas fa-bus"></i> Transport</li>
+                    <li><i class="fas fa-plus-square"></i> Hostel</li>
+                </ul>
+            </nav>
+            <div class="upgrade-section">
+                <div class="upgrade-card">
+                    <i class="fas fa-rocket"></i>
+                    <p>You're on the free plan. Upgrade to go Pro.</p>
+                    <button class="upgrade-btn">Upgrade</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search anything here">
+                </div>
+                <div class="header-actions">
+                    <i class="fas fa-bell"></i>
+                    <i class="fas fa-envelope"></i>
+                    <div class="user-profile">
+                        <div class="user-avatar">LR</div>
+                        <span>Luke J R</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <h1>Welcome.</h1>
+                <p>Navigate the future of education with Schooli.</p>
+            </section>
+
+            <!-- Stats Cards -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon students">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>15.00K</h3>
+                        <p>Students</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon teachers">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>200</h3>
+                        <p>Teachers</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon awards">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>5.6K</h3>
+                        <p>Awards</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Content Grid -->
+            <section class="content-grid">
+                <!-- Class Routine -->
+                <div class="card class-routine">
+                    <div class="card-header">
+                        <h3>Class Routine</h3>
+                        <a href="#">View All</a>
+                    </div>
+                    <div class="routine-calendar">
+                        <div class="calendar-nav">
+                            <button><i class="fas fa-chevron-left"></i></button>
+                            <span>October, 2023</span>
+                            <button><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-grid">
+                            <div class="calendar-day">1</div>
+                            <div class="calendar-day active">2</div>
+                            <div class="calendar-day">3</div>
+                            <!-- Add more days as needed -->
+                        </div>
+                        <div class="routine-actions">
+                            <button class="btn-primary">Download routine (pdf)</button>
+                            <button class="btn-secondary">Download marks (pdf)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Library -->
+                <div class="card library">
+                    <div class="card-header">
+                        <h3>Library</h3>
+                        <a href="#">View All</a>
+                    </div>
+                    <div class="library-books">
+                        <div class="book-item">
+                            <div class="book-icon"><i class="fas fa-book"></i></div>
+                            <div class="book-info">
+                                <h4>Literature</h4>
+                                <p>245 books</p>
+                            </div>
+                        </div>
+                        <div class="book-item">
+                            <div class="book-icon"><i class="fas fa-calculator"></i></div>
+                            <div class="book-info">
+                                <h4>Mathematics</h4>
+                                <p>180 books</p>
+                            </div>
+                        </div>
+                        <div class="book-item">
+                            <div class="book-icon"><i class="fas fa-globe"></i></div>
+                            <div class="book-info">
+                                <h4>English</h4>
+                                <p>320 books</p>
+                            </div>
+                        </div>
+                        <div class="book-item">
+                            <div class="book-icon"><i class="fas fa-flask"></i></div>
+                            <div class="book-info">
+                                <h4>Science</h4>
+                                <p>245 books</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Statistics -->
+                <div class="card course-stats">
+                    <div class="card-header">
+                        <h3>Course Statistics</h3>
+                    </div>
+                    <div class="stats-chart">
+                        <div class="chart-container">
+                            <div class="donut-chart">
+                                <div class="chart-center">
+                                    <span class="total">15000</span>
+                                </div>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <span class="color-dot math"></span>
+                                    <span>Math</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="color-dot english"></span>
+                                    <span>English</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="color-dot chemistry"></span>
+                                    <span>Chemistry</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="new-course">
+                        <button class="btn-new-course">
+                            <i class="fas fa-plus"></i>
+                            New Course
+                        </button>
+                        <p>Build your career with API</p>
+                        <button class="btn-enroll">Enroll Now</button>
+                    </div>
+                </div>
+
+                <!-- Star Students -->
+                <div class="card star-students">
+                    <div class="card-header">
+                        <h3>Star Students</h3>
+                    </div>
+                    <div class="students-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>ID</th>
+                                    <th>Marks</th>
+                                    <th>Percent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                        <div class="student-info">
+                            <div class="student-avatar">EH</div>
+                            <span>Evelyn Harper</span>
+                        </div>
+                    </td>
+                    <td>PRE43178</td>
+                                    <td>1185</td>
+                                    <td>98%</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                        <div class="student-info">
+                            <div class="student-avatar">DP</div>
+                            <span>Diana Penty</span>
+                        </div>
+                    </td>
+                    <td>PRE43174</td>
+                                    <td>1165</td>
+                                    <td>91%</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                        <div class="student-info">
+                            <div class="student-avatar">JM</div>
+                            <span>John Miller</span>
+                        </div>
+                    </td>
+                    <td>PRE43187</td>
+                                    <td>1175</td>
+                                    <td>92%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Total Exams -->
+                <div class="card total-exams">
+                    <div class="card-header">
+                        <h3>Total Exams</h3>
+                        <span class="exam-count">256</span>
+                    </div>
+                    <p>Here is your total exams setup in this month. Click here to <a href="#">View details</a></p>
+                </div>
+
+                <!-- Best Performers -->
+                <div class="card best-performers">
+                    <div class="card-header">
+                        <h3>Best Performers</h3>
+                        <select>
+                            <option>Weekly</option>
+                            <option>Monthly</option>
+                            <option>Yearly</option>
+                        </select>
+                    </div>
+                    <div class="performers-list">
+                        <div class="performer-item">
+                            <span class="rank">01</span>
+                            <div class="performer-bar">
+                                <div class="bar-fill" style="width: 80%"></div>
+                            </div>
+                            <span class="percentage">80%</span>
+                        </div>
+                        <div class="performer-item">
+                            <span class="rank">04</span>
+                            <div class="performer-bar">
+                                <div class="bar-fill" style="width: 70%"></div>
+                            </div>
+                            <span class="percentage">70%</span>
+                        </div>
+                        <div class="performer-item">
+                            <span class="rank">03</span>
+                            <div class="performer-bar">
+                                <div class="bar-fill" style="width: 75%"></div>
+                            </div>
+                            <span class="percentage">75%</span>
+                        </div>
+                        <div class="performer-item">
+                            <span class="rank">08</span>
+                            <div class="performer-bar">
+                                <div class="bar-fill" style="width: 65%"></div>
+                            </div>
+                            <span class="percentage">65%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="card notifications">
+                    <div class="card-header">
+                        <h3>Notifications</h3>
+                        <a href="#">View All</a>
+                    </div>
+                    <div class="notification-list">
+                        <div class="notification-item">
+                            <div class="notification-avatar">🚨</div>
+                            <div class="notification-content">
+                                <h4>Emergency School Closure</h4>
+                                <p>5 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-avatar">🎯</div>
+                            <div class="notification-content">
+                                <h4>New Extracurricular Clubs</h4>
+                                <p>4:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

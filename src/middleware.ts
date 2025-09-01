@@ -102,5 +102,6 @@ export const config = {
     '/schools/:path*',
     '/:schoolCode/portal/:path*',
     '/login',
+    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
   ],
 };

@@ -3,6 +3,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Design System */
+@import '../styles/design-system.css';
+@import '../styles/utilities.css';
+
 /* 
   The HSL variables below were part of the ShadCN theming.
   With the new roadmap focusing on Ant Design and a direct Tailwind color palette,

@@ -1,0 +1,45 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - img "read" [ref=e5]:
+      - img [ref=e6]
+    - heading "School System Login" [level=2] [ref=e8]
+    - alert [ref=e9]:
+      - img "info-circle" [ref=e10]:
+        - img [ref=e11]
+      - generic [ref=e13]:
+        - generic [ref=e14]: Login Instructions
+        - generic [ref=e16]:
+          - paragraph [ref=e17]:
+            - strong [ref=e18]: "For School Users (Admin, Teacher, Student):"
+            - text: Enter your email, password, and your school's code.
+          - paragraph [ref=e19]:
+            - strong [ref=e20]: "For System Administrators:"
+            - text: Enter your super admin credentials and leave the School Code field blank.
+    - generic [ref=e21]:
+      - generic [ref=e27]:
+        - img "mail" [ref=e29]:
+          - img [ref=e30]
+        - textbox "Email Address" [ref=e32]: test@example.com
+      - generic [ref=e38]:
+        - img "lock" [ref=e40]:
+          - img [ref=e41]
+        - textbox "Password" [active] [ref=e43]: pas
+        - img "eye-invisible" [ref=e45] [cursor=pointer]:
+          - img [ref=e46] [cursor=pointer]
+      - generic [ref=e54]:
+        - img "home" [ref=e56]:
+          - img [ref=e57]
+        - textbox "School Code (Optional)" [ref=e59]
+      - button "Log in" [ref=e65] [cursor=pointer]:
+        - generic [ref=e66] [cursor=pointer]: Log in
+    - generic [ref=e68]:
+      - text: Accessing a public school website?
+      - link "Find a school." [ref=e69] [cursor=pointer]:
+        - /url: /
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e70]
+```

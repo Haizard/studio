@@ -14,7 +14,15 @@ interface CustomUser extends NextAuthUser {
   schoolCode?: string | null;
 }
 
-export const authConfig: NextAuthConfig = {
+import NextAuth from 'next-auth';
+
+export const { auth, handlers, signIn, signOut } = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
+  useSecureCookies: process.env.NODE_ENV === 'production',
+  session: {
+    strategy: 'jwt',
+  },
   providers: [
     Credentials({
       name: 'Credentials',
@@ -25,15 +33,23 @@ export const authConfig: NextAuthConfig = {
       },
       async authorize(credentials, req) {
         const reqObject = req as NextRequest;
+        console.log('🔐 Authorization attempt:', { email: credentials?.email, hasPassword: !!credentials?.password, schoolCode: credentials?.schoolCode });
+        
         if (!credentials?.email || !credentials.password) {
+            console.log('❌ Missing credentials');
             return null;
         }
 
         const { email, password, schoolCode } = credentials;
+        console.log('📋 Credentials received:', { email, schoolCode, schoolCodeType: typeof schoolCode, schoolCodeValue: schoolCode });
+
+        // Normalize schoolCode - treat 'undefined' string, empty string, or actual undefined as no school code
+        const normalizedSchoolCode = schoolCode && typeof schoolCode === 'string' && schoolCode.trim() !== '' && schoolCode !== 'undefined' ? schoolCode.trim() : null;
+        console.log('🔧 Normalized schoolCode:', normalizedSchoolCode);
 
         try {
-          if (schoolCode && typeof schoolCode === 'string' && schoolCode.trim() !== '') {
-            const tenantSchoolCode = schoolCode.trim().toLowerCase();
+          if (normalizedSchoolCode) {
+            const tenantSchoolCode = normalizedSchoolCode.toLowerCase();
             const tenantDb = await getTenantConnection(tenantSchoolCode);
             const TenantUserOnDB = tenantDb.models.User || tenantDb.model<ITenantUser>('User', TenantUserSchemaDefinition);
             const user = await TenantUserOnDB.findOne({ email: email.toLowerCase() }).lean();
@@ -67,13 +83,18 @@ export const authConfig: NextAuthConfig = {
               }
             }
           } else {
+            console.log('🔑 Super admin authentication path');
             const superAdminDbInstance = await connectToSuperAdminDB();
+            console.log('✅ Connected to super admin DB');
             const SuperAdminUserOnDB = superAdminDbInstance.models.SuperAdminUser || superAdminDbInstance.model<ISuperAdminUser>('SuperAdminUser', SuperAdminUserModel.schema);
             const user = await SuperAdminUserOnDB.findOne({ email: email.toLowerCase() }).lean();
+            console.log('👤 User found:', !!user);
 
             if (user && user.passwordHash) {
               const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+              console.log('🔒 Password match:', passwordMatch);
               if (passwordMatch) {
+                console.log('✅ Super admin authentication successful');
                 return {
                   id: user._id.toString(),
                   email: user.email,
@@ -84,11 +105,13 @@ export const authConfig: NextAuthConfig = {
             }
           }
         } catch (error: any) {
-          console.error("Authorization database error:", error.message);
+          console.error("❌ Authorization database error:", error.message);
+          console.error("❌ Full error:", error);
+          console.error("❌ Error stack:", error.stack);
         }
         
-        if (schoolCode && typeof schoolCode === 'string') {
-            await logAudit(schoolCode.trim().toLowerCase(), {
+        if (normalizedSchoolCode) {
+            await logAudit(normalizedSchoolCode.toLowerCase(), {
                 username: email.toLowerCase(),
                 action: 'LOGIN_FAIL',
                 entity: 'User',
@@ -128,4 +151,4 @@ export const authConfig: NextAuthConfig = {
   pages: {
     signIn: '/login',
   },
-};
+});

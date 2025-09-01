@@ -1,0 +1,225 @@
+/* Header Component Styles */
+.header {
+  @apply ds-header;
+  height: var(--header-height);
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-neutral-200);
+  padding: 0 var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: var(--backdrop-blur);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.menuToggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+.menuToggle:hover {
+  background: var(--color-neutral-100);
+}
+
+.searchContainer {
+  @apply ds-search-bar;
+  position: relative;
+  width: 400px;
+  max-width: 100%;
+}
+
+.searchInput {
+  @apply ds-search-input;
+  width: 100%;
+  height: var(--input-height);
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 40px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background);
+  font-size: var(--font-size-sm);
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: var(--shadow-glow);
+}
+
+.searchInput::placeholder {
+  color: var(--color-neutral-500);
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--color-neutral-500);
+  pointer-events: none;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.notificationButton {
+  position: relative;
+  background: none;
+  border: none;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+.notificationButton:hover {
+  background: var(--color-neutral-100);
+  transform: scale(1.05);
+}
+
+.notificationIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-neutral-600);
+}
+
+.notificationBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  background: var(--color-danger-500);
+  border-radius: var(--border-radius-full);
+  animation: pulse 2s infinite;
+}
+
+.userProfile {
+  @apply ds-user-profile;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+.userProfile:hover {
+  background: var(--color-neutral-100);
+}
+
+.userAvatar {
+  @apply ds-user-avatar;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--border-radius-full);
+  background: var(--gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-fast) var(--easing-ease-out);
+}
+
+.userAvatar:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-glow);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-neutral-900);
+  line-height: var(--line-height-tight);
+}
+
+.userRole {
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-500);
+  line-height: var(--line-height-tight);
+}
+
+.dropdownIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-neutral-500);
+  transition: transform var(--duration-fast) var(--easing-ease-out);
+}
+
+.userProfile:hover .dropdownIcon {
+  transform: rotate(180deg);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .header {
+    padding: 0 var(--spacing-lg);
+  }
+  
+  .searchContainer {
+    width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .menuToggle {
+    display: block;
+  }
+  
+  .searchContainer {
+    width: 200px;
+  }
+  
+  .userInfo {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0 var(--spacing-sm);
+  }
+  
+  .searchContainer {
+    width: 150px;
+  }
+  
+  .searchInput {
+    font-size: var(--font-size-xs);
+  }
+  
+  .headerRight {
+    gap: var(--spacing-sm);
+  }
+}
